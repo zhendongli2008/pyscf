@@ -1,0 +1,431 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyscf.mcscf.casci &mdash; PySCF 0.10 documentation</title>
+    
+    <link rel="stylesheet" href="../../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.10',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../../static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 0.10 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 0.10 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyscf.mcscf.casci</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="nb">reduce</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">pyscf.lib</span>
+<span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">import</span> <span class="nn">pyscf.scf</span>
+<span class="kn">import</span> <span class="nn">pyscf.ao2mo</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">fci</span>
+<span class="kn">from</span> <span class="nn">pyscf.mcscf</span> <span class="kn">import</span> <span class="n">addons</span>
+
+
+<span class="k">def</span> <span class="nf">extract_orbs</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ncore</span><span class="p">):</span>
+    <span class="n">nocc</span> <span class="o">=</span> <span class="n">ncore</span> <span class="o">+</span> <span class="n">ncas</span>
+    <span class="n">mo_core</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="p">[:,:</span><span class="n">ncore</span><span class="p">]</span>
+    <span class="n">mo_cas</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">]</span>
+    <span class="n">mo_vir</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">nocc</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="n">mo_core</span><span class="p">,</span> <span class="n">mo_cas</span><span class="p">,</span> <span class="n">mo_vir</span>
+
+<div class="viewcode-block" id="h1e_for_cas"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.casci.h1e_for_cas">[docs]</a><span class="k">def</span> <span class="nf">h1e_for_cas</span><span class="p">(</span><span class="n">casci</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ncas</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ncore</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;CAS sapce one-electron hamiltonian</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        casci : a CASSCF/CASCI object or RHF object</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tuple, the first is the effective one-electron hamiltonian defined in CAS space,</span>
+<span class="sd">        the second is the electronic energy from core.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mo_coeff</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">mo_coeff</span>
+    <span class="k">if</span> <span class="n">ncas</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">ncas</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">ncas</span>
+    <span class="k">if</span> <span class="n">ncore</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">ncore</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">ncore</span>
+    <span class="n">mo_core</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="p">[:,:</span><span class="n">ncore</span><span class="p">]</span>
+    <span class="n">mo_cas</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">ncore</span><span class="p">:</span><span class="n">ncore</span><span class="o">+</span><span class="n">ncas</span><span class="p">]</span>
+
+    <span class="n">hcore</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">get_hcore</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mo_core</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">corevhf</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">energy_core</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">core_dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_core</span><span class="p">,</span> <span class="n">mo_core</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+        <span class="n">corevhf</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">get_veff</span><span class="p">(</span><span class="n">casci</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">core_dm</span><span class="p">)</span>
+        <span class="n">energy_core</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">core_dm</span><span class="p">,</span> <span class="n">hcore</span><span class="p">)</span> \
+                    <span class="o">+</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">core_dm</span><span class="p">,</span> <span class="n">corevhf</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+    <span class="n">h1eff</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mo_cas</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">hcore</span><span class="o">+</span><span class="n">corevhf</span><span class="p">,</span> <span class="n">mo_cas</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">h1eff</span><span class="p">,</span> <span class="n">energy_core</span>
+</div>
+<div class="viewcode-block" id="kernel"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.casci.kernel">[docs]</a><span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="n">casci</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">cikwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;CASCI solver</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">verbose</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">verbose</span>
+    <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mo_coeff</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">mo_coeff</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="n">casci</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">(),</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Start CASCI&#39;</span><span class="p">)</span>
+
+    <span class="n">ncas</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">ncas</span>
+    <span class="n">nelecas</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">nelecas</span>
+    <span class="n">ncore</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">ncore</span>
+    <span class="n">mo_core</span><span class="p">,</span> <span class="n">mo_cas</span><span class="p">,</span> <span class="n">mo_vir</span> <span class="o">=</span> <span class="n">extract_orbs</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ncore</span><span class="p">)</span>
+
+    <span class="c"># 1e</span>
+    <span class="n">h1eff</span><span class="p">,</span> <span class="n">energy_core</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">h1e_for_cas</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">)</span>
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;effective h1e in CAS space&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
+
+    <span class="c"># 2e</span>
+    <span class="n">eri_cas</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">ao2mo</span><span class="p">(</span><span class="n">mo_cas</span><span class="p">)</span>
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;integral transformation to CAS space&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t1</span><span class="p">)</span>
+
+    <span class="c"># FCI</span>
+    <span class="n">e_cas</span><span class="p">,</span> <span class="n">fcivec</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">h1eff</span><span class="p">,</span> <span class="n">eri_cas</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span>
+                                           <span class="n">ci0</span><span class="o">=</span><span class="n">ci0</span><span class="p">,</span> <span class="o">**</span><span class="n">cikwargs</span><span class="p">)</span>
+
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;FCI solver&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t1</span><span class="p">)</span>
+    <span class="n">e_tot</span> <span class="o">=</span> <span class="n">e_cas</span> <span class="o">+</span> <span class="n">energy_core</span> <span class="o">+</span> <span class="n">casci</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">energy_nuc</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">note</span><span class="p">(</span><span class="s">&#39;CASCI E = </span><span class="si">%.15g</span><span class="s">, E(CI) = </span><span class="si">%.15g</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_cas</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;CASCI&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_cas</span><span class="p">,</span> <span class="n">fcivec</span>
+
+</div>
+<div class="viewcode-block" id="CASCI"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.casci.CASCI">[docs]</a><span class="k">class</span> <span class="nc">CASCI</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;CASCI</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        verbose : int</span>
+<span class="sd">            Print level.  Default value equals to :class:`Mole.verbose`.</span>
+<span class="sd">        max_memory : float or int</span>
+<span class="sd">            Allowed memory in MB.  Default value equals to :class:`Mole.max_memory`.</span>
+<span class="sd">        ncas : int</span>
+<span class="sd">            Active space size.</span>
+<span class="sd">        nelecas : tuple of int</span>
+<span class="sd">            Active (nelec_alpha, nelec_beta)</span>
+<span class="sd">        ncore : int or tuple of int</span>
+<span class="sd">            Core electron number.  In UHF-CASSCF, it&#39;s a tuple to indicate the different core eletron numbers.</span>
+<span class="sd">        fcisolver : an instance of :class:`FCISolver`</span>
+<span class="sd">            The pyscf.fci module provides several FCISolver for different scenario.  Generally,</span>
+<span class="sd">            fci.direct_spin1.FCISolver can be used for all RHF-CASSCF.  However, a proper FCISolver</span>
+<span class="sd">            can provide better performance and better numerical stability.  One can either use</span>
+<span class="sd">            :func:`fci.solver` function to pick the FCISolver by the program or manually assigen</span>
+<span class="sd">            the FCISolver to this attribute, e.g.</span>
+
+<span class="sd">            &gt;&gt;&gt; from pyscf import fci</span>
+<span class="sd">            &gt;&gt;&gt; mc = mcscf.CASSCF(mf, 4, 4)</span>
+<span class="sd">            &gt;&gt;&gt; mc.fcisolver = fci.solver(mol, singlet=True)</span>
+<span class="sd">            &gt;&gt;&gt; mc.fcisolver = fci.direct_spin1.FCISolver(mol)</span>
+
+<span class="sd">            You can control FCISolver by setting e.g.::</span>
+
+<span class="sd">                &gt;&gt;&gt; mc.fcisolver.max_cycle = 30</span>
+<span class="sd">                &gt;&gt;&gt; mc.fcisolver.conv_tol = 1e-7</span>
+
+<span class="sd">            For more details of the parameter for FCISolver, See :mod:`fci`.</span>
+
+<span class="sd">    Saved results</span>
+
+<span class="sd">        e_tot : float</span>
+<span class="sd">            Total MCSCF energy (electronic energy plus nuclear repulsion)</span>
+<span class="sd">        ci : ndarray</span>
+<span class="sd">            CAS space FCI coefficients</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyscf import gto, scf, mcscf</span>
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;N 0 0 0; N 0 0 1&#39;, basis=&#39;ccpvdz&#39;, verbose=0)</span>
+<span class="sd">    &gt;&gt;&gt; mf = scf.RHF(mol)</span>
+<span class="sd">    &gt;&gt;&gt; mf.scf()</span>
+<span class="sd">    &gt;&gt;&gt; mc = mcscf.CASCI(mf, 6, 6)</span>
+<span class="sd">    &gt;&gt;&gt; mc.kernel()[0]</span>
+<span class="sd">    -108.980200816243354</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ncore</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">mol</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mol</span> <span class="o">=</span> <span class="n">mol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scf</span> <span class="o">=</span> <span class="n">mf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">stdout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_memory</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">max_memory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ncas</span> <span class="o">=</span> <span class="n">ncas</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelecas</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+            <span class="k">assert</span><span class="p">(</span><span class="n">nelecas</span><span class="o">%</span><span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">nelecb</span> <span class="o">=</span> <span class="p">(</span><span class="n">nelecas</span><span class="o">-</span><span class="n">mol</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+            <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelecas</span> <span class="o">-</span> <span class="n">nelecb</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span> <span class="o">=</span> <span class="p">(</span><span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span> <span class="o">=</span> <span class="p">(</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">ncore</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">ncorelec</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">assert</span><span class="p">(</span><span class="n">ncorelec</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ncore</span> <span class="o">=</span> <span class="n">ncorelec</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">ncore</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ncore</span> <span class="o">=</span> <span class="n">ncore</span>
+        <span class="c">#self.fcisolver = fci.direct_spin0.FCISolver(mol)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="c"># CI solver parameters are set in fcisolver object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">lindep</span> <span class="o">=</span> <span class="mf">1e-10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">max_cycle</span> <span class="o">=</span> <span class="mi">50</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-8</span>
+
+<span class="c">##################################################</span>
+<span class="c"># don&#39;t modify the following attributes, they are not input options</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ci</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_tot</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;******** CASCI flags ********&#39;</span><span class="p">)</span>
+        <span class="n">nvir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncore</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncas</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;CAS (</span><span class="si">%d</span><span class="s">e+</span><span class="si">%d</span><span class="s">e, </span><span class="si">%d</span><span class="s">o), ncore = </span><span class="si">%d</span><span class="s">, nvir = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> \
+                 <span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncore</span><span class="p">,</span> <span class="n">nvir</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;max_memory </span><span class="si">%d</span><span class="s"> (MB)&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_memory</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">get_hcore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">get_hcore</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_veff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
+        <span class="k">if</span> <span class="n">dm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">mocore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,:</span><span class="bp">self</span><span class="o">.</span><span class="n">ncore</span><span class="p">]</span>
+            <span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mocore</span><span class="p">,</span> <span class="n">mocore</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+<span class="c"># don&#39;t call self._scf.get_veff, because ROHF return alpha,beta potential separately</span>
+        <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">get_jk</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="n">hermi</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vj</span> <span class="o">-</span> <span class="n">vk</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+
+    <span class="k">def</span> <span class="nf">get_h2cas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ao2mo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_h2eff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ao2mo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">ao2mo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">mo_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="bp">self</span><span class="o">.</span><span class="n">ncore</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">ncore</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">ncas</span><span class="p">]</span>
+        <span class="n">nao</span><span class="p">,</span> <span class="n">nmo</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">_eri</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> \
+           <span class="p">(</span><span class="n">nao</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">nmo</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">nmo</span><span class="o">**</span><span class="mi">4</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">_eri</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">*</span><span class="mi">8</span><span class="o">/</span><span class="mf">1e6</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_memory</span><span class="o">*.</span><span class="mi">95</span><span class="p">:</span>
+            <span class="n">eri</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">ao2mo</span><span class="o">.</span><span class="n">incore</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">_eri</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">eri</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">ao2mo</span><span class="o">.</span><span class="n">outcore</span><span class="o">.</span><span class="n">full_iofree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span>
+                                                  <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">eri</span>
+
+    <span class="k">def</span> <span class="nf">get_h1cas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ncas</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ncore</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h1e_for_cas</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">ncore</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_h1eff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ncas</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ncore</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h1e_for_cas</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">ncore</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">h1e_for_cas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ncas</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ncore</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mo_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span>
+        <span class="k">return</span> <span class="n">h1e_for_cas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">ncore</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">casci</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">casci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">cikwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">mo_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span> <span class="o">=</span> <span class="n">mo_coeff</span>
+        <span class="k">if</span> <span class="n">ci0</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">ci0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">check_sanity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_tot</span><span class="p">,</span> <span class="n">e_cas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci</span> <span class="o">=</span> \
+                <span class="n">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="n">ci0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">cikwargs</span><span class="p">)</span>
+        <span class="c">#if self.verbose &gt;= logger.INFO:</span>
+        <span class="c">#    self.analyze(mo_coeff, self.ci, verbose=self.verbose)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_tot</span><span class="p">,</span> <span class="n">e_cas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci</span>
+
+    <span class="k">def</span> <span class="nf">cas_natorb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cas_natorb</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ci0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">cas_natorb_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ci</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">occ</span> <span class="o">=</span> <span class="n">addons</span><span class="o">.</span><span class="n">cas_natorb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span>
+
+    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ci</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">logger</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">pyscf.tools</span> <span class="kn">import</span> <span class="n">dump_mat</span>
+        <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mo_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span>
+        <span class="k">if</span> <span class="n">ci</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">ci</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span>
+            <span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+            <span class="n">dm1a</span><span class="p">,</span> <span class="n">dm1b</span> <span class="o">=</span> <span class="n">addons</span><span class="o">.</span><span class="n">make_rdm1s</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">)</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;</span><span class="si">%d%3s</span><span class="s"> </span><span class="si">%s%-4s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">spheric_labels</span><span class="p">()]</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;alpha density matrix (on AO)&#39;</span><span class="p">)</span>
+            <span class="n">dump_mat</span><span class="o">.</span><span class="n">dump_tri</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">dm1a</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;beta density matrix (on AO)&#39;</span><span class="p">)</span>
+            <span class="n">dump_mat</span><span class="o">.</span><span class="n">dump_tri</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">dm1b</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+
+            <span class="n">s</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mo_coeff</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">(),</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">))</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">&gt;.</span><span class="mi">4</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;&lt;mo-mcscf|mo-hf&gt; </span><span class="si">%d</span><span class="s">, </span><span class="si">%d</span><span class="s">, </span><span class="si">%12.8f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]))</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;** Largest CI components **&#39;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39; string alpha, string beta, CI coefficients&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">c</span><span class="p">,</span><span class="n">ia</span><span class="p">,</span><span class="n">ib</span> <span class="ow">in</span> <span class="n">fci</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">large_ci</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span><span class="p">):</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;  </span><span class="si">%9s</span><span class="s">    </span><span class="si">%9s</span><span class="s">    </span><span class="si">%.12f</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">ia</span><span class="p">,</span> <span class="n">ib</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dm1a</span><span class="p">,</span> <span class="n">dm1b</span>
+
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="bp">None</span><span class="c">#&quot;out_h2o&quot;</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">[</span><span class="s">&#39;O&#39;</span><span class="p">,</span> <span class="p">(</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span>    <span class="p">,</span> <span class="mf">0.</span>   <span class="p">)],</span>
+        <span class="p">[</span><span class="s">&#39;H&#39;</span><span class="p">,</span> <span class="p">(</span> <span class="mf">0.</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.757</span><span class="p">,</span> <span class="mf">0.587</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&#39;H&#39;</span><span class="p">,</span> <span class="p">(</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.757</span> <span class="p">,</span> <span class="mf">0.587</span><span class="p">)],]</span>
+
+    <span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;H&#39;</span><span class="p">:</span> <span class="s">&#39;sto-3g&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;O&#39;</span><span class="p">:</span> <span class="s">&#39;6-31g&#39;</span><span class="p">,}</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">ehf</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">CASCI</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">emc</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">casci</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">ehf</span><span class="p">,</span> <span class="n">emc</span><span class="p">,</span> <span class="n">emc</span><span class="o">-</span><span class="n">ehf</span><span class="p">)</span>
+    <span class="c">#-75.9577817425 -75.9624554777 -0.00467373522233</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">emc</span><span class="o">+</span><span class="mf">75.9624554777</span><span class="p">)</span>
+
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">CASCI</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    <span class="c">#mc.fcisolver = fci.direct_spin1</span>
+    <span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">emc</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">casci</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">emc</span> <span class="o">-</span> <span class="o">-</span><span class="mf">75.439016172976</span><span class="p">)</span>
+
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s">&quot;out_casci&quot;</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">[</span><span class="s">&quot;C&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.65830719</span><span class="p">,</span>  <span class="mf">0.61123287</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00800148</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;C&quot;</span><span class="p">,</span> <span class="p">(</span> <span class="mf">0.73685281</span><span class="p">,</span>  <span class="mf">0.61123287</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00800148</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;C&quot;</span><span class="p">,</span> <span class="p">(</span> <span class="mf">1.43439081</span><span class="p">,</span>  <span class="mf">1.81898387</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00800148</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;C&quot;</span><span class="p">,</span> <span class="p">(</span> <span class="mf">0.73673681</span><span class="p">,</span>  <span class="mf">3.02749287</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00920048</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;C&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.65808819</span><span class="p">,</span>  <span class="mf">3.02741487</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00967948</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;C&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.35568919</span><span class="p">,</span>  <span class="mf">1.81920887</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00868348</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.20806619</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.34108413</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00755148</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="p">(</span> <span class="mf">1.28636081</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.34128013</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00668648</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="p">(</span> <span class="mf">2.53407081</span><span class="p">,</span>  <span class="mf">1.81906387</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00736748</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="p">(</span> <span class="mf">1.28693681</span><span class="p">,</span>  <span class="mf">3.97963587</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00925948</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.20821019</span><span class="p">,</span>  <span class="mf">3.97969587</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.01063248</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mf">2.45529319</span><span class="p">,</span>  <span class="mf">1.81939187</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00886348</span><span class="p">)],]</span>
+
+    <span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;H&#39;</span><span class="p">:</span> <span class="s">&#39;sto-3g&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;C&#39;</span><span class="p">:</span> <span class="s">&#39;sto-3g&#39;</span><span class="p">,}</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">ehf</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">CASCI</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+    <span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">emc</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">casci</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">ehf</span><span class="p">,</span> <span class="n">emc</span><span class="p">,</span> <span class="n">emc</span><span class="o">-</span><span class="n">ehf</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">emc</span> <span class="o">-</span> <span class="o">-</span><span class="mf">227.948912536</span><span class="p">)</span>
+
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">CASCI</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+    <span class="c">#mc.fcisolver = fci.direct_spin1</span>
+    <span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">emc</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">casci</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">emc</span> <span class="o">-</span> <span class="o">-</span><span class="mf">227.7674519720</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 0.10 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

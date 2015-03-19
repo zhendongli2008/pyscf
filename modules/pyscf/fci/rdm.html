@@ -1,0 +1,384 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyscf.fci.rdm &mdash; PySCF 0.10 documentation</title>
+    
+    <link rel="stylesheet" href="../../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.10',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../../static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 0.10 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 0.10 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyscf.fci.rdm</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">ctypes</span>
+<span class="kn">import</span> <span class="nn">_ctypes</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">pyscf.lib</span>
+<span class="kn">from</span> <span class="nn">pyscf.fci</span> <span class="kn">import</span> <span class="n">cistring</span>
+
+<span class="n">librdm</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">load_library</span><span class="p">(</span><span class="s">&#39;libmcscf&#39;</span><span class="p">)</span>
+
+<span class="sd">&#39;&#39;&#39;FCI 1, 2, 3, 4-particle density matrices.</span>
+
+<span class="sd">Note the index difference to the mean-field density matrix.  Here,</span>
+<span class="sd">        dm[p,q,r,s,...] = &lt;p^+ q r^+ s ... &gt;</span>
+<span class="sd">rather than the mean-field DM</span>
+<span class="sd">        dm[p,q] = &lt; q^+ p &gt;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="k">def</span> <span class="nf">reorder_rdm</span><span class="p">(</span><span class="n">rdm1</span><span class="p">,</span> <span class="n">rdm2</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="n">nmo</span> <span class="o">=</span> <span class="n">rdm1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inplace</span><span class="p">:</span>
+        <span class="n">rdm2</span> <span class="o">=</span> <span class="n">rdm2</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nmo</span><span class="p">):</span>
+        <span class="n">rdm2</span><span class="p">[:,</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">,:]</span> <span class="o">-=</span> <span class="n">rdm1</span>
+    <span class="c">#return rdm1, rdm2</span>
+    <span class="n">rdm2</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">transpose_sum</span><span class="p">(</span><span class="n">rdm2</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nmo</span><span class="o">*</span><span class="n">nmo</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+    <span class="k">return</span> <span class="n">rdm1</span><span class="p">,</span> <span class="n">rdm2</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nmo</span><span class="p">,</span><span class="n">nmo</span><span class="p">,</span><span class="n">nmo</span><span class="p">,</span><span class="n">nmo</span><span class="p">)</span>
+
+<span class="c"># dm_pq = &lt;|p^+ q|&gt;</span>
+<span class="k">def</span> <span class="nf">make_rdm1_ms0</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cibra</span><span class="p">,</span> <span class="n">ciket</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelec</span><span class="o">//</span><span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">neleca</span> <span class="o">==</span> <span class="n">nelecb</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">link_index</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">link_index</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_linkstr_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">neleca</span><span class="p">)</span>
+    <span class="n">na</span><span class="p">,</span><span class="n">nlink</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">link_index</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">rdm1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,</span><span class="n">norb</span><span class="p">))</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">librdm</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="n">fn</span><span class="p">(</span><span class="n">rdm1</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+       <span class="n">cibra</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+       <span class="n">ciket</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span>
+       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">na</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">na</span><span class="p">),</span>
+       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nlink</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nlink</span><span class="p">),</span>
+       <span class="n">link_index</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+       <span class="n">link_index</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">rdm1</span>
+
+<span class="c"># NOTE the rdm2 is calculated as &lt;p^+ q r^+ s&gt;, call reorder_rdm to transform</span>
+<span class="c"># to the normal rdm2, which is defined as &lt;p^+ r^+ q s&gt;</span>
+<span class="c"># symm = 1: bra, ket symmetry</span>
+<span class="c"># symm = 2: particle permutation symmetry</span>
+<span class="k">def</span> <span class="nf">make_rdm12_ms0</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cibra</span><span class="p">,</span> <span class="n">ciket</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">symm</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelec</span><span class="o">//</span><span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">neleca</span> <span class="o">==</span> <span class="n">nelecb</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">link_index</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">link_index</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_linkstr_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">neleca</span><span class="p">)</span>
+    <span class="n">link_index</span> <span class="o">=</span> <span class="p">(</span><span class="n">link_index</span><span class="p">,</span> <span class="n">link_index</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">make_rdm12_spin1</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cibra</span><span class="p">,</span> <span class="n">ciket</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="p">,</span> <span class="n">symm</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">make_rdm1</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cibra</span><span class="p">,</span> <span class="n">ciket</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">make_rdm1_ms0</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cibra</span><span class="p">,</span> <span class="n">ciket</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">make_rdm12</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cibra</span><span class="p">,</span> <span class="n">ciket</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">symm</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">make_rdm12_ms0</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cibra</span><span class="p">,</span> <span class="n">ciket</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="p">,</span> <span class="n">symm</span><span class="p">)</span>
+
+<span class="c">###################################################</span>
+<span class="c">#</span>
+<span class="c"># nelec and link_index are tuples of (alpha,beta)</span>
+<span class="c">#</span>
+<span class="k">def</span> <span class="nf">make_rdm1_spin1</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cibra</span><span class="p">,</span> <span class="n">ciket</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span><span class="o">//</span><span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span>
+    <span class="k">if</span> <span class="n">link_index</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">link_indexa</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_linkstr_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">neleca</span><span class="p">)</span>
+        <span class="n">link_indexb</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_linkstr_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">nelecb</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">link_indexa</span><span class="p">,</span> <span class="n">link_indexb</span> <span class="o">=</span> <span class="n">link_index</span>
+    <span class="n">na</span><span class="p">,</span><span class="n">nlinka</span> <span class="o">=</span> <span class="n">link_indexa</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">nb</span><span class="p">,</span><span class="n">nlinkb</span> <span class="o">=</span> <span class="n">link_indexb</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">rdm1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,</span><span class="n">norb</span><span class="p">))</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">librdm</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="n">fn</span><span class="p">(</span><span class="n">rdm1</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+       <span class="n">cibra</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+       <span class="n">ciket</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span>
+       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">na</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nb</span><span class="p">),</span>
+       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nlinka</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nlinkb</span><span class="p">),</span>
+       <span class="n">link_indexa</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+       <span class="n">link_indexb</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">rdm1</span>
+
+<span class="c"># NOTE the rdm2 is calculated as &lt;p^+ q r^+ s&gt;, call reorder_rdm to transform</span>
+<span class="c"># to the normal rdm2, which is defined as &lt;p^+ r^+ q s&gt;</span>
+<span class="c"># symm = 1: bra, ket symmetry</span>
+<span class="c"># symm = 2: particle permutation symmetry</span>
+<span class="k">def</span> <span class="nf">make_rdm12_spin1</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cibra</span><span class="p">,</span> <span class="n">ciket</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">symm</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span><span class="o">//</span><span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span>
+    <span class="k">if</span> <span class="n">link_index</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">link_indexa</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_linkstr_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">neleca</span><span class="p">)</span>
+        <span class="n">link_indexb</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_linkstr_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">nelecb</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">link_indexa</span><span class="p">,</span> <span class="n">link_indexb</span> <span class="o">=</span> <span class="n">link_index</span>
+    <span class="n">na</span><span class="p">,</span><span class="n">nlinka</span> <span class="o">=</span> <span class="n">link_indexa</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">nb</span><span class="p">,</span><span class="n">nlinkb</span> <span class="o">=</span> <span class="n">link_indexb</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">rdm1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,</span><span class="n">norb</span><span class="p">))</span>
+    <span class="n">rdm2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,</span><span class="n">norb</span><span class="p">,</span><span class="n">norb</span><span class="p">,</span><span class="n">norb</span><span class="p">))</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">_ctypes</span><span class="o">.</span><span class="n">dlsym</span><span class="p">(</span><span class="n">librdm</span><span class="o">.</span><span class="n">_handle</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="n">librdm</span><span class="o">.</span><span class="n">FCIrdm12_drv</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">fn</span><span class="p">),</span>
+                        <span class="n">rdm1</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">rdm2</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">cibra</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">ciket</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">na</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nb</span><span class="p">),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nlinka</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nlinkb</span><span class="p">),</span>
+                        <span class="n">link_indexa</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">link_indexb</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">symm</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">rdm1</span><span class="p">,</span> <span class="n">rdm2</span>
+
+
+<span class="c">##############################</span>
+<span class="c">#</span>
+<span class="c"># 3-particle and 4-particle density matrix for RHF-FCI wfn</span>
+<span class="c">#</span>
+<span class="k">def</span> <span class="nf">make_dm123</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cibra</span><span class="p">,</span> <span class="n">ciket</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span><span class="o">//</span><span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span>
+    <span class="n">link_indexa</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_linkstr_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">neleca</span><span class="p">)</span>
+    <span class="n">link_indexb</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_linkstr_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">nelecb</span><span class="p">)</span>
+    <span class="n">na</span><span class="p">,</span><span class="n">nlinka</span> <span class="o">=</span> <span class="n">link_indexa</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">nb</span><span class="p">,</span><span class="n">nlinkb</span> <span class="o">=</span> <span class="n">link_indexb</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">rdm1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,)</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">rdm2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,)</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">rdm3</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,)</span><span class="o">*</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">_ctypes</span><span class="o">.</span><span class="n">dlsym</span><span class="p">(</span><span class="n">librdm</span><span class="o">.</span><span class="n">_handle</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="n">librdm</span><span class="o">.</span><span class="n">FCIrdm3_drv</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">kernel</span><span class="p">),</span>
+                       <span class="n">rdm1</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">rdm2</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">rdm3</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">cibra</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">ciket</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span>
+                       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">na</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nb</span><span class="p">),</span>
+                       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nlinka</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nlinkb</span><span class="p">),</span>
+                       <span class="n">link_indexa</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">link_indexb</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+    <span class="n">rdm3</span> <span class="o">=</span> <span class="n">_complete_dm3_</span><span class="p">(</span><span class="n">rdm2</span><span class="p">,</span> <span class="n">rdm3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rdm1</span><span class="p">,</span> <span class="n">rdm2</span><span class="p">,</span> <span class="n">rdm3</span>
+<span class="k">def</span> <span class="nf">_complete_dm3_</span><span class="p">(</span><span class="n">dm2</span><span class="p">,</span> <span class="n">dm3</span><span class="p">):</span>
+<span class="c"># fci_4pdm.c assumed symmetry p &gt;= r &gt;= t for 3-pdm &lt;p^+ q r^+ s t^+ u&gt;</span>
+<span class="c"># Using E^r_sE^p_q = E^p_qE^r_s - \delta_{qr}E^p_s + \delta_{ps}E^r_q to</span>
+<span class="c"># complete the full 3-pdm</span>
+    <span class="k">def</span> <span class="nf">transpose01</span><span class="p">(</span><span class="n">ijk</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="n">jik</span> <span class="o">=</span> <span class="n">ijk</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">jik</span><span class="p">[:,</span><span class="n">j</span><span class="p">]</span> <span class="o">-=</span> <span class="n">dm2</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:]</span>
+        <span class="n">jik</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">+=</span> <span class="n">dm2</span><span class="p">[</span><span class="n">j</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:]</span>
+        <span class="n">dm3</span><span class="p">[</span><span class="n">j</span><span class="p">,:,</span><span class="n">i</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">jik</span>
+        <span class="k">return</span> <span class="n">jik</span>
+    <span class="k">def</span> <span class="nf">transpose12</span><span class="p">(</span><span class="n">ijk</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="n">ikj</span> <span class="o">=</span> <span class="n">ijk</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ikj</span><span class="p">[:,:,</span><span class="n">k</span><span class="p">]</span> <span class="o">-=</span> <span class="n">dm2</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">j</span><span class="p">,:]</span>
+        <span class="n">ikj</span><span class="p">[:,</span><span class="n">j</span><span class="p">,:]</span> <span class="o">+=</span> <span class="n">dm2</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:]</span>
+        <span class="n">dm3</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:,</span><span class="n">j</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">ikj</span>
+        <span class="k">return</span> <span class="n">ikj</span>
+
+<span class="c"># ijk -&gt; jik -&gt; jki -&gt; kji -&gt; kij -&gt; ikj</span>
+    <span class="n">norb</span> <span class="o">=</span> <span class="n">dm2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose01</span><span class="p">(</span><span class="n">dm3</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">j</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose12</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose01</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose12</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose01</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dm3</span>
+
+<span class="k">def</span> <span class="nf">make_dm1234</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cibra</span><span class="p">,</span> <span class="n">ciket</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span><span class="o">//</span><span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span>
+    <span class="n">link_indexa</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_linkstr_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">neleca</span><span class="p">)</span>
+    <span class="n">link_indexb</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_linkstr_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">nelecb</span><span class="p">)</span>
+    <span class="n">na</span><span class="p">,</span><span class="n">nlinka</span> <span class="o">=</span> <span class="n">link_indexa</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">nb</span><span class="p">,</span><span class="n">nlinkb</span> <span class="o">=</span> <span class="n">link_indexb</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">rdm1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,)</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">rdm2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,)</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">rdm3</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,)</span><span class="o">*</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">rdm4</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,)</span><span class="o">*</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">librdm</span><span class="o">.</span><span class="n">FCIrdm4_drv</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">_ctypes</span><span class="o">.</span><span class="n">dlsym</span><span class="p">(</span><span class="n">librdm</span><span class="o">.</span><span class="n">_handle</span><span class="p">,</span> <span class="n">fname</span><span class="p">)),</span>
+                       <span class="n">rdm1</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">rdm2</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">rdm3</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">rdm4</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">cibra</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">ciket</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span>
+                       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">na</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nb</span><span class="p">),</span>
+                       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nlinka</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nlinkb</span><span class="p">),</span>
+                       <span class="n">link_indexa</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                       <span class="n">link_indexb</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+    <span class="n">rdm3</span> <span class="o">=</span> <span class="n">_complete_dm3_</span><span class="p">(</span><span class="n">rdm2</span><span class="p">,</span> <span class="n">rdm3</span><span class="p">)</span>
+    <span class="n">rdm4</span> <span class="o">=</span> <span class="n">_complete_dm4_</span><span class="p">(</span><span class="n">rdm3</span><span class="p">,</span> <span class="n">rdm4</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rdm1</span><span class="p">,</span> <span class="n">rdm2</span><span class="p">,</span> <span class="n">rdm3</span><span class="p">,</span> <span class="n">rdm4</span>
+<span class="k">def</span> <span class="nf">_complete_dm4_</span><span class="p">(</span><span class="n">dm3</span><span class="p">,</span> <span class="n">dm4</span><span class="p">):</span>
+<span class="c"># fci_4pdm.c assumed symmetry p &gt;= r &gt;= t &gt;= v for 4-pdm &lt;p^+ q r^+ s t^+ u v^+ w&gt;</span>
+<span class="c"># Using E^r_sE^p_q = E^p_qE^r_s - \delta_{qr}E^p_s + \delta_{ps}E^r_q to</span>
+<span class="c"># complete the full 4-pdm</span>
+    <span class="k">def</span> <span class="nf">transpose01</span><span class="p">(</span><span class="n">ijkl</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
+        <span class="n">jikl</span> <span class="o">=</span> <span class="n">ijkl</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">jikl</span><span class="p">[:,</span><span class="n">j</span><span class="p">]</span> <span class="o">-=</span> <span class="n">dm3</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:,</span><span class="n">l</span><span class="p">,:]</span>
+        <span class="n">jikl</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">+=</span> <span class="n">dm3</span><span class="p">[</span><span class="n">j</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:,</span><span class="n">l</span><span class="p">,:]</span>
+        <span class="n">dm4</span><span class="p">[</span><span class="n">j</span><span class="p">,:,</span><span class="n">i</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:,</span><span class="n">l</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">jikl</span>
+        <span class="k">return</span> <span class="n">jikl</span>
+    <span class="k">def</span> <span class="nf">transpose12</span><span class="p">(</span><span class="n">ijkl</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
+        <span class="n">ikjl</span> <span class="o">=</span> <span class="n">ijkl</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">ikjl</span><span class="p">[:,:,</span><span class="n">k</span><span class="p">]</span> <span class="o">-=</span> <span class="n">dm3</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">j</span><span class="p">,:,</span><span class="n">l</span><span class="p">,:]</span>
+        <span class="n">ikjl</span><span class="p">[:,</span><span class="n">j</span><span class="p">,:]</span> <span class="o">+=</span> <span class="n">dm3</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:,</span><span class="n">l</span><span class="p">,:]</span>
+        <span class="n">dm4</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:,</span><span class="n">j</span><span class="p">,:,</span><span class="n">l</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">ikjl</span>
+        <span class="k">return</span> <span class="n">ikjl</span>
+    <span class="k">def</span> <span class="nf">transpose23</span><span class="p">(</span><span class="n">ijkl</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
+        <span class="n">ijlk</span> <span class="o">=</span> <span class="n">ijkl</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ijlk</span><span class="p">[:,:,:,</span><span class="n">l</span><span class="p">]</span> <span class="o">-=</span> <span class="n">dm3</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">j</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:]</span>
+        <span class="n">ijlk</span><span class="p">[:,:,</span><span class="n">k</span><span class="p">,:]</span> <span class="o">+=</span> <span class="n">dm3</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">j</span><span class="p">,:,</span><span class="n">l</span><span class="p">,:]</span>
+        <span class="n">dm4</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">j</span><span class="p">,:,</span><span class="n">l</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">ijlk</span>
+        <span class="k">return</span> <span class="n">ijlk</span>
+    <span class="k">def</span> <span class="nf">chain</span><span class="p">(</span><span class="n">ijkl</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose23</span><span class="p">(</span><span class="n">ijkl</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose12</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose23</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose12</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose23</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tmp</span>
+
+<span class="c"># ijkl -&gt; ijlk -&gt; iljk -&gt; ilkj -&gt; iklj -&gt; ikjl</span>
+<span class="c">#      -&gt; jikl -&gt; jilk -&gt; jlik -&gt; jlki -&gt; jkli -&gt; jkil</span>
+<span class="c">#(ikjl)-&gt; kijl -&gt; kilj -&gt; klij -&gt; klji -&gt; kjli -&gt; kjil</span>
+<span class="c">#(iljk)-&gt; lijk -&gt; likj -&gt; lkij -&gt; lkji -&gt; ljki -&gt; ljik</span>
+    <span class="n">norb</span> <span class="o">=</span> <span class="n">dm3</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">tmp</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">dm4</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">j</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:,</span><span class="n">l</span><span class="p">,:]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+                    <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose01</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+                    <span class="n">tmp</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+                    <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose01</span><span class="p">(</span><span class="n">dm4</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">j</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:,</span><span class="n">l</span><span class="p">,:]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+                    <span class="n">tmp</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+                    <span class="n">tmp</span> <span class="o">=</span> <span class="n">transpose01</span><span class="p">(</span><span class="n">dm4</span><span class="p">[</span><span class="n">i</span><span class="p">,:,</span><span class="n">l</span><span class="p">,:,</span><span class="n">j</span><span class="p">,:,</span><span class="n">k</span><span class="p">,:]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                    <span class="n">tmp</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dm4</span>
+
+<span class="c"># &lt;p^+ q r^+ s t^+ u&gt; =&gt; &lt;p^+ r^+ t^+ u s q&gt;</span>
+<span class="c"># rdm2 is the (reordered) standard 2-pdm</span>
+<span class="k">def</span> <span class="nf">reorder_rdm3</span><span class="p">(</span><span class="n">rdm1</span><span class="p">,</span> <span class="n">rdm2</span><span class="p">,</span> <span class="n">rdm3</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inplace</span><span class="p">:</span>
+        <span class="n">rdm3</span> <span class="o">=</span> <span class="n">rdm3</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">norb</span> <span class="o">=</span> <span class="n">rdm1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
+                <span class="n">rdm3</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">s</span><span class="p">]</span> <span class="o">+=</span> <span class="o">-</span><span class="n">rdm2</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="n">s</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
+                <span class="n">rdm3</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">,:,:,</span><span class="n">q</span><span class="p">,</span><span class="n">u</span><span class="p">]</span> <span class="o">+=</span> <span class="o">-</span><span class="n">rdm2</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="n">u</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
+                <span class="n">rdm3</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">,:,</span><span class="n">s</span><span class="p">,</span><span class="n">s</span><span class="p">,:]</span> <span class="o">+=</span> <span class="o">-</span><span class="n">rdm2</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
+            <span class="n">rdm3</span><span class="p">[:,</span><span class="n">q</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">s</span><span class="p">,:]</span> <span class="o">+=</span> <span class="o">-</span><span class="n">rdm1</span>
+    <span class="k">return</span> <span class="n">rdm3</span>
+
+<span class="c"># &lt;p^+ q r^+ s t^+ u w^+ v&gt; =&gt; &lt;p^+ r^+ t^+ w^+ v u s q&gt;</span>
+<span class="c"># rdm2, rdm3 are the (reordered) standard 2-pdm and 3-pdm</span>
+<span class="k">def</span> <span class="nf">reorder_rdm4</span><span class="p">(</span><span class="n">rdm1</span><span class="p">,</span> <span class="n">rdm2</span><span class="p">,</span> <span class="n">rdm3</span><span class="p">,</span> <span class="n">rdm4</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;TODO&#39;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 0.10 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

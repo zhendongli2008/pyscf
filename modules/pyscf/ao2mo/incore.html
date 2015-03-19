@@ -1,0 +1,365 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyscf.ao2mo.incore &mdash; PySCF 0.10 documentation</title>
+    
+    <link rel="stylesheet" href="../../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.10',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../../static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 0.10 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 0.10 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyscf.ao2mo.incore</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">ctypes</span>
+<span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">pyscf.ao2mo</span> <span class="kn">import</span> <span class="n">_ao2mo</span>
+
+<span class="n">BLOCK</span> <span class="o">=</span> <span class="mi">56</span>
+
+<div class="viewcode-block" id="full"><a class="viewcode-back" href="../../../ao2mo.html#pyscf.ao2mo.incore.full">[docs]</a><span class="k">def</span> <span class="nf">full</span><span class="p">(</span><span class="n">eri_ao</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">compact</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">r&#39;&#39;&#39;MO integral transformation for the given orbital.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        eri_ao : ndarray</span>
+<span class="sd">            AO integrals, can be either 8-fold or 4-fold symmetry.</span>
+<span class="sd">        mo_coeff : ndarray</span>
+<span class="sd">            Transform (ij|kl) with the same set of orbitals.</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        verbose : int</span>
+<span class="sd">            Print level</span>
+<span class="sd">        compact : bool</span>
+<span class="sd">            When compact is True, the returned MO integrals have 4-fold</span>
+<span class="sd">            symmetry.  Otherwise, return the &quot;plain&quot; MO integrals.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        2D array of transformed MO integrals.  The MO integrals may or may not</span>
+<span class="sd">        have the permutation symmetry (controlled by the kwargs compact)</span>
+
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyscf import gto</span>
+<span class="sd">    &gt;&gt;&gt; from pyscf.scf import _vhf</span>
+<span class="sd">    &gt;&gt;&gt; from pyscf import ao2mo</span>
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;O 0 0 0; H 0 1 0; H 0 0 1&#39;, basis=&#39;sto3g&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; eri = _vhf.int2e_sph(mol._atm, mol._bas, mol._env)</span>
+<span class="sd">    &gt;&gt;&gt; mo1 = numpy.random.random((mol.nao_nr(), 10))</span>
+<span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.full(eri, mo1)</span>
+<span class="sd">    &gt;&gt;&gt; print(eri1.shape)</span>
+<span class="sd">    (55, 55)</span>
+<span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.full(eri, mo1, compact=False)</span>
+<span class="sd">    &gt;&gt;&gt; print(eri1.shape)</span>
+<span class="sd">    (100, 100)</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">general</span><span class="p">(</span><span class="n">eri_ao</span><span class="p">,</span> <span class="p">(</span><span class="n">mo_coeff</span><span class="p">,)</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span> <span class="n">verbose</span><span class="p">,</span> <span class="n">compact</span><span class="p">)</span>
+
+<span class="c"># It consumes two times of the memory needed by MO integrals</span></div>
+<div class="viewcode-block" id="general"><a class="viewcode-back" href="../../../ao2mo.html#pyscf.ao2mo.incore.general">[docs]</a><span class="k">def</span> <span class="nf">general</span><span class="p">(</span><span class="n">eri_ao</span><span class="p">,</span> <span class="n">mo_coeffs</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">compact</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">r&#39;&#39;&#39;For the given four sets of orbitals, transfer the 8-fold or 4-fold 2e</span>
+<span class="sd">    AO integrals to MO integrals.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        eri_ao : ndarray</span>
+<span class="sd">            AO integrals, can be either 8-fold or 4-fold symmetry.</span>
+<span class="sd">        mo_coeffs : 4-item list of ndarray</span>
+<span class="sd">            Four sets of orbital coefficients, corresponding to the four</span>
+<span class="sd">            indices of (ij|kl)</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        verbose : int</span>
+<span class="sd">            Print level</span>
+<span class="sd">        compact : bool</span>
+<span class="sd">            When compact is True, depending on the four oribital sets, the</span>
+<span class="sd">            returned MO integrals has (up to 4-fold) permutation symmetry.</span>
+<span class="sd">            If it&#39;s False, the function will abandon any permutation symmetry,</span>
+<span class="sd">            and return the &quot;plain&quot; MO integrals</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        2D array of transformed MO integrals.  The MO integrals may or may not</span>
+<span class="sd">        have the permutation symmetry, depending on the given orbitals, and</span>
+<span class="sd">        the kwargs compact.  If the four sets of orbitals are identical, the</span>
+<span class="sd">        MO integrals will at most have 4-fold symmetry.</span>
+
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyscf import gto</span>
+<span class="sd">    &gt;&gt;&gt; from pyscf.scf import _vhf</span>
+<span class="sd">    &gt;&gt;&gt; from pyscf import ao2mo</span>
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;O 0 0 0; H 0 1 0; H 0 0 1&#39;, basis=&#39;sto3g&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; eri = _vhf.int2e_sph(mol._atm, mol._bas, mol._env)</span>
+<span class="sd">    &gt;&gt;&gt; mo1 = numpy.random.random((mol.nao_nr(), 10))</span>
+<span class="sd">    &gt;&gt;&gt; mo2 = numpy.random.random((mol.nao_nr(), 8))</span>
+<span class="sd">    &gt;&gt;&gt; mo3 = numpy.random.random((mol.nao_nr(), 6))</span>
+<span class="sd">    &gt;&gt;&gt; mo4 = numpy.random.random((mol.nao_nr(), 4))</span>
+<span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.general(eri, (mo1,mo2,mo3,mo4))</span>
+<span class="sd">    &gt;&gt;&gt; print(eri1.shape)</span>
+<span class="sd">    (80, 24)</span>
+<span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.general(eri, (mo1,mo2,mo3,mo3))</span>
+<span class="sd">    &gt;&gt;&gt; print(eri1.shape)</span>
+<span class="sd">    (80, 21)</span>
+<span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.general(eri, (mo1,mo2,mo3,mo3), compact=False)</span>
+<span class="sd">    &gt;&gt;&gt; print(eri1.shape)</span>
+<span class="sd">    (80, 36)</span>
+<span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.general(eri, (mo1,mo1,mo2,mo2))</span>
+<span class="sd">    &gt;&gt;&gt; print(eri1.shape)</span>
+<span class="sd">    (55, 36)</span>
+<span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.general(eri, (mo1,mo2,mo1,mo2))</span>
+<span class="sd">    &gt;&gt;&gt; print(eri1.shape)</span>
+<span class="sd">    (80, 80)</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">verbose</span><span class="p">,</span> <span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">):</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="n">verbose</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">ijsame</span> <span class="o">=</span> <span class="n">compact</span> <span class="ow">and</span> <span class="n">iden_coeffs</span><span class="p">(</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">klsame</span> <span class="o">=</span> <span class="n">compact</span> <span class="ow">and</span> <span class="n">iden_coeffs</span><span class="p">(</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="n">nmoi</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">nmoj</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">nmok</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">nmol</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">nao</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nao_pair</span> <span class="o">=</span> <span class="n">nao</span><span class="o">*</span><span class="p">(</span><span class="n">nao</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+
+    <span class="k">if</span> <span class="n">compact</span> <span class="ow">and</span> <span class="n">ijsame</span><span class="p">:</span>
+        <span class="n">nij_pair</span> <span class="o">=</span> <span class="n">nmoi</span><span class="o">*</span><span class="p">(</span><span class="n">nmoi</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nij_pair</span> <span class="o">=</span> <span class="n">nmoi</span><span class="o">*</span><span class="n">nmoj</span>
+
+    <span class="k">if</span> <span class="n">compact</span> <span class="ow">and</span> <span class="n">klsame</span><span class="p">:</span>
+        <span class="n">klmosym</span> <span class="o">=</span> <span class="s">&#39;s2&#39;</span>
+        <span class="n">nkl_pair</span> <span class="o">=</span> <span class="n">nmok</span><span class="o">*</span><span class="p">(</span><span class="n">nmok</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">mokl</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">klshape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nmok</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nmok</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">klmosym</span> <span class="o">=</span> <span class="s">&#39;s1&#39;</span>
+        <span class="n">nkl_pair</span> <span class="o">=</span> <span class="n">nmok</span><span class="o">*</span><span class="n">nmol</span>
+        <span class="n">mokl</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">3</span><span class="p">])),</span> \
+                           <span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">klshape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nmok</span><span class="p">,</span> <span class="n">nmok</span><span class="p">,</span> <span class="n">nmol</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nij_pair</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">nkl_pair</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c"># 0 dimension sometimes causes blas problem</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nij_pair</span><span class="p">,</span><span class="n">nkl_pair</span><span class="p">))</span>
+
+<span class="c">#    if nij_pair &gt; nkl_pair:</span>
+<span class="c">#        log.warn(&#39;low efficiency for AO to MO trans!&#39;)</span>
+
+<span class="c"># transform e1</span>
+    <span class="n">eri1</span> <span class="o">=</span> <span class="n">half_e1</span><span class="p">(</span><span class="n">eri_ao</span><span class="p">,</span> <span class="n">mo_coeffs</span><span class="p">,</span> <span class="n">compact</span><span class="p">)</span>
+
+<span class="c"># transform e2</span>
+    <span class="n">eri1</span> <span class="o">=</span> <span class="n">_ao2mo</span><span class="o">.</span><span class="n">nr_e2_</span><span class="p">(</span><span class="n">eri1</span><span class="p">,</span> <span class="n">mokl</span><span class="p">,</span> <span class="n">klshape</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="s">&#39;s4&#39;</span><span class="p">,</span> <span class="n">mosym</span><span class="o">=</span><span class="n">klmosym</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">eri1</span>
+</div>
+<div class="viewcode-block" id="half_e1"><a class="viewcode-back" href="../../../ao2mo.html#pyscf.ao2mo.incore.half_e1">[docs]</a><span class="k">def</span> <span class="nf">half_e1</span><span class="p">(</span><span class="n">eri_ao</span><span class="p">,</span> <span class="n">mo_coeffs</span><span class="p">,</span> <span class="n">compact</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">r&#39;&#39;&#39;Given two set of orbitals, half transform the (ij| pair of 8-fold or</span>
+<span class="sd">    4-fold AO integrals (ij|kl)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        eri_ao : ndarray</span>
+<span class="sd">            AO integrals, can be either 8-fold or 4-fold symmetry.</span>
+<span class="sd">        mo_coeffs : list of ndarray</span>
+<span class="sd">            Two sets of orbital coefficients, corresponding to the i, j</span>
+<span class="sd">            indices of (ij|kl)</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        compact : bool</span>
+<span class="sd">            When compact is True, the returned MO integrals uses the highest</span>
+<span class="sd">            possible permutation symmetry.  If it&#39;s False, the function will</span>
+<span class="sd">            abandon any permutation symmetry, and return the &quot;plain&quot; MO</span>
+<span class="sd">            integrals</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray of transformed MO integrals.  The MO integrals may or may not</span>
+<span class="sd">        have the permutation symmetry, depending on the given orbitals, and</span>
+<span class="sd">        the kwargs compact.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyscf import gto</span>
+<span class="sd">    &gt;&gt;&gt; from pyscf import ao2mo</span>
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;O 0 0 0; H 0 1 0; H 0 0 1&#39;, basis=&#39;sto3g&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; eri = _vhf.int2e_sph(mol._atm, mol._bas, mol._env)</span>
+<span class="sd">    &gt;&gt;&gt; mo1 = numpy.random.random((mol.nao_nr(), 10))</span>
+<span class="sd">    &gt;&gt;&gt; mo2 = numpy.random.random((mol.nao_nr(), 8))</span>
+<span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.half_e1(eri, (mo1,mo2))</span>
+<span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.half_e1(eri, (mo1,mo2))</span>
+<span class="sd">    &gt;&gt;&gt; print(eri1.shape)</span>
+<span class="sd">    (80, 28)</span>
+<span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.half_e1(eri, (mo1,mo2), compact=False)</span>
+<span class="sd">    &gt;&gt;&gt; print(eri1.shape)</span>
+<span class="sd">    (80, 28)</span>
+<span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.half_e1(eri, (mo1,mo1))</span>
+<span class="sd">    &gt;&gt;&gt; print(eri1.shape)</span>
+<span class="sd">    (55, 28)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">ijsame</span> <span class="o">=</span> <span class="n">compact</span> <span class="ow">and</span> <span class="n">iden_coeffs</span><span class="p">(</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">nmoi</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">nmoj</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">nao</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nao_pair</span> <span class="o">=</span> <span class="n">nao</span><span class="o">*</span><span class="p">(</span><span class="n">nao</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+
+    <span class="k">if</span> <span class="n">compact</span> <span class="ow">and</span> <span class="n">ijsame</span><span class="p">:</span>
+        <span class="n">ijmosym</span> <span class="o">=</span> <span class="s">&#39;s2&#39;</span>
+        <span class="n">nij_pair</span> <span class="o">=</span> <span class="n">nmoi</span><span class="o">*</span><span class="p">(</span><span class="n">nmoi</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">moij</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">ijshape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nmoi</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nmoi</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ijmosym</span> <span class="o">=</span> <span class="s">&#39;s1&#39;</span>
+        <span class="n">nij_pair</span> <span class="o">=</span> <span class="n">nmoi</span><span class="o">*</span><span class="n">nmoj</span>
+        <span class="n">moij</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span> \
+                           <span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">ijshape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nmoi</span><span class="p">,</span> <span class="n">nmoi</span><span class="p">,</span> <span class="n">nmoj</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">eri_ao</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">nao_pair</span><span class="o">**</span><span class="mi">2</span><span class="p">:</span> <span class="c"># 4-fold symmetry</span>
+        <span class="n">ftrans</span> <span class="o">=</span> <span class="n">_ao2mo</span><span class="o">.</span><span class="n">_fpointer</span><span class="p">(</span><span class="s">&#39;AO2MOtranse1_incore_s4&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ftrans</span> <span class="o">=</span> <span class="n">_ao2mo</span><span class="o">.</span><span class="n">_fpointer</span><span class="p">(</span><span class="s">&#39;AO2MOtranse1_incore_s8&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ijmosym</span> <span class="o">==</span> <span class="s">&#39;s2&#39;</span><span class="p">:</span>
+        <span class="n">fmmm</span> <span class="o">=</span> <span class="n">_ao2mo</span><span class="o">.</span><span class="n">_fpointer</span><span class="p">(</span><span class="s">&#39;AO2MOmmm_nr_s2_s2&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">nmoi</span> <span class="o">&lt;=</span> <span class="n">nmoj</span><span class="p">:</span>
+        <span class="n">fmmm</span> <span class="o">=</span> <span class="n">_ao2mo</span><span class="o">.</span><span class="n">_fpointer</span><span class="p">(</span><span class="s">&#39;AO2MOmmm_nr_s2_iltj&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fmmm</span> <span class="o">=</span> <span class="n">_ao2mo</span><span class="o">.</span><span class="n">_fpointer</span><span class="p">(</span><span class="s">&#39;AO2MOmmm_nr_s2_igtj&#39;</span><span class="p">)</span>
+    <span class="n">fdrv</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_ao2mo</span><span class="o">.</span><span class="n">libao2mo</span><span class="p">,</span> <span class="s">&#39;AO2MOnr_e1incore_drv&#39;</span><span class="p">)</span>
+    <span class="n">eri1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nij_pair</span><span class="p">,</span><span class="n">nao_pair</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">blk0</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nao_pair</span><span class="p">,</span> <span class="n">BLOCK</span><span class="p">):</span>
+        <span class="n">blk1</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">blk0</span><span class="o">+</span><span class="n">BLOCK</span><span class="p">,</span> <span class="n">nao_pair</span><span class="p">)</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">blk1</span><span class="o">-</span><span class="n">blk0</span><span class="p">,</span><span class="n">nij_pair</span><span class="p">))</span>
+        <span class="n">fdrv</span><span class="p">(</span><span class="n">ftrans</span><span class="p">,</span> <span class="n">fmmm</span><span class="p">,</span>
+             <span class="n">buf</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+             <span class="n">eri_ao</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+             <span class="n">moij</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+             <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">blk0</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">blk1</span><span class="o">-</span><span class="n">blk0</span><span class="p">),</span>
+             <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nao</span><span class="p">),</span>
+             <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">ijshape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">ijshape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+             <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">ijshape</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">ijshape</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+        <span class="n">eri1</span><span class="p">[:,</span><span class="n">blk0</span><span class="p">:</span><span class="n">blk1</span><span class="p">]</span> <span class="o">=</span> <span class="n">buf</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">return</span> <span class="n">eri1</span>
+</div>
+<span class="k">def</span> <span class="nf">iden_coeffs</span><span class="p">(</span><span class="n">mo1</span><span class="p">,</span> <span class="n">mo2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">mo1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">id</span><span class="p">(</span><span class="n">mo2</span><span class="p">))</span> <span class="ow">or</span> \
+            <span class="p">(</span><span class="n">mo1</span><span class="o">.</span><span class="n">shape</span><span class="o">==</span><span class="n">mo2</span><span class="o">.</span><span class="n">shape</span> <span class="ow">and</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">mo1</span><span class="p">,</span><span class="n">mo2</span><span class="p">))</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s">&#39;out_h2o&#39;</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">[</span><span class="s">&quot;O&quot;</span> <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span>     <span class="p">,</span> <span class="mf">0.</span><span class="p">)],</span>
+        <span class="p">[</span><span class="mi">1</span>   <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="o">-</span><span class="mf">0.757</span> <span class="p">,</span> <span class="mf">0.587</span><span class="p">)],</span>
+        <span class="p">[</span><span class="mi">1</span>   <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.757</span>  <span class="p">,</span> <span class="mf">0.587</span><span class="p">)]]</span>
+
+    <span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;H&#39;</span><span class="p">:</span> <span class="s">&#39;cc-pvtz&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;O&#39;</span><span class="p">:</span> <span class="s">&#39;cc-pvtz&#39;</span><span class="p">,}</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+    <span class="n">rhf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">rhf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+    <span class="kn">import</span> <span class="nn">time</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">())</span>
+    <span class="n">eri0</span> <span class="o">=</span> <span class="n">full</span><span class="p">(</span><span class="n">rhf</span><span class="o">.</span><span class="n">_eri</span><span class="p">,</span> <span class="n">rhf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">eri0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">-</span><span class="mf">5384.460843787659</span><span class="p">)</span> <span class="c"># should = 0</span>
+    <span class="n">eri0</span> <span class="o">=</span> <span class="n">general</span><span class="p">(</span><span class="n">rhf</span><span class="o">.</span><span class="n">_eri</span><span class="p">,</span> <span class="p">(</span><span class="n">rhf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">,)</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">eri0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">-</span><span class="mf">5384.460843787659</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">())</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 0.10 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

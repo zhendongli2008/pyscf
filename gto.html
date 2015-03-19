@@ -1,0 +1,2797 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gto — Molecular structure and GTO basis &mdash; PySCF 0.10 documentation</title>
+    
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.10',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 0.10 documentation" href="index.html" />
+    <link rel="next" title="lib" href="lib.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lib.html" title="lib"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="gto-molecular-structure-and-gto-basis">
+<span id="gto"></span><h1>gto &#8212; Molecular structure and GTO basis<a class="headerlink" href="#gto-molecular-structure-and-gto-basis" title="Permalink to this headline">¶</a></h1>
+<p>This module provides the functions to parse the command line options,
+the molecular geometry and format the basic functions for <cite>libcint</cite>
+integral library.  In <tt class="file docutils literal"><span class="pre">mole</span></tt>, a basic class <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> is
+defined to hold the global parameters, which will be used throughout the
+package.</p>
+<span class="target" id="module-pyscf.gto"></span><div class="section" id="module-pyscf.gto.mole">
+<span id="mole"></span><h2>mole<a class="headerlink" href="#module-pyscf.gto.mole" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyscf.gto.mole.M">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">M</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#M"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.M" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a simple way to build up Mole object quickly.</p>
+<p>Args: Same to <tt class="xref py py-func docutils literal"><span class="pre">Mole.build()</span></tt></p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; F 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;6-31g&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyscf.gto.mole.Mole">
+<em class="property">class </em><tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">Mole</tt><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole" title="Permalink to this definition">¶</a></dt>
+<dd><p>Basic class to hold molecular structure and global options</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first docutils">
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Print level</dd>
+<dt>output <span class="classifier-delimiter">:</span> <span class="classifier">str or None</span></dt>
+<dd>Output file, default is None which dumps msg to sys.stdout</dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">int, float</span></dt>
+<dd>Allowed memory in MB</dd>
+<dt>light_speed :</dt>
+<dd>Default is set in lib.parameters.LIGHTSPEED</dd>
+<dt>charge <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Charge of molecule. It affects the electron numbers</dd>
+<dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>2S, num. alpha electrons - num. beta electrons</dd>
+<dt>symmetry <span class="classifier-delimiter">:</span> <span class="classifier">bool or str</span></dt>
+<dd>Whether to use symmetry.  If given a string of point group
+name, the given point group symmetry will be used.</dd>
+<dt>atom <span class="classifier-delimiter">:</span> <span class="classifier">list or str</span></dt>
+<dd><p class="first">To define molecluar structure.  The internal format is</p>
+<div class="last line-block">
+<div class="line">atom = [[atom1, (x, y, z)],</div>
+<div class="line-block">
+<div class="line">[atom2, (x, y, z)],</div>
+<div class="line">...</div>
+<div class="line">[atomN, (x, y, z)]]</div>
+</div>
+</div>
+</dd>
+<dt>basis <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
+<dd>To define basis set.</dd>
+<dt>nucmod <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
+<dd>Nuclear model</dd>
+<dt>mass <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Similar struct as <tt class="xref py py-attr docutils literal"><span class="pre">Mole.nucmod</span></tt></dd>
+<dt>grids <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Define (radial grids, angular grids) for given atom or symbol</dd>
+</dl>
+<p>** Following attributes are generated by <tt class="xref py py-func docutils literal"><span class="pre">Mole.build()</span></tt> **</p>
+<dl class="docutils">
+<dt>stdout <span class="classifier-delimiter">:</span> <span class="classifier">file object</span></dt>
+<dd>Default is sys.stdout if <tt class="xref py py-attr docutils literal"><span class="pre">Mole.output</span></tt> is not set</dd>
+<dt>groupname <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>One of D2h, C2h, C2v, D2, Cs, Ci, C2, C1</dd>
+<dt>nelectron <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>sum of nuclear charges - <tt class="xref py py-attr docutils literal"><span class="pre">Mole.charge</span></tt></dd>
+<dt>symm_orb <span class="classifier-delimiter">:</span> <span class="classifier">a list of numpy.ndarray</span></dt>
+<dd>Symmetry adapted basis.  Each element is a set of symm-adapted orbitals
+for one irreducible representation.  The list index does <strong>not</strong> correspond
+to the id of irreducible representation.</dd>
+<dt>irrep_id <span class="classifier-delimiter">:</span> <span class="classifier">a list of int</span></dt>
+<dd>Each element is one irreducible representation id associated with the basis
+stored in symm_orb.  One irrep id stands for one irreducible representation
+symbol.  The irrep symbol and the relevant id are defined in
+<tt class="xref py py-attr docutils literal"><span class="pre">symm.parameters.IRREP_ID_TABLE</span></tt></dd>
+<dt>irrep_name <span class="classifier-delimiter">:</span> <span class="classifier">a list of str</span></dt>
+<dd>Each element is one irreducible representation symbol associated with the basis
+stored in symm_orb.  The irrep symbols are defined in
+<tt class="xref py py-attr docutils literal"><span class="pre">symm.parameters.IRREP_ID_TABLE</span></tt></dd>
+<dt>_built <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>To label whether <tt class="xref py py-func docutils literal"><span class="pre">Mole.build()</span></tt> has been called.  It ensures some functions
+being initialized once.</dd>
+<dt>_basis <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>like <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt>, the internal format which is returned from the
+parser <a class="reference internal" href="#pyscf.gto.mole.format_basis" title="pyscf.gto.mole.format_basis"><tt class="xref py py-func docutils literal"><span class="pre">format_basis()</span></tt></a></dd>
+<dt>_keys <span class="classifier-delimiter">:</span> <span class="classifier">a set of str</span></dt>
+<dd>Store the keys appeared in the module.  It is used to check misinput attributes</dd>
+</dl>
+<p>** Following attributes are arguments used by <tt class="docutils literal"><span class="pre">libcint</span></tt> library **</p>
+<dl class="last docutils">
+<dt>_atm :</dt>
+<dd><tt class="code docutils literal"><span class="pre">[[charge,</span> <span class="pre">ptr-of-coord,</span> <span class="pre">nuc-model,</span> <span class="pre">mass,</span> <span class="pre">0,</span> <span class="pre">0],</span> <span class="pre">[...]]</span></tt>
+each element reperesents one atom</dd>
+<dt>natm :</dt>
+<dd>number of atoms</dd>
+<dt>_bas :</dt>
+<dd><tt class="code docutils literal"><span class="pre">[[atom-id,</span> <span class="pre">angular-momentum,</span> <span class="pre">num-primitive-GTO,</span> <span class="pre">num-contracted-GTO,</span> <span class="pre">0,</span> <span class="pre">ptr-of-exps,</span> <span class="pre">ptr-of-contract-coeff,</span> <span class="pre">0],</span> <span class="pre">[...]]</span></tt>
+each element reperesents one shell</dd>
+<dt>nbas :</dt>
+<dd>number of shells</dd>
+<dt>_env :</dt>
+<dd>list of floats to store the coordinates, GTO exponents, contract-coefficients</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">Mole</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H^2 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">H^2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_pure_symbol</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">H</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">())</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">))</span>
+<span class="go">[[ 0.99999999  0.43958641]</span>
+<span class="go"> [ 0.43958641  0.99999999]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="go">&lt;class &#39;pyscf.gto.mole.Mole&#39;&gt; has no attributes Charge</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.atom_charge">
+<tt class="descname">atom_charge</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_charge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.atom_charge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Nuclear charge of the given atom id</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_charge</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">17</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.atom_coord">
+<tt class="descname">atom_coord</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_coord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.atom_coord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coordinates (ndarray) of the given atom id</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_coord</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">[ 0.          0.          2.07869874]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.atom_nshells">
+<tt class="descname">atom_nshells</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_nshells"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.atom_nshells" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of basis/shells of the given atom</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_nshells</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.atom_pure_symbol">
+<tt class="descname">atom_pure_symbol</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_pure_symbol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.atom_pure_symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>For the given atom id, return the standard symbol (striping special characters)</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H^2 0 0 0; H 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">H</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.atom_shell_ids">
+<tt class="descname">atom_shell_ids</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_shell_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.atom_shell_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of the shell-ids of the given atom</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_nshells</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">[3, 4, 5, 6, 7]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.atom_symbol">
+<tt class="descname">atom_symbol</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_symbol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.atom_symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>For the given atom id, return the input symbol (without striping special characters)</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H^2 0 0 0; H 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">H^2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.bas_angular">
+<tt class="descname">bas_angular</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_angular"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.bas_angular" title="Permalink to this definition">¶</a></dt>
+<dd><p>The angular momentum associated with the given basis</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.bas_atom">
+<tt class="descname">bas_atom</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.bas_atom" title="Permalink to this definition">¶</a></dt>
+<dd><p>The atom (0-based id) that the given basis sits on</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.bas_coord">
+<tt class="descname">bas_coord</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_coord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.bas_coord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coordinates (ndarray) associated with the given basis id</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_coord</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[ 0.          0.          2.07869874]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.bas_ctr_coeff">
+<tt class="descname">bas_ctr_coeff</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_ctr_coeff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.bas_ctr_coeff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contract coefficients (ndarray) of the given shell</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_ctr_coeff</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">[[ 0.34068924]</span>
+<span class="go"> [ 0.57789106]</span>
+<span class="go"> [ 0.65774031]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.bas_exp">
+<tt class="descname">bas_exp</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_exp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.bas_exp" title="Permalink to this definition">¶</a></dt>
+<dd><p>exponents (ndarray) of the given shell</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_kappa</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">[ 13.01     1.962    0.4446]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.bas_kappa">
+<tt class="descname">bas_kappa</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_kappa"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.bas_kappa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kappa (if l &lt; j, -l-1, else l) of the given shell</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_kappa</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.bas_len_cart">
+<tt class="descname">bas_len_cart</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_len_cart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.bas_len_cart" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of Cartesian function associated with given basis</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.bas_len_spinor">
+<tt class="descname">bas_len_spinor</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_len_spinor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.bas_len_spinor" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of spinor associated with given basis
+If kappa is 0, return 4l+2</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.bas_nctr">
+<tt class="descname">bas_nctr</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_nctr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.bas_nctr" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of contracted GTOs for the given shell</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.bas_nprim">
+<tt class="descname">bas_nprim</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_nprim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.bas_nprim" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of primitive GTOs for the given shell</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">11</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.build_">
+<tt class="descname">build_</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>verbose=None</em>, <em>output=None</em>, <em>max_memory=None</em>, <em>atom=None</em>, <em>basis=None</em>, <em>nucmod=None</em>, <em>mass=None</em>, <em>grids=None</em>, <em>charge=None</em>, <em>spin=None</em>, <em>symmetry=None</em>, <em>light_speed=None</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.build_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.build_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup moleclue and initialize some control parameters.  Whenever you
+change the value of the attributes of <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a>, you need call
+this function to refresh the internal data of Mole.</p>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>dump_input <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>whether to dump the contents of input file in the output file</dd>
+<dt>parse_arg <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>whether to read the sys.argv and overwrite the relevant parameters</dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Print level.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.verbose</span></tt></dd>
+<dt>output <span class="classifier-delimiter">:</span> <span class="classifier">str or None</span></dt>
+<dd>Output file.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.output</span></tt></dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">int, float</span></dt>
+<dd>Allowd memory in MB.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.max_memory</span></tt></dd>
+<dt>atom <span class="classifier-delimiter">:</span> <span class="classifier">list or str</span></dt>
+<dd>To define molecluar structure.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.atom</span></tt></dd>
+<dt>basis <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
+<dd>To define basis set.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt></dd>
+<dt>nucmod <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
+<dd>Nuclear model.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.nucmod</span></tt></dd>
+<dt>mass <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.mass</span></tt></dd>
+<dt>grids <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Define (radial grids, angular grids) for given atom or symbol
+If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.grids</span></tt></dd>
+<dt>charge <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Charge of molecule. It affects the electron numbers
+If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.charge</span></tt></dd>
+<dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>2S, num. alpha electrons - num. beta electrons
+If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.spin</span></tt></dd>
+<dt>symmetry <span class="classifier-delimiter">:</span> <span class="classifier">bool or str</span></dt>
+<dd>Whether to use symmetry.  If given a string of point group
+name, the given point group symmetry will be used.</dd>
+<dt>light_speed :</dt>
+<dd>If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.light_speed</span></tt></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.check_sanity">
+<tt class="descname">check_sanity</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.check_sanity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.check_sanity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check misinput of a class attribute due to typos, check whether a
+class method is overwritten.  It does not check the attributes which
+are prefixed with &#8220;_&#8221;.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>obj : this object should have attribute _keys to store all the
+name of the attributes of the object</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.intor">
+<tt class="descname">intor</tt><big>(</big><em>intor</em>, <em>comp=1</em>, <em>hermi=0</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.intor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.intor" title="Permalink to this definition">¶</a></dt>
+<dd><p>One-electron integral generator.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>intor <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Name of the 1-electron integral.  Ref to <tt class="xref py py-func docutils literal"><span class="pre">getints()</span></tt> for the
+complete list of available 1-electron integral names</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>comp <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Components of the integrals, e.g. cint1e_ipovlp has 3 components.</dd>
+<dt>hermi <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first">Symmetry of the integrals</p>
+<div class="last line-block">
+<div class="line">0 : no symmetry assumed (default)</div>
+<div class="line">1 : hermitian</div>
+<div class="line">2 : anti-hermitian</div>
+</div>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>ndarray of 1-electron integrals, can be either 2-dim or 3-dim, depending on comp</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s">&#39;cint1e_ipnuc_sph&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="c"># &lt;nabla i | V_nuc | j&gt;</span>
+<span class="go">[[[ 0.          0.        ]</span>
+<span class="go">  [ 0.          0.        ]]</span>
+<span class="go"> [[ 0.          0.        ]</span>
+<span class="go">  [ 0.          0.        ]]</span>
+<span class="go"> [[ 0.10289944  0.48176097]</span>
+<span class="go">  [-0.48176097 -0.10289944]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s">&#39;cint1e_nuc&#39;</span><span class="p">)</span>
+<span class="go">[[-1.69771092+0.j  0.00000000+0.j -0.67146312+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -1.69771092+0.j  0.00000000+0.j -0.67146312+0.j]</span>
+<span class="go"> [-0.67146312+0.j  0.00000000+0.j -1.69771092+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -0.67146312+0.j  0.00000000+0.j -1.69771092+0.j]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.intor_asymmetric">
+<tt class="descname">intor_asymmetric</tt><big>(</big><em>intor</em>, <em>comp=1</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.intor_asymmetric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.intor_asymmetric" title="Permalink to this definition">¶</a></dt>
+<dd><p>One-electron integral generator. The integrals are assumed to be anti-hermitian</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>intor <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Name of the 1-electron integral.  Ref to <tt class="xref py py-func docutils literal"><span class="pre">getints()</span></tt> for the
+complete list of available 1-electron integral names</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>comp <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Components of the integrals, e.g. cint1e_ipovlp has 3 components.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>ndarray of 1-electron integrals, can be either 2-dim or 3-dim, depending on comp</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">intor_asymmetric</span><span class="p">(</span><span class="s">&#39;cint1e_nuc&#39;</span><span class="p">)</span>
+<span class="go">[[-1.69771092+0.j  0.00000000+0.j  0.67146312+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -1.69771092+0.j  0.00000000+0.j  0.67146312+0.j]</span>
+<span class="go"> [-0.67146312+0.j  0.00000000+0.j -1.69771092+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -0.67146312+0.j  0.00000000+0.j -1.69771092+0.j]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.intor_cross">
+<tt class="descname">intor_cross</tt><big>(</big><em>intor</em>, <em>bras</em>, <em>kets</em>, <em>comp=1</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.intor_cross"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.intor_cross" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cross 1-electron integrals like</p>
+<div class="math">
+\[\langle \mu | intor | \nu \rangle, \mu \in bras, \nu \in kets\]</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>intor <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Name of the 1-electron integral.  Ref to <tt class="xref py py-func docutils literal"><span class="pre">getints()</span></tt> for the
+full list of available 1-electron integral names</dd>
+<dt>bras <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>A list of shell ids for bra</dd>
+<dt>kets <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>A list of shell ids for ket</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>comp <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Components of the integrals, e.g. cint1e_ipovlp has 3 components</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>ndarray of 1-electron integrals, can be either 2-dim or 3-dim, depending on comp</dd>
+<dt>Examples:</dt>
+<dd>Compute the overlap between H2 molecule and O atom</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; H 0 1 0; H 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">intor_cross</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="go">[[ 0.04875181  0.04875181]</span>
+<span class="go"> [ 0.44714688  0.44714688]</span>
+<span class="go"> [ 0.          0.        ]</span>
+<span class="go"> [ 0.37820346  0.        ]</span>
+<span class="go"> [ 0.          0.37820346]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.intor_symmetric">
+<tt class="descname">intor_symmetric</tt><big>(</big><em>intor</em>, <em>comp=1</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.intor_symmetric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.intor_symmetric" title="Permalink to this definition">¶</a></dt>
+<dd><p>One-electron integral generator. The integrals are assumed to be hermitian</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>intor <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Name of the 1-electron integral.  Ref to <tt class="xref py py-func docutils literal"><span class="pre">getints()</span></tt> for the
+complete list of available 1-electron integral names</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>comp <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Components of the integrals, e.g. cint1e_ipovlp has 3 components.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>ndarray of 1-electron integrals, can be either 2-dim or 3-dim, depending on comp</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&#39;cint1e_nuc&#39;</span><span class="p">)</span>
+<span class="go">[[-1.69771092+0.j  0.00000000+0.j -0.67146312+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -1.69771092+0.j  0.00000000+0.j -0.67146312+0.j]</span>
+<span class="go"> [-0.67146312+0.j  0.00000000+0.j -1.69771092+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -0.67146312+0.j  0.00000000+0.j -1.69771092+0.j]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.set_common_origin_">
+<tt class="descname">set_common_origin_</tt><big>(</big><em>coord</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.set_common_origin_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.set_common_origin_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update common origin which held in :class`Mole`._env.  <strong>Note</strong> the unit is Bohr</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">set_common_origin_</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">set_common_origin_</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.set_rinv_origin_">
+<tt class="descname">set_rinv_origin_</tt><big>(</big><em>coord</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.set_rinv_origin_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.set_rinv_origin_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update origin for operator <span class="math">\(\frac{1}{|r-R_O|}\)</span>.  <strong>Note</strong> the unit is Bohr</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">set_rinv_orig_</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">set_rinv_orig_</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.ao_loc_2c">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">ao_loc_2c</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#ao_loc_2c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.ao_loc_2c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Offset of every shell in the spinor basis function spectrum</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>list, each entry is the corresponding start id of spinor function</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; C 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;6-31g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">ao_loc_2c</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="go">[0, 2, 4, 6, 12, 18, 20, 22, 24, 30, 36]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.ao_loc_nr">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">ao_loc_nr</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#ao_loc_nr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.ao_loc_nr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Offset of every shell in the spherical basis function spectrum</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>list, each entry is the corresponding start basis function id</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; C 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;6-31g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">ao_loc_nr</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="go">[0, 1, 2, 3, 6, 9, 10, 11, 12, 15, 18]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.conc_env">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">conc_env</tt><big>(</big><em>atm1</em>, <em>bas1</em>, <em>env1</em>, <em>atm2</em>, <em>bas2</em>, <em>env2</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#conc_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.conc_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concatenate two Mole&#8217;s integral parameters.  This function can be used
+to construct the environment for cross integrals like</p>
+<div class="math">
+\[\langle \mu | \nu \rangle, \mu \in mol1, \nu \in mol2\]</div>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>Concatenated atm, bas, env</dd>
+<dt>Examples:</dt>
+<dd>Compute the overlap between H2 molecule and O atom</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol1</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 1 0; H 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol2</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atm3</span><span class="p">,</span> <span class="n">bas3</span><span class="p">,</span> <span class="n">env3</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">conc_env</span><span class="p">(</span><span class="n">mol1</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="n">mol1</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="n">mol1</span><span class="o">.</span><span class="n">_env</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">mol2</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="n">mol2</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="n">mol2</span><span class="o">.</span><span class="n">_env</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">moleintor</span><span class="o">.</span><span class="n">getints</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">,</span> <span class="n">atm3</span><span class="p">,</span> <span class="n">bas3</span><span class="p">,</span> <span class="n">env3</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="go">[[ 0.04875181  0.44714688  0.          0.37820346  0.        ]</span>
+<span class="go"> [ 0.04875181  0.44714688  0.          0.          0.37820346]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.copy">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">copy</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deepcopy of the given <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> object</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.energy_nuc">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">energy_nuc</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#energy_nuc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.energy_nuc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Nuclear repulsion energy, (AU)</p>
+<dl class="docutils">
+<dt>Returns</dt>
+<dd>float</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.expand_etb">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">expand_etb</tt><big>(</big><em>l</em>, <em>n</em>, <em>alpha</em>, <em>beta</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#expand_etb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.expand_etb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the exponents of even tempered basis for <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt>.
+.. math:</p>
+<div class="highlight-python"><div class="highlight"><pre>e = e^{-\alpha * \beta^{i-1}} for i = 1 .. n
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>l <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Angular momentum</dd>
+<dt>n <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of GTOs</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>Formated <tt class="xref py py-attr docutils literal"><span class="pre">basis</span></tt></dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">expand_etb</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">[[1, [6.0, 1]], [1, [3.0, 1]], [1, [1.5, 1]]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.format_atom">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">format_atom</tt><big>(</big><em>atoms</em>, <em>origin=0</em>, <em>axes=1</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#format_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.format_atom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">Mole.atom</span></tt> to the internal data format.
+Including, changing the nuclear charge to atom symbol, rotate and shift
+molecule.  If the <tt class="xref py py-attr docutils literal"><span class="pre">atom</span></tt> is a string, it takes &#8221;;&#8221; and &#8220;n&#8221;
+for the mark to separate atoms;  &#8221;,&#8221; and arbitrary length of blank space
+to spearate the individual terms for an atom.  Blank line will be ignored.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atoms <span class="classifier-delimiter">:</span> <span class="classifier">list or str</span></dt>
+<dd>the same to <tt class="xref py py-attr docutils literal"><span class="pre">Mole.atom</span></tt></dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>origin <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>new axis origin.</dd>
+<dt>axes <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>(new_x, new_y, new_z), each entry is a length-3 array</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>formated <tt class="xref py py-attr docutils literal"><span class="pre">atom</span></tt></dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">format_atom</span><span class="p">(</span><span class="s">&#39;9,0,0,0; h@1 0 0 1&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">[[&#39;F&#39;, [-1.0, -1.0, -1.0]], [&#39;H@1&#39;, [-1.0, -1.0, 0.0]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">format_atom</span><span class="p">([</span><span class="s">&#39;9,0,0,0&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))],</span> <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">[[&#39;F&#39;, [-1.0, -1.0, -1.0]], [&#39;H&#39;, [-1, -1, 0]]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.format_basis">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">format_basis</tt><big>(</big><em>basis_tab</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#format_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.format_basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt> to the internal data format.</p>
+<p><tt class="docutils literal"><span class="pre">{</span> <span class="pre">atom:</span> <span class="pre">(l,</span> <span class="pre">kappa,</span> <span class="pre">((-exp,</span> <span class="pre">c_1,</span> <span class="pre">c_2,</span> <span class="pre">..),</span> <span class="pre">nprim,</span> <span class="pre">nctr,</span> <span class="pre">ptr-exps,</span> <span class="pre">ptr-contraction-coeff)),</span> <span class="pre">...</span> <span class="pre">}</span></tt></p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>basis_tab <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>Similar to <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt>, it <strong>cannot</strong> be a str</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>Formated <tt class="xref py py-attr docutils literal"><span class="pre">basis</span></tt></dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">format_basis</span><span class="p">({</span><span class="s">&#39;H&#39;</span><span class="p">:</span><span class="s">&#39;sto-3g&#39;</span><span class="p">,</span> <span class="s">&#39;H^2&#39;</span><span class="p">:</span> <span class="s">&#39;3-21g&#39;</span><span class="p">})</span>
+<span class="go">{&#39;H&#39;: [[0,</span>
+<span class="go">    [3.4252509099999999, 0.15432897000000001],</span>
+<span class="go">    [0.62391373000000006, 0.53532813999999995],</span>
+<span class="go">    [0.16885539999999999, 0.44463454000000002]]],</span>
+<span class="go"> &#39;H^2&#39;: [[0,</span>
+<span class="go">    [5.4471780000000001, 0.15628500000000001],</span>
+<span class="go">    [0.82454700000000003, 0.90469100000000002]],</span>
+<span class="go">    [0, [0.18319199999999999, 1.0]]]}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.gto_norm">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">gto_norm</tt><big>(</big><em>l</em>, <em>expnt</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#gto_norm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.gto_norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalized factor for GTO   <span class="math">\(g=r^l e^{-\alpha r^2}\)</span></p>
+<div class="math">
+\[\frac{1}{\sqrt{\int g^2 r^2 dr}}
+= \sqrt{\frac{2^{2l+3} (l+1)! (2a)^{l+1.5}}{(2l+2)!\sqrt{\pi}}}\]</div>
+<p>Ref: H. B. Schlegel and M. J. Frisch, Int. J. Quant.  Chem., 54(1955), 83-87.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>l (int):</dt>
+<dd>angular momentum</dd>
+<dt>expnt :</dt>
+<dd>exponent <span class="math">\(\alpha\)</span></dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>normalization factor</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">gto_norm</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">2.5264751109842591</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.intor_cross">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">intor_cross</tt><big>(</big><em>intor</em>, <em>mol1</em>, <em>mol2</em>, <em>comp=1</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#intor_cross"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.intor_cross" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cross 1-electron integrals like</p>
+<div class="math">
+\[\langle \mu | intor | \nu \rangle, \mu \in mol1, \nu \in mol2\]</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>intor <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Name of the 1-electron integral, such as cint1e_ovlp_sph (spherical overlap),
+cint1e_nuc_cart (cartesian nuclear attraction), cint1e_ipovlp
+(spinor overlap gradients), etc.  Ref to <tt class="xref py py-func docutils literal"><span class="pre">getints()</span></tt> for the
+full list of available 1-electron integral names</dd>
+<dt>mol1, mol2:</dt>
+<dd><a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> objects</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>comp <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Components of the integrals, e.g. cint1e_ipovlp has 3 components</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>ndarray of 1-electron integrals, can be either 2-dim or 3-dim, depending on comp</dd>
+<dt>Examples:</dt>
+<dd>Compute the overlap between H2 molecule and O atom</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol1</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 1 0; H 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol2</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">intor_cross</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">,</span> <span class="n">mol1</span><span class="p">,</span> <span class="n">mol2</span><span class="p">)</span>
+<span class="go">[[ 0.04875181  0.44714688  0.          0.37820346  0.        ]</span>
+<span class="go"> [ 0.04875181  0.44714688  0.          0.          0.37820346]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.len_cart">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">len_cart</tt><big>(</big><em>l</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#len_cart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.len_cart" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of Cartesian function associated with given angular momentum.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.len_spinor">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">len_spinor</tt><big>(</big><em>l</em>, <em>kappa</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#len_spinor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.len_spinor" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of spinor associated with given angular momentum and kappa.  If kappa is 0,
+return 4l+2</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.make_atm_env">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">make_atm_env</tt><big>(</big><em>atom</em>, <em>ptr=0</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#make_atm_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.make_atm_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <tt class="xref py py-attr docutils literal"><span class="pre">Mole.atom</span></tt> to the argument <tt class="docutils literal"><span class="pre">atm</span></tt> for <tt class="docutils literal"><span class="pre">libcint</span></tt> integrals</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.make_bas_env">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">make_bas_env</tt><big>(</big><em>basis_add</em>, <em>atom_id=0</em>, <em>ptr=0</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#make_bas_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.make_bas_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt> to the argument <tt class="docutils literal"><span class="pre">bas</span></tt> for <tt class="docutils literal"><span class="pre">libcint</span></tt> integrals</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.make_env">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">make_env</tt><big>(</big><em>atoms</em>, <em>basis</em>, <em>pre_env=[]</em>, <em>nucmod={}</em>, <em>mass={}</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#make_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.make_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the input arguments for <tt class="docutils literal"><span class="pre">libcint</span></tt> library in terms of
+<tt class="xref py py-attr docutils literal"><span class="pre">Mole.atoms</span></tt> and <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.nao_2c">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">nao_2c</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#nao_2c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.nao_2c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total number of contracted spinor GTOs for the given <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> object</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.nao_2c_range">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">nao_2c_range</tt><big>(</big><em>mol</em>, <em>bas_id0</em>, <em>bas_id1</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#nao_2c_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.nao_2c_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lower and upper boundary of contracted spinor basis functions associated
+with the given shell range</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>mol :</dt>
+<dd><a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> object</dd>
+<dt>bas_id0 <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>start shell id, 0-based</dd>
+<dt>bas_id1 <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>stop shell id, 0-based</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>tupel of start basis function id and the stop function id</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; C 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;6-31g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">nao_2c_range</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">(4, 12)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.nao_nr">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">nao_nr</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#nao_nr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.nao_nr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total number of contracted spherical GTOs for the given <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> object</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.nao_nr_range">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">nao_nr_range</tt><big>(</big><em>mol</em>, <em>bas_id0</em>, <em>bas_id1</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#nao_nr_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.nao_nr_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lower and upper boundary of contracted spherical basis functions associated
+with the given shell range</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>mol :</dt>
+<dd><a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> object</dd>
+<dt>bas_id0 <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>start shell id</dd>
+<dt>bas_id1 <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>stop shell id</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>tupel of start basis function id and the stop function id</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; C 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;6-31g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">nao_nr_range</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">(2, 6)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.npgto_nr">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">npgto_nr</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#npgto_nr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.npgto_nr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total number of primitive spherical GTOs for the given <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> object</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.pack">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">pack</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#pack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.pack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pack the given <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> to a dict, which can be serialized with <tt class="xref py py-mod docutils literal"><span class="pre">pickle</span></tt></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.search_ao_nr">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">search_ao_nr</tt><big>(</big><em>mol</em>, <em>atm_id</em>, <em>l</em>, <em>m</em>, <em>atmshell</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#search_ao_nr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.search_ao_nr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the first basis function id (<strong>not</strong> the shell id) which matches
+the given atom-id, angular momentum magnetic angular momentum, principal shell.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>atom id, 0-based</dd>
+<dt>l <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>angular momentum</dd>
+<dt>m <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>magnetic angular momentum</dd>
+<dt>atmshell <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>principal quantum number</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>basis function id, 0-based.  If not found, return None</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">search_ao_nr</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="c"># Cl 3px</span>
+<span class="go">7</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.search_shell_id">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">search_shell_id</tt><big>(</big><em>mol</em>, <em>atm_id</em>, <em>l</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#search_shell_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.search_shell_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the first basis/shell id (<strong>not</strong> the basis function id) which
+matches the given atom-id and angular momentum</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>atom id, 0-based</dd>
+<dt>l <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>angular momentum</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>basis id, 0-based.  If not found, return None</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">search_shell_id</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># Cl p shell</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">search_shell_id</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c"># Cl d shell</span>
+<span class="go">None</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.spheric_labels">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">spheric_labels</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#spheric_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.spheric_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Labels for spheric GTO functions</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>List of [(atom-id, symbol-str, nl-str, str-of-real-spheric-notation]</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">spheric_labels</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="go">[(0, &#39;H&#39;, &#39;1s&#39;, &#39;&#39;), (1, &#39;Cl&#39;, &#39;1s&#39;, &#39;&#39;), (1, &#39;Cl&#39;, &#39;2s&#39;, &#39;&#39;), (1, &#39;Cl&#39;, &#39;3s&#39;, &#39;&#39;), (1, &#39;Cl&#39;, &#39;2p&#39;, &#39;x&#39;), (1, &#39;Cl&#39;, &#39;2p&#39;, &#39;y&#39;), (1, &#39;Cl&#39;, &#39;2p&#39;, &#39;z&#39;), (1, &#39;Cl&#39;, &#39;3p&#39;, &#39;x&#39;), (1, &#39;Cl&#39;, &#39;3p&#39;, &#39;y&#39;), (1, &#39;Cl&#39;, &#39;3p&#39;, &#39;z&#39;)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.time_reversal_map">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">time_reversal_map</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#time_reversal_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.time_reversal_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>The index to map the spinor functions and its time reversal counterpart.
+The returned indices have postive and negative value.  For the i-th basis function,
+if the returned j = idx[i] &lt; 0, it means <span class="math">\(T|i\rangle = -|j\rangle\)</span>,
+otherwise <span class="math">\(T|i\rangle = |j\rangle\)</span></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.tot_electrons">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">tot_electrons</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#tot_electrons"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.tot_electrons" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total number of electrons for the given molecule</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>electron number in integer</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 1 0; C 0 0 1&#39;</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">tot_electrons</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.unpack">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">unpack</tt><big>(</big><em>moldic</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#unpack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.unpack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unpack a dict which is packed by <a class="reference internal" href="#pyscf.gto.mole.pack" title="pyscf.gto.mole.pack"><tt class="xref py py-func docutils literal"><span class="pre">pack()</span></tt></a>, return a <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> object.</p>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">Mole</tt><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Basic class to hold molecular structure and global options</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first docutils">
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Print level</dd>
+<dt>output <span class="classifier-delimiter">:</span> <span class="classifier">str or None</span></dt>
+<dd>Output file, default is None which dumps msg to sys.stdout</dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">int, float</span></dt>
+<dd>Allowed memory in MB</dd>
+<dt>light_speed :</dt>
+<dd>Default is set in lib.parameters.LIGHTSPEED</dd>
+<dt>charge <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Charge of molecule. It affects the electron numbers</dd>
+<dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>2S, num. alpha electrons - num. beta electrons</dd>
+<dt>symmetry <span class="classifier-delimiter">:</span> <span class="classifier">bool or str</span></dt>
+<dd>Whether to use symmetry.  If given a string of point group
+name, the given point group symmetry will be used.</dd>
+<dt>atom <span class="classifier-delimiter">:</span> <span class="classifier">list or str</span></dt>
+<dd><p class="first">To define molecluar structure.  The internal format is</p>
+<div class="last line-block">
+<div class="line">atom = [[atom1, (x, y, z)],</div>
+<div class="line-block">
+<div class="line">[atom2, (x, y, z)],</div>
+<div class="line">...</div>
+<div class="line">[atomN, (x, y, z)]]</div>
+</div>
+</div>
+</dd>
+<dt>basis <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
+<dd>To define basis set.</dd>
+<dt>nucmod <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
+<dd>Nuclear model</dd>
+<dt>mass <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Similar struct as <tt class="xref py py-attr docutils literal"><span class="pre">Mole.nucmod</span></tt></dd>
+<dt>grids <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Define (radial grids, angular grids) for given atom or symbol</dd>
+</dl>
+<p>** Following attributes are generated by <tt class="xref py py-func docutils literal"><span class="pre">Mole.build()</span></tt> **</p>
+<dl class="docutils">
+<dt>stdout <span class="classifier-delimiter">:</span> <span class="classifier">file object</span></dt>
+<dd>Default is sys.stdout if <tt class="xref py py-attr docutils literal"><span class="pre">Mole.output</span></tt> is not set</dd>
+<dt>groupname <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>One of D2h, C2h, C2v, D2, Cs, Ci, C2, C1</dd>
+<dt>nelectron <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>sum of nuclear charges - <tt class="xref py py-attr docutils literal"><span class="pre">Mole.charge</span></tt></dd>
+<dt>symm_orb <span class="classifier-delimiter">:</span> <span class="classifier">a list of numpy.ndarray</span></dt>
+<dd>Symmetry adapted basis.  Each element is a set of symm-adapted orbitals
+for one irreducible representation.  The list index does <strong>not</strong> correspond
+to the id of irreducible representation.</dd>
+<dt>irrep_id <span class="classifier-delimiter">:</span> <span class="classifier">a list of int</span></dt>
+<dd>Each element is one irreducible representation id associated with the basis
+stored in symm_orb.  One irrep id stands for one irreducible representation
+symbol.  The irrep symbol and the relevant id are defined in
+<tt class="xref py py-attr docutils literal"><span class="pre">symm.parameters.IRREP_ID_TABLE</span></tt></dd>
+<dt>irrep_name <span class="classifier-delimiter">:</span> <span class="classifier">a list of str</span></dt>
+<dd>Each element is one irreducible representation symbol associated with the basis
+stored in symm_orb.  The irrep symbols are defined in
+<tt class="xref py py-attr docutils literal"><span class="pre">symm.parameters.IRREP_ID_TABLE</span></tt></dd>
+<dt>_built <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>To label whether <tt class="xref py py-func docutils literal"><span class="pre">Mole.build()</span></tt> has been called.  It ensures some functions
+being initialized once.</dd>
+<dt>_basis <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>like <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt>, the internal format which is returned from the
+parser <a class="reference internal" href="#pyscf.gto.mole.format_basis" title="pyscf.gto.mole.format_basis"><tt class="xref py py-func docutils literal"><span class="pre">format_basis()</span></tt></a></dd>
+<dt>_keys <span class="classifier-delimiter">:</span> <span class="classifier">a set of str</span></dt>
+<dd>Store the keys appeared in the module.  It is used to check misinput attributes</dd>
+</dl>
+<p>** Following attributes are arguments used by <tt class="docutils literal"><span class="pre">libcint</span></tt> library **</p>
+<dl class="last docutils">
+<dt>_atm :</dt>
+<dd><tt class="code docutils literal"><span class="pre">[[charge,</span> <span class="pre">ptr-of-coord,</span> <span class="pre">nuc-model,</span> <span class="pre">mass,</span> <span class="pre">0,</span> <span class="pre">0],</span> <span class="pre">[...]]</span></tt>
+each element reperesents one atom</dd>
+<dt>natm :</dt>
+<dd>number of atoms</dd>
+<dt>_bas :</dt>
+<dd><tt class="code docutils literal"><span class="pre">[[atom-id,</span> <span class="pre">angular-momentum,</span> <span class="pre">num-primitive-GTO,</span> <span class="pre">num-contracted-GTO,</span> <span class="pre">0,</span> <span class="pre">ptr-of-exps,</span> <span class="pre">ptr-of-contract-coeff,</span> <span class="pre">0],</span> <span class="pre">[...]]</span></tt>
+each element reperesents one shell</dd>
+<dt>nbas :</dt>
+<dd>number of shells</dd>
+<dt>_env :</dt>
+<dd>list of floats to store the coordinates, GTO exponents, contract-coefficients</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">Mole</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H^2 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">H^2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_pure_symbol</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">H</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">())</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">))</span>
+<span class="go">[[ 0.99999999  0.43958641]</span>
+<span class="go"> [ 0.43958641  0.99999999]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="go">&lt;class &#39;pyscf.gto.mole.Mole&#39;&gt; has no attributes Charge</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt>
+<tt class="descname">atom_charge</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_charge"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Nuclear charge of the given atom id</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_charge</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">17</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">atom_coord</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_coord"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Coordinates (ndarray) of the given atom id</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_coord</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">[ 0.          0.          2.07869874]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">atom_nshells</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_nshells"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Number of basis/shells of the given atom</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_nshells</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">atom_pure_symbol</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_pure_symbol"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>For the given atom id, return the standard symbol (striping special characters)</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H^2 0 0 0; H 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">H</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">atom_shell_ids</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_shell_ids"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>A list of the shell-ids of the given atom</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_nshells</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">[3, 4, 5, 6, 7]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">atom_symbol</tt><big>(</big><em>atm_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.atom_symbol"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>For the given atom id, return the input symbol (without striping special characters)</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>atm_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H^2 0 0 0; H 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">H^2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">bas_angular</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_angular"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>The angular momentum associated with the given basis</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">bas_atom</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_atom"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>The atom (0-based id) that the given basis sits on</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">bas_coord</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_coord"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Coordinates (ndarray) associated with the given basis id</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_coord</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[ 0.          0.          2.07869874]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">bas_ctr_coeff</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_ctr_coeff"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Contract coefficients (ndarray) of the given shell</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_ctr_coeff</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">[[ 0.34068924]</span>
+<span class="go"> [ 0.57789106]</span>
+<span class="go"> [ 0.65774031]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">bas_exp</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_exp"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>exponents (ndarray) of the given shell</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_kappa</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">[ 13.01     1.962    0.4446]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">bas_kappa</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_kappa"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Kappa (if l &lt; j, -l-1, else l) of the given shell</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_kappa</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">bas_len_cart</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_len_cart"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>The number of Cartesian function associated with given basis</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">bas_len_spinor</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_len_spinor"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>The number of spinor associated with given basis
+If kappa is 0, return 4l+2</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">bas_nctr</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_nctr"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>The number of contracted GTOs for the given shell</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">bas_nprim</tt><big>(</big><em>bas_id</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.bas_nprim"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>The number of primitive GTOs for the given shell</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>bas_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">11</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">build_</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>verbose=None</em>, <em>output=None</em>, <em>max_memory=None</em>, <em>atom=None</em>, <em>basis=None</em>, <em>nucmod=None</em>, <em>mass=None</em>, <em>grids=None</em>, <em>charge=None</em>, <em>spin=None</em>, <em>symmetry=None</em>, <em>light_speed=None</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.build_"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Setup moleclue and initialize some control parameters.  Whenever you
+change the value of the attributes of <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a>, you need call
+this function to refresh the internal data of Mole.</p>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>dump_input <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>whether to dump the contents of input file in the output file</dd>
+<dt>parse_arg <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>whether to read the sys.argv and overwrite the relevant parameters</dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Print level.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.verbose</span></tt></dd>
+<dt>output <span class="classifier-delimiter">:</span> <span class="classifier">str or None</span></dt>
+<dd>Output file.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.output</span></tt></dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">int, float</span></dt>
+<dd>Allowd memory in MB.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.max_memory</span></tt></dd>
+<dt>atom <span class="classifier-delimiter">:</span> <span class="classifier">list or str</span></dt>
+<dd>To define molecluar structure.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.atom</span></tt></dd>
+<dt>basis <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
+<dd>To define basis set.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt></dd>
+<dt>nucmod <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
+<dd>Nuclear model.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.nucmod</span></tt></dd>
+<dt>mass <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.mass</span></tt></dd>
+<dt>grids <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Define (radial grids, angular grids) for given atom or symbol
+If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.grids</span></tt></dd>
+<dt>charge <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Charge of molecule. It affects the electron numbers
+If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.charge</span></tt></dd>
+<dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>2S, num. alpha electrons - num. beta electrons
+If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.spin</span></tt></dd>
+<dt>symmetry <span class="classifier-delimiter">:</span> <span class="classifier">bool or str</span></dt>
+<dd>Whether to use symmetry.  If given a string of point group
+name, the given point group symmetry will be used.</dd>
+<dt>light_speed :</dt>
+<dd>If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.light_speed</span></tt></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">check_sanity</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.check_sanity"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Check misinput of a class attribute due to typos, check whether a
+class method is overwritten.  It does not check the attributes which
+are prefixed with &#8220;_&#8221;.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>obj : this object should have attribute _keys to store all the
+name of the attributes of the object</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">intor</tt><big>(</big><em>intor</em>, <em>comp=1</em>, <em>hermi=0</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.intor"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>One-electron integral generator.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>intor <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Name of the 1-electron integral.  Ref to <tt class="xref py py-func docutils literal"><span class="pre">getints()</span></tt> for the
+complete list of available 1-electron integral names</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>comp <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Components of the integrals, e.g. cint1e_ipovlp has 3 components.</dd>
+<dt>hermi <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first">Symmetry of the integrals</p>
+<div class="last line-block">
+<div class="line">0 : no symmetry assumed (default)</div>
+<div class="line">1 : hermitian</div>
+<div class="line">2 : anti-hermitian</div>
+</div>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>ndarray of 1-electron integrals, can be either 2-dim or 3-dim, depending on comp</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s">&#39;cint1e_ipnuc_sph&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="c"># &lt;nabla i | V_nuc | j&gt;</span>
+<span class="go">[[[ 0.          0.        ]</span>
+<span class="go">  [ 0.          0.        ]]</span>
+<span class="go"> [[ 0.          0.        ]</span>
+<span class="go">  [ 0.          0.        ]]</span>
+<span class="go"> [[ 0.10289944  0.48176097]</span>
+<span class="go">  [-0.48176097 -0.10289944]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s">&#39;cint1e_nuc&#39;</span><span class="p">)</span>
+<span class="go">[[-1.69771092+0.j  0.00000000+0.j -0.67146312+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -1.69771092+0.j  0.00000000+0.j -0.67146312+0.j]</span>
+<span class="go"> [-0.67146312+0.j  0.00000000+0.j -1.69771092+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -0.67146312+0.j  0.00000000+0.j -1.69771092+0.j]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">intor_asymmetric</tt><big>(</big><em>intor</em>, <em>comp=1</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.intor_asymmetric"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>One-electron integral generator. The integrals are assumed to be anti-hermitian</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>intor <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Name of the 1-electron integral.  Ref to <tt class="xref py py-func docutils literal"><span class="pre">getints()</span></tt> for the
+complete list of available 1-electron integral names</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>comp <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Components of the integrals, e.g. cint1e_ipovlp has 3 components.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>ndarray of 1-electron integrals, can be either 2-dim or 3-dim, depending on comp</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">intor_asymmetric</span><span class="p">(</span><span class="s">&#39;cint1e_nuc&#39;</span><span class="p">)</span>
+<span class="go">[[-1.69771092+0.j  0.00000000+0.j  0.67146312+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -1.69771092+0.j  0.00000000+0.j  0.67146312+0.j]</span>
+<span class="go"> [-0.67146312+0.j  0.00000000+0.j -1.69771092+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -0.67146312+0.j  0.00000000+0.j -1.69771092+0.j]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">intor_cross</tt><big>(</big><em>intor</em>, <em>bras</em>, <em>kets</em>, <em>comp=1</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.intor_cross"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Cross 1-electron integrals like</p>
+<div class="math">
+\[\langle \mu | intor | \nu \rangle, \mu \in bras, \nu \in kets\]</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>intor <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Name of the 1-electron integral.  Ref to <tt class="xref py py-func docutils literal"><span class="pre">getints()</span></tt> for the
+full list of available 1-electron integral names</dd>
+<dt>bras <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>A list of shell ids for bra</dd>
+<dt>kets <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>A list of shell ids for ket</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>comp <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Components of the integrals, e.g. cint1e_ipovlp has 3 components</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>ndarray of 1-electron integrals, can be either 2-dim or 3-dim, depending on comp</dd>
+<dt>Examples:</dt>
+<dd>Compute the overlap between H2 molecule and O atom</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; H 0 1 0; H 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">intor_cross</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="go">[[ 0.04875181  0.04875181]</span>
+<span class="go"> [ 0.44714688  0.44714688]</span>
+<span class="go"> [ 0.          0.        ]</span>
+<span class="go"> [ 0.37820346  0.        ]</span>
+<span class="go"> [ 0.          0.37820346]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">intor_symmetric</tt><big>(</big><em>intor</em>, <em>comp=1</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.intor_symmetric"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>One-electron integral generator. The integrals are assumed to be hermitian</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>intor <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Name of the 1-electron integral.  Ref to <tt class="xref py py-func docutils literal"><span class="pre">getints()</span></tt> for the
+complete list of available 1-electron integral names</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>comp <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Components of the integrals, e.g. cint1e_ipovlp has 3 components.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>ndarray of 1-electron integrals, can be either 2-dim or 3-dim, depending on comp</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&#39;cint1e_nuc&#39;</span><span class="p">)</span>
+<span class="go">[[-1.69771092+0.j  0.00000000+0.j -0.67146312+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -1.69771092+0.j  0.00000000+0.j -0.67146312+0.j]</span>
+<span class="go"> [-0.67146312+0.j  0.00000000+0.j -1.69771092+0.j  0.00000000+0.j]</span>
+<span class="go"> [ 0.00000000+0.j -0.67146312+0.j  0.00000000+0.j -1.69771092+0.j]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">set_common_origin_</tt><big>(</big><em>coord</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.set_common_origin_"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Update common origin which held in :class`Mole`._env.  <strong>Note</strong> the unit is Bohr</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">set_common_origin_</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">set_common_origin_</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">set_rinv_origin_</tt><big>(</big><em>coord</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/mole.html#Mole.set_rinv_origin_"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Update origin for operator <span class="math">\(\frac{1}{|r-R_O|}\)</span>.  <strong>Note</strong> the unit is Bohr</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">set_rinv_orig_</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">set_rinv_orig_</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyscf.gto.moleintor">
+<span id="moleintor"></span><span id="gto-moleintor"></span><h2>moleintor<a class="headerlink" href="#module-pyscf.gto.moleintor" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyscf.gto.moleintor.getints">
+<tt class="descclassname">pyscf.gto.moleintor.</tt><tt class="descname">getints</tt><big>(</big><em>intor_name</em>, <em>atm</em>, <em>bas</em>, <em>env</em>, <em>bras=None</em>, <em>kets=None</em>, <em>comp=1</em>, <em>hermi=0</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/moleintor.html#getints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.moleintor.getints" title="Permalink to this definition">¶</a></dt>
+<dd><p>One electron integral generator.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>intor_name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first">Name of the 1-electron integral.  The list of 1e integrals in
+current version of libcint (v2.5.1)</p>
+<table border="1" class="last docutils">
+<colgroup>
+<col width="31%" />
+<col width="11%" />
+<col width="58%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Function</th>
+<th class="head">type</th>
+<th class="head">Expression</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>&#8220;cint1e_ovlp_sph&#8221;</td>
+<td>spheric</td>
+<td>( | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_nuc_sph&#8221;</td>
+<td>spheric</td>
+<td>( | nuc | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_kin_sph&#8221;</td>
+<td>spheric</td>
+<td>(.5 | p dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ia01p_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 1) | nabla-rinv | cross p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_giao_irjxp_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 1) | r cross p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_cg_irxp_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 1) | rc cross p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_giao_a11part_sph&#8221;</td>
+<td>spheric</td>
+<td>(-.5 | nabla-rinv | r))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_cg_a11part_sph&#8221;</td>
+<td>spheric</td>
+<td>(-.5 | nabla-rinv | rc))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_a01gp_sph&#8221;</td>
+<td>spheric</td>
+<td>(g | nabla-rinv cross p |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_igkin_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 .5) g | p dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_igovlp_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 1) g |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ignuc_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 1) g | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_z_sph&#8221;</td>
+<td>spheric</td>
+<td>( | zc | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_zz_sph&#8221;</td>
+<td>spheric</td>
+<td>( | zc zc | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_r_sph&#8221;</td>
+<td>spheric</td>
+<td>( | rc | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_r2_sph&#8221;</td>
+<td>spheric</td>
+<td>( | rc dot rc | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_rr_sph&#8221;</td>
+<td>spheric</td>
+<td>( | rc rc | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_pnucp_sph&#8221;</td>
+<td>spheric</td>
+<td>(p* | nuc dot p | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_prinvxp_sph&#8221;</td>
+<td>spheric</td>
+<td>(p* | rinv cross p | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ovlp&#8221;</td>
+<td>spinor</td>
+<td>( | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_nuc&#8221;</td>
+<td>spinor</td>
+<td>( | nuc |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_srsr&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot r | sigma dot r))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_sr&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot r |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_srsp&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot r | sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_spsp&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_sp&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_spnucsp&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p | nuc | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_srnucsr&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot r | nuc | sigma dot r))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_govlp&#8221;</td>
+<td>spinor</td>
+<td>(g |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_gnuc&#8221;</td>
+<td>spinor</td>
+<td>(g | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_cg_sa10sa01&#8221;</td>
+<td>spinor</td>
+<td>(.5 sigma cross rc | sigma cross nabla-rinv |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_cg_sa10sp&#8221;</td>
+<td>spinor</td>
+<td>(.5 rc cross sigma | sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_cg_sa10nucsp&#8221;</td>
+<td>spinor</td>
+<td>(.5 rc cross sigma | nuc | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_giao_sa10sa01&#8221;</td>
+<td>spinor</td>
+<td>(.5 sigma cross r | sigma cross nabla-rinv |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_giao_sa10sp&#8221;</td>
+<td>spinor</td>
+<td>(.5 r cross sigma | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_giao_sa10nucsp&#8221;</td>
+<td>spinor</td>
+<td>(.5 r cross sigma | nuc | sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_sa01sp&#8221;</td>
+<td>spinor</td>
+<td>(| nabla-rinv cross sigma | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_spgsp&#8221;</td>
+<td>spinor</td>
+<td>(g sigma dot p | sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_spgnucsp&#8221;</td>
+<td>spinor</td>
+<td>(g sigma dot p | nuc | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_spgsa01&#8221;</td>
+<td>spinor</td>
+<td>(g sigma dot p | nabla-rinv cross sigma |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_spspsp&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p | sigma dot p sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_spnuc&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ovlp_cart&#8221;</td>
+<td>cartesian</td>
+<td>( | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_nuc_cart&#8221;</td>
+<td>cartesian</td>
+<td>( | nuc | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_kin_cart&#8221;</td>
+<td>cartesian</td>
+<td>(.5 | p dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ia01p_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 1) | nabla-rinv | cross p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_giao_irjxp_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 1) | r cross p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_cg_irxp_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 1) | rc cross p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_giao_a11part_cart&#8221;</td>
+<td>cartesian</td>
+<td>(-.5 | nabla-rinv | r))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_cg_a11part_cart&#8221;</td>
+<td>cartesian</td>
+<td>(-.5 | nabla-rinv | rc))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_a01gp_cart&#8221;</td>
+<td>cartesian</td>
+<td>(g | nabla-rinv cross p |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_igkin_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 .5) g | p dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_igovlp_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 1) g |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ignuc_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 1) g | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ipovlp_sph&#8221;</td>
+<td>spheric</td>
+<td>(nabla |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipkin_sph&#8221;</td>
+<td>spheric</td>
+<td>(.5 nabla | p dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ipnuc_sph&#8221;</td>
+<td>spheric</td>
+<td>(nabla | nuc |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_iprinv_sph&#8221;</td>
+<td>spheric</td>
+<td>(nabla | rinv |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_rinv_sph&#8221;</td>
+<td>spheric</td>
+<td>(| rinv |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipovlp&#8221;</td>
+<td>spinor</td>
+<td>(nabla |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ipkin&#8221;</td>
+<td>spinor</td>
+<td>(.5 nabla | p dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipnuc&#8221;</td>
+<td>spinor</td>
+<td>(nabla | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_iprinv&#8221;</td>
+<td>spinor</td>
+<td>(nabla | rinv |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipspnucsp&#8221;</td>
+<td>spinor</td>
+<td>(nabla sigma dot p | nuc | sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ipsprinvsp&#8221;</td>
+<td>spinor</td>
+<td>(nabla sigma dot p | rinv | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipovlp_cart&#8221;</td>
+<td>cartesian</td>
+<td>(nabla |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ipkin_cart&#8221;</td>
+<td>cartesian</td>
+<td>(.5 nabla | p dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipnuc_cart&#8221;</td>
+<td>cartesian</td>
+<td>(nabla | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_iprinv_cart&#8221;</td>
+<td>cartesian</td>
+<td>(nabla | rinv |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_rinv_cart&#8221;</td>
+<td>cartesian</td>
+<td>(| rinv |))</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>atm <span class="classifier-delimiter">:</span> <span class="classifier">int32 ndarray</span></dt>
+<dd>libcint integral function argument</dd>
+<dt>bas <span class="classifier-delimiter">:</span> <span class="classifier">int32 ndarray</span></dt>
+<dd>libcint integral function argument</dd>
+<dt>env <span class="classifier-delimiter">:</span> <span class="classifier">float64 ndarray</span></dt>
+<dd>libcint integral function argument</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>bras <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>shell ids for bra.  Default is all shells given by bas</dd>
+<dt>kets <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>shell ids for ket.  Default is all shells given by bas</dd>
+<dt>comp <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Components of the integrals, e.g. cint1e_ipovlp has 3 components.</dd>
+<dt>hermi <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Symmetry of the integrals
+| 0 : no symmetry assumed (default)
+| 1 : hermitian
+| 2 : anti-hermitian</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>ndarray of 1-electron integrals, can be either 2-dim or 3-dim, depending on comp</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">moleintor</span><span class="p">(</span><span class="s">&#39;cint1e_ipnuc_sph&#39;</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_env</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="c"># &lt;nabla i | V_nuc | j&gt;</span>
+<span class="go">[[[ 0.          0.        ]</span>
+<span class="go">  [ 0.          0.        ]]</span>
+<span class="go"> [[ 0.          0.        ]</span>
+<span class="go">  [ 0.          0.        ]]</span>
+<span class="go"> [[ 0.10289944  0.48176097]</span>
+<span class="go">  [-0.48176097 -0.10289944]]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.moleintor.getints_by_shell">
+<tt class="descclassname">pyscf.gto.moleintor.</tt><tt class="descname">getints_by_shell</tt><big>(</big><em>intor_name</em>, <em>shls</em>, <em>atm</em>, <em>bas</em>, <em>env</em>, <em>comp=1</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/moleintor.html#getints_by_shell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.moleintor.getints_by_shell" title="Permalink to this definition">¶</a></dt>
+<dd><p>For given 2, 3 or 4 shells, interface for libcint to get 1e, 2e,
+2-center-2e or 3-center-2e integrals</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>intor_name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first">Integral name.  In the current version of libcint (v2.5.1), it can be</p>
+<table border="1" class="last docutils">
+<colgroup>
+<col width="26%" />
+<col width="9%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Function</th>
+<th class="head">type</th>
+<th class="head">Expression</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>&#8220;cint1e_ovlp_sph&#8221;</td>
+<td>spheric</td>
+<td>( | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_nuc_sph&#8221;</td>
+<td>spheric</td>
+<td>( | nuc | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_kin_sph&#8221;</td>
+<td>spheric</td>
+<td>(.5 | p dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ia01p_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 1) | nabla-rinv | cross p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_giao_irjxp_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 1) | r cross p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_cg_irxp_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 1) | rc cross p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_giao_a11part_sph&#8221;</td>
+<td>spheric</td>
+<td>(-.5 | nabla-rinv | r))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_cg_a11part_sph&#8221;</td>
+<td>spheric</td>
+<td>(-.5 | nabla-rinv | rc))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_a01gp_sph&#8221;</td>
+<td>spheric</td>
+<td>(g | nabla-rinv cross p |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_igkin_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 .5) g | p dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_igovlp_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 1) g |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ignuc_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 1) g | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_z_sph&#8221;</td>
+<td>spheric</td>
+<td>( | zc | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_zz_sph&#8221;</td>
+<td>spheric</td>
+<td>( | zc zc | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_r_sph&#8221;</td>
+<td>spheric</td>
+<td>( | rc | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_r2_sph&#8221;</td>
+<td>spheric</td>
+<td>( | rc dot rc | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_rr_sph&#8221;</td>
+<td>spheric</td>
+<td>( | rc rc | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_pnucp_sph&#8221;</td>
+<td>spheric</td>
+<td>(p* | nuc dot p | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_prinvxp_sph&#8221;</td>
+<td>spheric</td>
+<td>(p* | rinv cross p | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ovlp&#8221;</td>
+<td>spinor</td>
+<td>( | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_nuc&#8221;</td>
+<td>spinor</td>
+<td>( | nuc |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_srsr&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot r | sigma dot r))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_sr&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot r |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_srsp&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot r | sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_spsp&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_sp&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_spnucsp&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p | nuc | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_srnucsr&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot r | nuc | sigma dot r))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_govlp&#8221;</td>
+<td>spinor</td>
+<td>(g |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_gnuc&#8221;</td>
+<td>spinor</td>
+<td>(g | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_cg_sa10sa01&#8221;</td>
+<td>spinor</td>
+<td>(.5 sigma cross rc | sigma cross nabla-rinv |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_cg_sa10sp&#8221;</td>
+<td>spinor</td>
+<td>(.5 rc cross sigma | sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_cg_sa10nucsp&#8221;</td>
+<td>spinor</td>
+<td>(.5 rc cross sigma | nuc | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_giao_sa10sa01&#8221;</td>
+<td>spinor</td>
+<td>(.5 sigma cross r | sigma cross nabla-rinv |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_giao_sa10sp&#8221;</td>
+<td>spinor</td>
+<td>(.5 r cross sigma | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_giao_sa10nucsp&#8221;</td>
+<td>spinor</td>
+<td>(.5 r cross sigma | nuc | sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_sa01sp&#8221;</td>
+<td>spinor</td>
+<td>(| nabla-rinv cross sigma | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_spgsp&#8221;</td>
+<td>spinor</td>
+<td>(g sigma dot p | sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_spgnucsp&#8221;</td>
+<td>spinor</td>
+<td>(g sigma dot p | nuc | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_spgsa01&#8221;</td>
+<td>spinor</td>
+<td>(g sigma dot p | nabla-rinv cross sigma |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_spspsp&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p | sigma dot p sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_spnuc&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ovlp_cart&#8221;</td>
+<td>cartesian</td>
+<td>( | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_nuc_cart&#8221;</td>
+<td>cartesian</td>
+<td>( | nuc | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_kin_cart&#8221;</td>
+<td>cartesian</td>
+<td>(.5 | p dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ia01p_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 1) | nabla-rinv | cross p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_giao_irjxp_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 1) | r cross p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_cg_irxp_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 1) | rc cross p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_giao_a11part_cart&#8221;</td>
+<td>cartesian</td>
+<td>(-.5 | nabla-rinv | r))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_cg_a11part_cart&#8221;</td>
+<td>cartesian</td>
+<td>(-.5 | nabla-rinv | rc))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_a01gp_cart&#8221;</td>
+<td>cartesian</td>
+<td>(g | nabla-rinv cross p |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_igkin_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 .5) g | p dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_igovlp_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 1) g |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ignuc_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 1) g | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ipovlp_sph&#8221;</td>
+<td>spheric</td>
+<td>(nabla |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipkin_sph&#8221;</td>
+<td>spheric</td>
+<td>(.5 nabla | p dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ipnuc_sph&#8221;</td>
+<td>spheric</td>
+<td>(nabla | nuc |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_iprinv_sph&#8221;</td>
+<td>spheric</td>
+<td>(nabla | rinv |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_rinv_sph&#8221;</td>
+<td>spheric</td>
+<td>(| rinv |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipovlp&#8221;</td>
+<td>spinor</td>
+<td>(nabla |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ipkin&#8221;</td>
+<td>spinor</td>
+<td>(.5 nabla | p dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipnuc&#8221;</td>
+<td>spinor</td>
+<td>(nabla | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_iprinv&#8221;</td>
+<td>spinor</td>
+<td>(nabla | rinv |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipspnucsp&#8221;</td>
+<td>spinor</td>
+<td>(nabla sigma dot p | nuc | sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ipsprinvsp&#8221;</td>
+<td>spinor</td>
+<td>(nabla sigma dot p | rinv | sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipovlp_cart&#8221;</td>
+<td>cartesian</td>
+<td>(nabla |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_ipkin_cart&#8221;</td>
+<td>cartesian</td>
+<td>(.5 nabla | p dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_ipnuc_cart&#8221;</td>
+<td>cartesian</td>
+<td>(nabla | nuc |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint1e_iprinv_cart&#8221;</td>
+<td>cartesian</td>
+<td>(nabla | rinv |))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint1e_rinv_cart&#8221;</td>
+<td>cartesian</td>
+<td>(| rinv |))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_p1vxp1_sph&#8221;</td>
+<td>spheric</td>
+<td>( p* , cross p | , )) ; SSO</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_sph&#8221;</td>
+<td>spheric</td>
+<td>( , | , ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_ig1_sph&#8221;</td>
+<td>spheric</td>
+<td>(#C(0 1) g , | , ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e&#8221;</td>
+<td>spinor</td>
+<td>(, | , ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_spsp1&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p , sigma dot p | , ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_spsp1spsp2&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p , sigma dot p | sigma dot p , sigma dot p ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_srsr1&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot r , sigma dot r | ,))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_srsr1srsr2&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot r , sigma dot r | sigma dot r , sigma dot r))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_cg_sa10sp1&#8221;</td>
+<td>spinor</td>
+<td>(.5 rc cross sigma , sigma dot p | ,))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_cg_sa10sp1spsp2&#8221;</td>
+<td>spinor</td>
+<td>(.5 rc cross sigma , sigma dot p | sigma dot p , sigma dot p ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_giao_sa10sp1&#8221;</td>
+<td>spinor</td>
+<td>(.5 r cross sigma , sigma dot p | ,))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_giao_sa10sp1spsp2&#8221;</td>
+<td>spinor</td>
+<td>(.5 r cross sigma , sigma dot p | sigma dot p , sigma dot p ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_g1&#8221;</td>
+<td>spinor</td>
+<td>(g , | ,))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_spgsp1&#8221;</td>
+<td>spinor</td>
+<td>(g sigma dot p , sigma dot p | ,))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_g1spsp2&#8221;</td>
+<td>spinor</td>
+<td>(g , | sigma dot p , sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_spgsp1spsp2&#8221;</td>
+<td>spinor</td>
+<td>(g sigma dot p , sigma dot p | sigma dot p , sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_spv1&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p , | ,))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_vsp1&#8221;</td>
+<td>spinor</td>
+<td>(, sigma dot p | ,))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_spsp2&#8221;</td>
+<td>spinor</td>
+<td>(, | sigma dot p , sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_spv1spv2&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p , | sigma dot p ,))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_vsp1spv2&#8221;</td>
+<td>spinor</td>
+<td>(, sigma dot p | sigma dot p ,))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_spv1vsp2&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p , | , sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_vsp1vsp2&#8221;</td>
+<td>spinor</td>
+<td>(, sigma dot p | , sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_spv1spsp2&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p , | sigma dot p , sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_vsp1spsp2&#8221;</td>
+<td>spinor</td>
+<td>(, sigma dot p | sigma dot p , sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_ig1_cart&#8221;</td>
+<td>cartesian</td>
+<td>(#C(0 1) g , | , ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_ip1_sph&#8221;</td>
+<td>spheric</td>
+<td>(nabla , | ,))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_ip1&#8221;</td>
+<td>spinor</td>
+<td>(nabla , | ,))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_ipspsp1&#8221;</td>
+<td>spinor</td>
+<td>(nabla sigma dot p , sigma dot p | ,))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_ip1spsp2&#8221;</td>
+<td>spinor</td>
+<td>(nabla , | sigma dot p , sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_ipspsp1spsp2&#8221;</td>
+<td>spinor</td>
+<td>(nabla sigma dot p , sigma dot p | sigma dot p , sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_ipsrsr1&#8221;</td>
+<td>spinor</td>
+<td>(nabla sigma dot r , sigma dot r | ,))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_ip1srsr2&#8221;</td>
+<td>spinor</td>
+<td>(nabla , | sigma dot r , sigma dot r))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_ipsrsr1srsr2&#8221;</td>
+<td>spinor</td>
+<td>(nabla sigma dot r , sigma dot r | sigma dot r , sigma dot r))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_ip1_cart&#8221;</td>
+<td>cartesian</td>
+<td>(nabla , | ,))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_ssp1ssp2&#8221;</td>
+<td>spinor</td>
+<td>( , sigma dot p | gaunt | , sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_cg_ssa10ssp2&#8221;</td>
+<td>spinor</td>
+<td>(rc cross sigma , | gaunt | , sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_giao_ssa10ssp2&#8221;</td>
+<td>spinor</td>
+<td>(r cross sigma  , | gaunt | , sigma dot p))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_gssp1ssp2&#8221;</td>
+<td>spinor</td>
+<td>(g , sigma dot p  | gaunt | , sigma dot p))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_ipip1_sph&#8221;</td>
+<td>spheric</td>
+<td>( nabla nabla , | , ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2e_ipvip1_sph&#8221;</td>
+<td>spheric</td>
+<td>( nabla , nabla | , ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint2e_ip1ip2_sph&#8221;</td>
+<td>spheric</td>
+<td>( nabla , | nabla , ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint3c2e_ip1_sph&#8221;</td>
+<td>spheric</td>
+<td>(nabla , | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint3c2e_ip2_sph&#8221;</td>
+<td>spheric</td>
+<td>( , | nabla))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint2c2e_ip1_sph&#8221;</td>
+<td>spheric</td>
+<td>(nabla | r12 | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint3c2e_spinor&#8221;</td>
+<td>spinor</td>
+<td>(nabla , | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint3c2e_spsp1_spinor&#8221;</td>
+<td>spinor</td>
+<td>(nabla , | ))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint3c2e_ip1_spinor&#8221;</td>
+<td>spinor</td>
+<td>(nabla , | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint3c2e_ip2_spinor&#8221;</td>
+<td>spinor</td>
+<td>( , | nabla))</td>
+</tr>
+<tr class="row-odd"><td>&#8220;cint3c2e_ipspsp1_spinor&#8221;</td>
+<td>spinor</td>
+<td>(nabla sigma dot p , sigma dot p | ))</td>
+</tr>
+<tr class="row-even"><td>&#8220;cint3c2e_spsp1ip2_spinor&#8221;</td>
+<td>spinor</td>
+<td>(sigma dot p , sigma dot p | nabla ))</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>shls <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>The AO shell-ids of the integrals</dd>
+<dt>atm <span class="classifier-delimiter">:</span> <span class="classifier">int32 ndarray</span></dt>
+<dd>libcint integral function argument</dd>
+<dt>bas <span class="classifier-delimiter">:</span> <span class="classifier">int32 ndarray</span></dt>
+<dd>libcint integral function argument</dd>
+<dt>env <span class="classifier-delimiter">:</span> <span class="classifier">float64 ndarray</span></dt>
+<dd>libcint integral function argument</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>comp <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Components of the integrals, e.g. cint1e_ipovlp has 3 components.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>ndarray of 2-dim to 5-dim, depending on the integral type (1e,
+2e, 3c-2e, 2c2e) and the value of comp</dd>
+<dt>Examples:</dt>
+<dd>The gradients of the spherical 2e integrals</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">getints_by_shell</span><span class="p">(</span><span class="s">&#39;cint2e_ip1_sph&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_env</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">[[[[[-0.        ]]]]</span>
+<span class="go">  [[[[-0.        ]]]]</span>
+<span class="go">  [[[[-0.08760462]]]]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="basis">
+<h2>basis<a class="headerlink" href="#basis" title="Permalink to this headline">¶</a></h2>
+<p>Basis sets</p>
+<span class="target" id="module-pyscf.gto.basis"></span><dl class="function">
+<dt id="pyscf.gto.basis.load">
+<tt class="descclassname">pyscf.gto.basis.</tt><tt class="descname">load</tt><big>(</big><em>basis_name</em>, <em>symb</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/basis.html#load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.basis.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the basis of the given symbol to internal format</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>basis_name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Case insensitive basis set name. Special characters will be removed.</dd>
+<dt>symb <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Atomic symbol, Special characters will be removed.</dd>
+</dl>
+</dd>
+<dt>Examples:</dt>
+<dd>Load STO 3G basis of carbon to oxygen atom</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;O&#39;</span><span class="p">:</span> <span class="n">load</span><span class="p">(</span><span class="s">&#39;sto-3g&#39;</span><span class="p">,</span> <span class="s">&#39;C&#39;</span><span class="p">)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.basis.parse">
+<tt class="descclassname">pyscf.gto.basis.</tt><tt class="descname">parse</tt><big>(</big><em>string</em><big>)</big><a class="reference internal" href="modules/pyscf/gto/basis.html#parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.basis.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the basis text which is in NWChem format, return an internal
+basis format which can be assigned to <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt></p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>string : Blank linke and the lines of &#8220;BASIS SET&#8221; and &#8220;END&#8221; will be ignored</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;O&#39;</span><span class="p">:</span> <span class="n">gto</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="gp">... </span><span class="s">#BASIS SET: (6s,3p) -&gt; [2s,1p]</span>
+<span class="gp">... </span><span class="s">C    S</span>
+<span class="gp">... </span><span class="s">     71.6168370              0.15432897</span>
+<span class="gp">... </span><span class="s">     13.0450960              0.53532814</span>
+<span class="gp">... </span><span class="s">      3.5305122              0.44463454</span>
+<span class="gp">... </span><span class="s">C    SP</span>
+<span class="gp">... </span><span class="s">      2.9412494             -0.09996723             0.15591627</span>
+<span class="gp">... </span><span class="s">      0.6834831              0.39951283             0.60768372</span>
+<span class="gp">... </span><span class="s">      0.2222899              0.70011547             0.39195739</span>
+<span class="gp">... </span><span class="s">&quot;&quot;&quot;</span><span class="p">)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">gto &#8212; Molecular structure and GTO basis</a><ul>
+<li><a class="reference internal" href="#module-pyscf.gto.mole">mole</a></li>
+<li><a class="reference internal" href="#module-pyscf.gto.moleintor">moleintor</a></li>
+<li><a class="reference internal" href="#basis">basis</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="previous chapter">Tutorial</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="lib.html"
+                        title="next chapter">lib</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="sources/gto.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lib.html" title="lib"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             >previous</a> |</li>
+        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

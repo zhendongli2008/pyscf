@@ -1,0 +1,709 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mcscf &mdash; PySCF 0.10 documentation</title>
+    
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.10',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 0.10 documentation" href="index.html" />
+    <link rel="next" title="fci" href="fci.html" />
+    <link rel="prev" title="ao2mo" href="ao2mo.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fci.html" title="fci"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ao2mo.html" title="ao2mo"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pyscf.mcscf">
+<span id="mcscf"></span><h1>mcscf<a class="headerlink" href="#module-pyscf.mcscf" title="Permalink to this headline">¶</a></h1>
+<p>CASCI and CASSCF</p>
+<p>Simple usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;N 0 0 0; N 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">-108.980200816243354</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">-109.044401882238134</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cas_list</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">]</span> <span class="c"># pick orbitals for CAS space, 1-based indices</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mo</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">sort_mo</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">cas_list</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">-109.007378939813691</span>
+</pre></div>
+</div>
+<p><tt class="xref py py-func docutils literal"><span class="pre">mcscf.CASSCF()</span></tt> or <tt class="xref py py-func docutils literal"><span class="pre">mcscf.CASCI()</span></tt> returns a proper instance of CASSCF/CASCI class.
+There are some parameters to control the CASSCF/CASCI method.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Print level.  Default value equals to <tt class="xref py py-class docutils literal"><span class="pre">Mole.verbose</span></tt>.</dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dd>Allowed memory in MB.  Default value equals to <tt class="xref py py-class docutils literal"><span class="pre">Mole.max_memory</span></tt>.</dd>
+<dt>ncas <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Active space size.</dd>
+<dt>nelecas <span class="classifier-delimiter">:</span> <span class="classifier">tuple of int</span></dt>
+<dd>Active (nelec_alpha, nelec_beta)</dd>
+<dt>ncore <span class="classifier-delimiter">:</span> <span class="classifier">int or tuple of int</span></dt>
+<dd>Core electron number.  In UHF-CASSCF, it&#8217;s a tuple to indicate the different core eletron numbers.</dd>
+<dt>fcisolver <span class="classifier-delimiter">:</span> <span class="classifier">an instance of <tt class="xref py py-class docutils literal"><span class="pre">FCISolver</span></tt></span></dt>
+<dd><p class="first">The pyscf.fci module provides several FCISolver for different scenario.  Generally,
+fci.direct_spin1.FCISolver can be used for all RHF-CASSCF.  However, a proper FCISolver
+can provide better performance and better numerical stability.  One can either use
+<tt class="xref py py-func docutils literal"><span class="pre">fci.solver()</span></tt> function to pick the FCISolver by the program or manually assigen
+the FCISolver to this attribute, e.g.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">fci</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">singlet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">direct_spin1</span><span class="o">.</span><span class="n">FCISolver</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can control FCISolver by setting e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">max_cycle</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-7</span>
+</pre></div>
+</div>
+<p>For more details of the parameter for FCISolver, See <tt class="xref py py-mod docutils literal"><span class="pre">fci</span></tt>.</p>
+<p class="last">By replacing this fcisolver, you can easily use the CASCI/CASSCF solver
+with other FCI replacements,  such as DMRG, QMC.  See <tt class="xref py py-mod docutils literal"><span class="pre">dmrgscf</span></tt> and
+<tt class="xref py py-mod docutils literal"><span class="pre">fciqmcscf</span></tt>.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>The Following attributes are used for CASSCF</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>conv_tol <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Converge threshold.  Default is 1e-7</dd>
+<dt>conv_tol_grad <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Converge threshold for CI gradients and orbital rotation gradients.
+Default is 1e-4</dd>
+<dt>max_orb_stepsize <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd><p class="first">The step size for orbital rotation.  Small step size is prefered.
+Default is 0.03.  
+(NOTE although the default step size is small enough for many systems,
+it happens that the orbital optimizor crosses the barriar of local
+minimum and converge to the neighbour solution, e.g. the CAS(4,4) for
+C2H4 in the test files.  In these cases, one need to fine the
+optimization by reducing max_orb_stepsize, max_ci_stepsize and
+max_cycle_micro, max_cycle_micro_inner and ah_start_tol.)</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">max_orb_stepsize</span> <span class="o">=</span> <span class="o">.</span><span class="mo">01</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">max_cycle_micro</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">max_cycle_macro</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">max_cycle_micro_inner</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">ah_start_tol</span> <span class="o">=</span> <span class="mf">1e-6</span>
+</pre></div>
+</div>
+</dd>
+<dt>max_ci_stepsize <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The max size for approximate CI updates.  The approximate updates are
+used in 1-step algorithm, to estimate the change of CI wavefunction wrt
+the orbital rotation.  Small step size is prefered.  Default is 0.01.</dd>
+<dt>max_cycle_macro <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Max number of macro iterations.  Default is 50.</dd>
+<dt>max_cycle_micro <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Max number of micro iterations in each macro iteration.  Depending on
+systems, increasing this value might reduce the total macro
+iterations.  Generally, 2 - 3 steps should be enough.  Default is 2.</dd>
+<dt>max_cycle_micro_inner <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Max number of steps for the orbital rotations allowed for the augmented
+hessian solver.  It can affect the actual size of orbital rotation.
+Even with a small max_orb_stepsize, a few max_cycle_micro_inner can
+accumulate the rotation and leads to a significant change of the CAS
+space.  Depending on systems, increasing this value migh reduce the
+total number of macro iterations.  The value between 2 - 8 is preferred.
+Default is 4.</dd>
+<dt>ah_level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float, for AH solver.</span></dt>
+<dd>Level shift for the Davidson diagonalization in AH solver.  Default is 0.</dd>
+<dt>ah_conv_tol <span class="classifier-delimiter">:</span> <span class="classifier">float, for AH solver.</span></dt>
+<dd>converge threshold for Davidson diagonalization in AH solver.  Default is 1e-8.</dd>
+<dt>ah_max_cycle <span class="classifier-delimiter">:</span> <span class="classifier">float, for AH solver.</span></dt>
+<dd>Max number of iterations allowd in AH solver.  Default is 20.</dd>
+<dt>ah_lindep <span class="classifier-delimiter">:</span> <span class="classifier">float, for AH solver.</span></dt>
+<dd>Linear dependence threshold for AH solver.  Default is 1e-16.</dd>
+<dt>ah_start_tol <span class="classifier-delimiter">:</span> <span class="classifier">flat, for AH solver.</span></dt>
+<dd>In AH solver, the orbital rotation is started without completely solving the AH problem.
+This value is to control the start point. Default is 1e-4.</dd>
+<dt>ah_start_cycle <span class="classifier-delimiter">:</span> <span class="classifier">int, for AH solver.</span></dt>
+<dd><p class="first">In AH solver, the orbital rotation is started without completely solving the AH problem.
+This value is to control the start point. Default is 3.</p>
+<p><tt class="docutils literal"><span class="pre">ah_conv_tol</span></tt>, <tt class="docutils literal"><span class="pre">ah_max_cycle</span></tt>, <tt class="docutils literal"><span class="pre">ah_lindep</span></tt>, <tt class="docutils literal"><span class="pre">ah_start_tol</span></tt> and <tt class="docutils literal"><span class="pre">ah_start_cycle</span></tt>
+can affect the accuracy and performance of CASSCF solver.  Lower
+<tt class="docutils literal"><span class="pre">ah_conv_tol</span></tt> and <tt class="docutils literal"><span class="pre">ah_lindep</span></tt> can improve the accuracy of CASSCF
+optimization, but slow down the performance.</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;N 0 0 0; N 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">UHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">ah_conv_tol</span> <span class="o">=</span> <span class="mf">1e-5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">-109.044401898486001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">ah_conv_tol</span> <span class="o">=</span> <span class="mf">1e-10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">-109.044401887945668</span>
+</pre></div>
+</div>
+</dd>
+<dt>chkfile <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Checkpoint file to save the intermediate orbitals during the CASSCF optimization.
+Default is the checkpoint file of mean field object.</dd>
+<dt>natorb <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Whether to restore the natural orbital during CASSCF optimization. Default is not.</dd>
+</dl>
+</div></blockquote>
+<p>Saved results</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Total MCSCF energy (electronic energy plus nuclear repulsion)</dd>
+<dt>ci <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>CAS space FCI coefficients</dd>
+<dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool, for CASSCF only</span></dt>
+<dd>It indicates CASSCF optimization converged or not.</dd>
+<dt>mo_coeff <span class="classifier-delimiter">:</span> <span class="classifier">ndarray, for CASSCF only</span></dt>
+<dd>Optimized CASSCF orbitals coefficients</dd>
+</dl>
+</div></blockquote>
+<div class="section" id="module-pyscf.mcscf.casci">
+<span id="casci"></span><h2>CASCI<a class="headerlink" href="#module-pyscf.mcscf.casci" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyscf.mcscf.casci.CASCI">
+<em class="property">class </em><tt class="descclassname">pyscf.mcscf.casci.</tt><tt class="descname">CASCI</tt><big>(</big><em>mf</em>, <em>ncas</em>, <em>nelecas</em>, <em>ncore=None</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/casci.html#CASCI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.casci.CASCI" title="Permalink to this definition">¶</a></dt>
+<dd><p>CASCI</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first last docutils">
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Print level.  Default value equals to <tt class="xref py py-class docutils literal"><span class="pre">Mole.verbose</span></tt>.</dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dd>Allowed memory in MB.  Default value equals to <tt class="xref py py-class docutils literal"><span class="pre">Mole.max_memory</span></tt>.</dd>
+<dt>ncas <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Active space size.</dd>
+<dt>nelecas <span class="classifier-delimiter">:</span> <span class="classifier">tuple of int</span></dt>
+<dd>Active (nelec_alpha, nelec_beta)</dd>
+<dt>ncore <span class="classifier-delimiter">:</span> <span class="classifier">int or tuple of int</span></dt>
+<dd>Core electron number.  In UHF-CASSCF, it&#8217;s a tuple to indicate the different core eletron numbers.</dd>
+<dt>fcisolver <span class="classifier-delimiter">:</span> <span class="classifier">an instance of <tt class="xref py py-class docutils literal"><span class="pre">FCISolver</span></tt></span></dt>
+<dd><p class="first">The pyscf.fci module provides several FCISolver for different scenario.  Generally,
+fci.direct_spin1.FCISolver can be used for all RHF-CASSCF.  However, a proper FCISolver
+can provide better performance and better numerical stability.  One can either use
+<tt class="xref py py-func docutils literal"><span class="pre">fci.solver()</span></tt> function to pick the FCISolver by the program or manually assigen
+the FCISolver to this attribute, e.g.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">fci</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">singlet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">direct_spin1</span><span class="o">.</span><span class="n">FCISolver</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can control FCISolver by setting e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">max_cycle</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-7</span>
+</pre></div>
+</div>
+<p class="last">For more details of the parameter for FCISolver, See <tt class="xref py py-mod docutils literal"><span class="pre">fci</span></tt>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Saved results</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Total MCSCF energy (electronic energy plus nuclear repulsion)</dd>
+<dt>ci <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>CAS space FCI coefficients</dd>
+</dl>
+</div></blockquote>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;N 0 0 0; N 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">-108.980200816243354</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.mcscf.casci.h1e_for_cas">
+<tt class="descclassname">pyscf.mcscf.casci.</tt><tt class="descname">h1e_for_cas</tt><big>(</big><em>casci</em>, <em>mo_coeff=None</em>, <em>ncas=None</em>, <em>ncore=None</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/casci.html#h1e_for_cas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.casci.h1e_for_cas" title="Permalink to this definition">¶</a></dt>
+<dd><p>CAS sapce one-electron hamiltonian</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>casci : a CASSCF/CASCI object or RHF object</dd>
+<dt>Returns:</dt>
+<dd>A tuple, the first is the effective one-electron hamiltonian defined in CAS space,
+the second is the electronic energy from core.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.mcscf.casci.kernel">
+<tt class="descclassname">pyscf.mcscf.casci.</tt><tt class="descname">kernel</tt><big>(</big><em>casci</em>, <em>mo_coeff=None</em>, <em>ci0=None</em>, <em>verbose=None</em>, <em>**cikwargs</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/casci.html#kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.casci.kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>CASCI solver</p>
+</dd></dl>
+
+<span class="target" id="module-pyscf.mcscf.casci_symm"></span><span class="target" id="module-pyscf.mcscf.casci_uhf"></span><dl class="function">
+<dt id="pyscf.mcscf.casci_uhf.h1e_for_cas">
+<tt class="descclassname">pyscf.mcscf.casci_uhf.</tt><tt class="descname">h1e_for_cas</tt><big>(</big><em>casci</em>, <em>mo_coeff=None</em>, <em>ncas=None</em>, <em>ncore=None</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/casci_uhf.html#h1e_for_cas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.casci_uhf.h1e_for_cas" title="Permalink to this definition">¶</a></dt>
+<dd><p>CAS sapce one-electron hamiltonian for UHF-CASCI or UHF-CASSCF</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>casci : a U-CASSCF/U-CASCI object or UHF object</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.mcscf.casci_uhf.kernel">
+<tt class="descclassname">pyscf.mcscf.casci_uhf.</tt><tt class="descname">kernel</tt><big>(</big><em>casci</em>, <em>mo_coeff=None</em>, <em>ci0=None</em>, <em>verbose=None</em>, <em>**cikwargs</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/casci_uhf.html#kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.casci_uhf.kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>UHF-CASCI solver</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyscf.mcscf.mc1step">
+<span id="casscf"></span><h2>CASSCF<a class="headerlink" href="#module-pyscf.mcscf.mc1step" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyscf.mcscf.mc1step.CASSCF">
+<em class="property">class </em><tt class="descclassname">pyscf.mcscf.mc1step.</tt><tt class="descname">CASSCF</tt><big>(</big><em>mf</em>, <em>ncas</em>, <em>nelecas</em>, <em>ncore=None</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/mc1step.html#CASSCF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.mc1step.CASSCF" title="Permalink to this definition">¶</a></dt>
+<dd><p>CASCI</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first last docutils">
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Print level.  Default value equals to <tt class="xref py py-class docutils literal"><span class="pre">Mole.verbose</span></tt>.</dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dd>Allowed memory in MB.  Default value equals to <tt class="xref py py-class docutils literal"><span class="pre">Mole.max_memory</span></tt>.</dd>
+<dt>ncas <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Active space size.</dd>
+<dt>nelecas <span class="classifier-delimiter">:</span> <span class="classifier">tuple of int</span></dt>
+<dd>Active (nelec_alpha, nelec_beta)</dd>
+<dt>ncore <span class="classifier-delimiter">:</span> <span class="classifier">int or tuple of int</span></dt>
+<dd>Core electron number.  In UHF-CASSCF, it&#8217;s a tuple to indicate the different core eletron numbers.</dd>
+<dt>fcisolver <span class="classifier-delimiter">:</span> <span class="classifier">an instance of <tt class="xref py py-class docutils literal"><span class="pre">FCISolver</span></tt></span></dt>
+<dd><p class="first">The pyscf.fci module provides several FCISolver for different scenario.  Generally,
+fci.direct_spin1.FCISolver can be used for all RHF-CASSCF.  However, a proper FCISolver
+can provide better performance and better numerical stability.  One can either use
+<tt class="xref py py-func docutils literal"><span class="pre">fci.solver()</span></tt> function to pick the FCISolver by the program or manually assigen
+the FCISolver to this attribute, e.g.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">fci</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">singlet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">direct_spin1</span><span class="o">.</span><span class="n">FCISolver</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can control FCISolver by setting e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">max_cycle</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-7</span>
+</pre></div>
+</div>
+<p class="last">For more details of the parameter for FCISolver, See <tt class="xref py py-mod docutils literal"><span class="pre">fci</span></tt>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Saved results</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Total MCSCF energy (electronic energy plus nuclear repulsion)</dd>
+<dt>ci <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>CAS space FCI coefficients</dd>
+</dl>
+</div></blockquote>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;N 0 0 0; N 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">-108.980200816243354</span>
+<span class="go">CASSCF</span>
+</pre></div>
+</div>
+<p>Extra attributes for CASSCF:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>conv_tol <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Converge threshold.  Default is 1e-7</dd>
+<dt>conv_tol_grad <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Converge threshold for CI gradients and orbital rotation gradients.
+Default is 1e-4</dd>
+<dt>max_orb_stepsize <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The step size for orbital rotation.  Small step size is prefered.
+Default is 0.03.</dd>
+<dt>max_ci_stepsize <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The max size for approximate CI updates.  The approximate updates are
+used in 1-step algorithm, to estimate the change of CI wavefunction wrt
+the orbital rotation.  Small step size is prefered.  Default is 0.01.</dd>
+<dt>max_cycle_macro <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Max number of macro iterations.  Default is 50.</dd>
+<dt>max_cycle_micro <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Max number of micro iterations in each macro iteration.  Depending on
+systems, increasing this value might reduce the total macro
+iterations.  Generally, 2 - 3 steps should be enough.  Default is 2.</dd>
+<dt>max_cycle_micro_inner <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Max number of steps for the orbital rotations allowed for the augmented
+hessian solver.  It can affect the actual size of orbital rotation.
+Even with a small max_orb_stepsize, a few max_cycle_micro_inner can
+accumulate the rotation and leads to a significant change of the CAS
+space.  Depending on systems, increasing this value migh reduce the
+total number of macro iterations.  The value between 2 - 8 is preferred.
+Default is 4.</dd>
+<dt>ah_level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float, for AH solver.</span></dt>
+<dd>Level shift for the Davidson diagonalization in AH solver.  Default is 0.</dd>
+<dt>ah_conv_tol <span class="classifier-delimiter">:</span> <span class="classifier">float, for AH solver.</span></dt>
+<dd>converge threshold for Davidson diagonalization in AH solver.  Default is 1e-8.</dd>
+<dt>ah_max_cycle <span class="classifier-delimiter">:</span> <span class="classifier">float, for AH solver.</span></dt>
+<dd>Max number of iterations allowd in AH solver.  Default is 20.</dd>
+<dt>ah_lindep <span class="classifier-delimiter">:</span> <span class="classifier">float, for AH solver.</span></dt>
+<dd>Linear dependence threshold for AH solver.  Default is 1e-16.</dd>
+<dt>ah_start_tol <span class="classifier-delimiter">:</span> <span class="classifier">flat, for AH solver.</span></dt>
+<dd>In AH solver, the orbital rotation is started without completely solving the AH problem.
+This value is to control the start point. Default is 1e-4.</dd>
+<dt>ah_start_cycle <span class="classifier-delimiter">:</span> <span class="classifier">int, for AH solver.</span></dt>
+<dd><p class="first">In AH solver, the orbital rotation is started without completely solving the AH problem.
+This value is to control the start point. Default is 3.</p>
+<p><tt class="docutils literal"><span class="pre">ah_conv_tol</span></tt>, <tt class="docutils literal"><span class="pre">ah_max_cycle</span></tt>, <tt class="docutils literal"><span class="pre">ah_lindep</span></tt>, <tt class="docutils literal"><span class="pre">ah_start_tol</span></tt> and <tt class="docutils literal"><span class="pre">ah_start_cycle</span></tt>
+can affect the accuracy and performance of CASSCF solver.  Lower
+<tt class="docutils literal"><span class="pre">ah_conv_tol</span></tt> and <tt class="docutils literal"><span class="pre">ah_lindep</span></tt> can improve the accuracy of CASSCF
+optimization, but decrease the performance.</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;N 0 0 0; N 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">UHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">ah_conv_tol</span> <span class="o">=</span> <span class="mf">1e-5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">-109.044401898486001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">ah_conv_tol</span> <span class="o">=</span> <span class="mf">1e-10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">-109.044401887945668</span>
+</pre></div>
+</div>
+</dd>
+<dt>chkfile <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Checkpoint file to save the intermediate orbitals during the CASSCF optimization.
+Default is the checkpoint file of mean field object.</dd>
+<dt>natorb <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Whether to restore the natural orbital during CASSCF optimization.  Default is not.</dd>
+<dt>ci_response_space <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>subspace size to solve the CI vector response.  Default is 2.</dd>
+</dl>
+</div></blockquote>
+<p>Saved results</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Total MCSCF energy (electronic energy plus nuclear repulsion)</dd>
+<dt>ci <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>CAS space FCI coefficients</dd>
+<dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>It indicates CASSCF optimization converged or not.</dd>
+<dt>mo_coeff <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Optimized CASSCF orbitals coefficients</dd>
+</dl>
+</div></blockquote>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;N 0 0 0; N 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">-109.044401882238134</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.mcscf.mc1step.kernel">
+<tt class="descclassname">pyscf.mcscf.mc1step.</tt><tt class="descname">kernel</tt><big>(</big><em>casscf</em>, <em>mo_coeff</em>, <em>tol=1e-07</em>, <em>macro=30</em>, <em>micro=8</em>, <em>ci0=None</em>, <em>verbose=None</em>, <em>dump_chk=True</em>, <em>dump_chk_ci=False</em>, <em>**cikwargs</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/mc1step.html#kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.mc1step.kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>CASSCF solver</p>
+</dd></dl>
+
+<span class="target" id="module-pyscf.mcscf.mc1step_symm"></span><span class="target" id="module-pyscf.mcscf.mc1step_uhf"></span><span class="target" id="module-pyscf.mcscf.mc_ao2mo"></span><span class="target" id="module-pyscf.mcscf.mc_ao2mo_uhf"></span></div>
+<div class="section" id="module-pyscf.mcscf.addons">
+<span id="addons"></span><h2>addons<a class="headerlink" href="#module-pyscf.mcscf.addons" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyscf.mcscf.addons.cas_natorb">
+<tt class="descclassname">pyscf.mcscf.addons.</tt><tt class="descname">cas_natorb</tt><big>(</big><em>casscf</em>, <em>fcivec=None</em>, <em>mo_coeff=None</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/addons.html#cas_natorb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.addons.cas_natorb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restore natrual orbitals</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.mcscf.addons.get_fock">
+<tt class="descclassname">pyscf.mcscf.addons.</tt><tt class="descname">get_fock</tt><big>(</big><em>casscf</em>, <em>fcivec=None</em>, <em>mo_coeff=None</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/addons.html#get_fock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.addons.get_fock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generalized Fock matrix</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.mcscf.addons.make_rdm1">
+<tt class="descclassname">pyscf.mcscf.addons.</tt><tt class="descname">make_rdm1</tt><big>(</big><em>casscf</em>, <em>fcivec=None</em>, <em>mo_coeff=None</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/addons.html#make_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.addons.make_rdm1" title="Permalink to this definition">¶</a></dt>
+<dd><p>One-particle densit matrix in AO representation</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>casscf : an <tt class="xref py py-class docutils literal"><span class="pre">CASSCF</span></tt> or <tt class="xref py py-class docutils literal"><span class="pre">CASCI</span></tt> object</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>fcivec <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>CAS space FCI coefficients. If not given, take casscf.ci.</dd>
+<dt>mo_coeff <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Orbital coefficients. If not given, take casscf.mo_coeff.</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">scipy.linalg</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;N 0 0 0; N 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">natocc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">mcscf</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="n">mc</span><span class="p">),</span> <span class="n">mf</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">(),</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">natocc</span><span class="p">)</span>
+<span class="go">[ 0.0121563   0.0494735   0.0494735   1.95040395  1.95040395  1.98808879</span>
+<span class="go">  2.          2.          2.          2.        ]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.mcscf.addons.make_rdm1s">
+<tt class="descclassname">pyscf.mcscf.addons.</tt><tt class="descname">make_rdm1s</tt><big>(</big><em>casscf</em>, <em>fcivec=None</em>, <em>mo_coeff=None</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/addons.html#make_rdm1s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.addons.make_rdm1s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alpha and beta one-particle densit matrices in AO representation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.mcscf.addons.map2hf">
+<tt class="descclassname">pyscf.mcscf.addons.</tt><tt class="descname">map2hf</tt><big>(</big><em>casscf</em>, <em>mf_mo=None</em>, <em>base=1</em>, <em>tol=0.5</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/addons.html#map2hf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.addons.map2hf" title="Permalink to this definition">¶</a></dt>
+<dd><p>The overlap between the CASSCF optimized orbitals and the canonical HF orbitals.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.mcscf.addons.project_init_guess">
+<tt class="descclassname">pyscf.mcscf.addons.</tt><tt class="descname">project_init_guess</tt><big>(</big><em>casscf</em>, <em>init_mo</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/addons.html#project_init_guess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.addons.project_init_guess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Project the given initial guess to the current CASSCF problem.  The
+projected initial guess has two parts.  The core orbitals are directly
+taken from the Hartree-Fock orbitals, and the active orbitals are
+projected from the given initial guess.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">casscf : an <tt class="xref py py-class docutils literal"><span class="pre">CASSCF</span></tt> or <tt class="xref py py-class docutils literal"><span class="pre">CASCI</span></tt> object</p>
+<dl class="last docutils">
+<dt>init_mo <span class="classifier-delimiter">:</span> <span class="classifier">ndarray or list of ndarray</span></dt>
+<dd>Initial guess orbitals which are not orth-normal for the current
+molecule.  When the casscf is UHF-CASSCF, the init_mo needs to be
+a list of two ndarrays, for alpha and beta orbitals</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>New orthogonal initial guess orbitals with the core taken from
+Hartree-Fock orbitals and projected active space from original initial
+guess orbitals</dd>
+</dl>
+<p>Examples:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; F 0 0 0.8&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">mo</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">sort_mo</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">])</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;E(0.8) = </span><span class="si">%.12f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">init_mo</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">mo_coeff</span>
+<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.</span><span class="p">,</span> <span class="o">.</span><span class="mi">2</span><span class="p">):</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="p">[[</span><span class="s">&#39;H&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="p">[</span><span class="s">&#39;F&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="p">)]]</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">mo</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">project_init_guess</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">init_mo</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;E(</span><span class="si">%2.1f</span><span class="s">) = </span><span class="si">%.12f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">init_mo</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">mo_coeff</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.mcscf.addons.sort_mo">
+<tt class="descclassname">pyscf.mcscf.addons.</tt><tt class="descname">sort_mo</tt><big>(</big><em>casscf</em>, <em>mo_coeff</em>, <em>caslst</em>, <em>base=1</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/addons.html#sort_mo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.addons.sort_mo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pick orbitals for CAS space</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">casscf : an <tt class="xref py py-class docutils literal"><span class="pre">CASSCF</span></tt> or <tt class="xref py py-class docutils literal"><span class="pre">CASCI</span></tt> object</p>
+<dl class="last docutils">
+<dt>mo_coeff <span class="classifier-delimiter">:</span> <span class="classifier">ndarray or a list of ndarray</span></dt>
+<dd>Orbitals for CASSCF initial guess.  In the UHF-CASSCF, it&#8217;s a list
+of two orbitals, for alpha and beta spin.</dd>
+<dt>caslst <span class="classifier-delimiter">:</span> <span class="classifier">list of int or nested list of int</span></dt>
+<dd>A list of orbital indices to represent the CAS space.  In the UHF-CASSCF,
+it&#8217;s consist of two lists, for alpha and beta spin.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>base <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>0-based (C-like) or 1-based (Fortran-like) caslst</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>An reoreded mo_coeff, which put the orbitals given by caslst in the CAS space</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;N 0 0 0; N 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cas_list</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">]</span> <span class="c"># pi orbitals</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mo</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">sort_mo</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">cas_list</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">-109.007378939813691</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.mcscf.addons.spin_square">
+<tt class="descclassname">pyscf.mcscf.addons.</tt><tt class="descname">spin_square</tt><big>(</big><em>casscf</em>, <em>fcivec=None</em>, <em>mo_coeff=None</em>, <em>ovlp=None</em><big>)</big><a class="reference internal" href="modules/pyscf/mcscf/addons.html#spin_square"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.mcscf.addons.spin_square" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin square of the UHF-CASSCF wavefunction</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>A list of two floats.  The first is the expectation value of S^2.
+The second is the corresponding 2S+1</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; O 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto-3g&#39;</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">UHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;S^2 = </span><span class="si">%.7f</span><span class="s">, 2S+1 = </span><span class="si">%.7f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">spin_square</span><span class="p">(</span><span class="n">mc</span><span class="p">))</span>
+<span class="go">S^2 = 3.9831589, 2S+1 = 4.1149284</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">mcscf</a><ul>
+<li><a class="reference internal" href="#module-pyscf.mcscf.casci">CASCI</a></li>
+<li><a class="reference internal" href="#module-pyscf.mcscf.mc1step">CASSCF</a></li>
+<li><a class="reference internal" href="#module-pyscf.mcscf.addons">addons</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ao2mo.html"
+                        title="previous chapter">ao2mo</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="fci.html"
+                        title="next chapter">fci</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="sources/mcscf.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fci.html" title="fci"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ao2mo.html" title="ao2mo"
+             >previous</a> |</li>
+        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

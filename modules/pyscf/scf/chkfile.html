@@ -1,0 +1,160 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyscf.scf.chkfile &mdash; PySCF 0.10 documentation</title>
+    
+    <link rel="stylesheet" href="../../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.10',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../../static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 0.10 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 0.10 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyscf.scf.chkfile</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">pyscf.gto</span>
+
+<span class="k">def</span> <span class="nf">load_chkfile_key</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">load</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="n">fh5</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fh5</span><span class="p">:</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">fh5</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">fh5</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">val</span>
+
+<span class="k">def</span> <span class="nf">dump_chkfile_key</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="n">dump</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">h5py</span><span class="o">.</span><span class="n">is_hdf5</span><span class="p">(</span><span class="n">chkfile</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fh5</span><span class="p">:</span>
+                <span class="k">del</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+
+<span class="c">###########################################</span>
+<span class="k">def</span> <span class="nf">load_scf</span><span class="p">(</span><span class="n">chkfile</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
+        <span class="n">mol</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+        <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">mol</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s">&#39;/dev/null&#39;</span>
+        <span class="n">moldic</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="bp">False</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">moldic</span><span class="p">)</span>
+        <span class="n">scf_rec</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;hf_energy&#39;</span><span class="p">:</span> <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/hf_energy&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s">&#39;mo_energy&#39;</span><span class="p">:</span> <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_energy&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s">&#39;mo_occ&#39;</span>   <span class="p">:</span> <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_occ&#39;</span>   <span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s">&#39;mo_coeff&#39;</span> <span class="p">:</span> <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_coeff&#39;</span> <span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="p">}</span>
+    <span class="k">return</span> <span class="n">mol</span><span class="p">,</span> <span class="n">scf_rec</span>
+
+<div class="viewcode-block" id="dump_scf"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.chkfile.dump_scf">[docs]</a><span class="k">def</span> <span class="nf">dump_scf</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">,</span> <span class="n">hf_energy</span><span class="p">,</span> <span class="n">mo_energy</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;save temporary results&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">h5py</span><span class="o">.</span><span class="n">is_hdf5</span><span class="p">(</span><span class="n">chkfile</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s">&#39;mol&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fh5</span><span class="p">:</span>
+                <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">format</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">pack</span><span class="p">())</span>
+            <span class="k">if</span> <span class="s">&#39;scf&#39;</span> <span class="ow">in</span> <span class="n">fh5</span><span class="p">:</span>
+                <span class="k">del</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf&#39;</span><span class="p">])</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/hf_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hf_energy</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mo_energy</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_occ&#39;</span>   <span class="p">]</span> <span class="o">=</span> <span class="n">mo_occ</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_coeff&#39;</span> <span class="p">]</span> <span class="o">=</span> <span class="n">mo_coeff</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">format</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">pack</span><span class="p">())</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/hf_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hf_energy</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mo_energy</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_occ&#39;</span>   <span class="p">]</span> <span class="o">=</span> <span class="n">mo_occ</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_coeff&#39;</span> <span class="p">]</span> <span class="o">=</span> <span class="n">mo_coeff</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 0.10 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
