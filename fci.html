@@ -6,25 +6,25 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>fci &mdash; PySCF 0.10 documentation</title>
+    <title>fci &mdash; PySCF 1.0 documentation</title>
     
-    <link rel="stylesheet" href="static/default.css" type="text/css" />
-    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.10',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="static/jquery.js"></script>
-    <script type="text/javascript" src="static/underscore.js"></script>
-    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 0.10 documentation" href="index.html" />
+    <link rel="top" title="PySCF 1.0 documentation" href="index.html" />
     <link rel="next" title="symm" href="symm.html" />
     <link rel="prev" title="mcscf" href="mcscf.html" /> 
   </head>
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="mcscf.html" title="mcscf"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -57,30 +57,482 @@
 <span id="fci"></span><h1>fci<a class="headerlink" href="#module-pyscf.fci" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-pyscf.fci.direct_spin1">
 <span id="direct-ci"></span><h2>direct CI<a class="headerlink" href="#module-pyscf.fci.direct_spin1" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-pyscf.fci.direct_spin1_symm"></span><span class="target" id="module-pyscf.fci.direct_spin0"></span><span class="target" id="module-pyscf.fci.direct_spin0_symm"></span><span class="target" id="module-pyscf.fci.direct_ms0"></span><span class="target" id="module-pyscf.fci.direct_ms0_symm"></span><span class="target" id="module-pyscf.fci.direct_uhf"></span></div>
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.absorb_h1e">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">absorb_h1e</tt><big>(</big><em>h1e</em>, <em>eri</em>, <em>norb</em>, <em>nelec</em>, <em>fac=1</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#absorb_h1e"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.absorb_h1e" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify 2e Hamiltonian to include 1e Hamiltonian contribution.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.contract_1e">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">contract_1e</tt><big>(</big><em>f1e</em>, <em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#contract_1e"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.contract_1e" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contract the 1-electron Hamiltonian with a FCI vector to get a new FCI
+vector.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.contract_2e">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">contract_2e</tt><big>(</big><em>eri</em>, <em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#contract_2e"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.contract_2e" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contract the 2-electron Hamiltonian with a FCI vector to get a new FCI
+vector.</p>
+<p>Note the input arg eri is NOT the 2e hamiltonian matrix, the 2e hamiltonian is</p>
+<div class="math">
+\[\begin{split}h2e &amp;= eri_{pq,rs} p^+ q r^+ s \\
+    &amp;= (pq|rs) p^+ r^+ s q - (pq|rs) \delta_{qr} p^+ s\end{split}\]</div>
+<p>So eri is defined as</p>
+<div class="math">
+\[eri_{pq,rs} = (pq|rs) - (1/Nelec) \sum_q (pq|qs)\]</div>
+<p>to restore the symmetry between pq and rs,</p>
+<div class="math">
+\[eri_{pq,rs} = (pq|rs) - (.5/Nelec) [\sum_q (pq|qs) + \sum_p (pq|rp)]\]</div>
+<p>Please refer to the treatment in <tt class="xref py py-func docutils literal"><span class="pre">direct_spin1.absorb_h1e()</span></tt></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.energy">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">energy</tt><big>(</big><em>h1e</em>, <em>eri</em>, <em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the FCI electronic energy for given Hamiltonian and FCI vector.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.make_hdiag">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">make_hdiag</tt><big>(</big><em>h1e</em>, <em>eri</em>, <em>norb</em>, <em>nelec</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#make_hdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.make_hdiag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Diagonal Hamiltonian for Davidson preconditioner</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.make_rdm1">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">make_rdm1</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#make_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.make_rdm1" title="Permalink to this definition">¶</a></dt>
+<dd><p>spin-traced 1-particle density matrix</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.make_rdm12">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">make_rdm12</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#make_rdm12"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.make_rdm12" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin traced 1- and 2-particle density matrices,</p>
+<p>NOTE the 2pdm is <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span> but is
+stored as [p,r,q,s]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.make_rdm12s">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">make_rdm12s</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#make_rdm12s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.make_rdm12s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin searated 1- and 2-particle density matrices,
+(alpha,beta) for 1-particle density matrices.
+(alpha,alpha,alpha,alpha), (alpha,alpha,beta,beta),
+(beta,beta,beta,beta) for 2-particle density matrices.</p>
+<p>NOTE the 2pdm is <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span> but is
+stored as [p,r,q,s]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.make_rdm1s">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">make_rdm1s</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#make_rdm1s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.make_rdm1s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin searated 1-particle density matrices, (alpha,beta)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.pspace">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">pspace</tt><big>(</big><em>h1e</em>, <em>eri</em>, <em>norb</em>, <em>nelec</em>, <em>hdiag</em>, <em>np=400</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#pspace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.pspace" title="Permalink to this definition">¶</a></dt>
+<dd><p>pspace Hamiltonian to improve Davidson preconditioner. See, CPL, 169, 463</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.trans_rdm1">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">trans_rdm1</tt><big>(</big><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#trans_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.trans_rdm1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin traced transition 1-particle density matrices</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.trans_rdm12">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">trans_rdm12</tt><big>(</big><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#trans_rdm12"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.trans_rdm12" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin traced transition 1- and 2-particle density matrices.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.trans_rdm12s">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">trans_rdm12s</tt><big>(</big><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#trans_rdm12s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.trans_rdm12s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin separated transition 1- and 2-particle density matrices.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.trans_rdm1s">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">trans_rdm1s</tt><big>(</big><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#trans_rdm1s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.trans_rdm1s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin separated transition 1-particle density matrices</p>
+</dd></dl>
+
+<span class="target" id="module-pyscf.fci.direct_spin1_symm"></span><span class="target" id="module-pyscf.fci.direct_spin0"></span><span class="target" id="module-pyscf.fci.direct_spin0_symm"></span><span class="target" id="module-pyscf.fci.direct_uhf"></span></div>
 <div class="section" id="module-pyscf.fci.cistring">
 <span id="cistring"></span><h2>cistring<a class="headerlink" href="#module-pyscf.fci.cistring" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyscf.fci.cistring.addr2str">
+<tt class="descclassname">pyscf.fci.cistring.</tt><tt class="descname">addr2str</tt><big>(</big><em>norb</em>, <em>nelec</em>, <em>addr</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/cistring.html#addr2str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.cistring.addr2str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert CI determinant address to string</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.cistring.gen_cre_str_index">
+<tt class="descclassname">pyscf.fci.cistring.</tt><tt class="descname">gen_cre_str_index</tt><big>(</big><em>orb_list</em>, <em>nelec</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/cistring.html#gen_cre_str_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.cistring.gen_cre_str_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>linkstr_index to map between N electron string to N+1 electron string.
+It maps the given string to the address of the string which is generated by
+the creation operator.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.cistring.gen_des_str_index">
+<tt class="descclassname">pyscf.fci.cistring.</tt><tt class="descname">gen_des_str_index</tt><big>(</big><em>orb_list</em>, <em>nelec</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/cistring.html#gen_des_str_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.cistring.gen_des_str_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>linkstr_index to map between N electron string to N-1 electron string.
+It maps the given string to the address of the string which is generated by
+the annihilation operator.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.cistring.gen_linkstr_index">
+<tt class="descclassname">pyscf.fci.cistring.</tt><tt class="descname">gen_linkstr_index</tt><big>(</big><em>orb_list</em>, <em>nocc</em>, <em>strs=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/cistring.html#gen_linkstr_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.cistring.gen_linkstr_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up table, for the strings relationship in terms of a
+creation-annihilating operator pair.</p>
+<p>For given string str0, index[str0] is (nocc+nocc*nvir) x 4 array.
+The first nocc rows [i(:occ),i(:occ),str0,sign] are occupied-occupied
+excitations, which do not change the string. The next nocc*nvir rows
+[a(:vir),i(:occ),str1,sign] are occupied-virtual exciations, starting from
+str0, annihilating i, creating a, to get str1.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.cistring.gen_linkstr_index_trilidx">
+<tt class="descclassname">pyscf.fci.cistring.</tt><tt class="descname">gen_linkstr_index_trilidx</tt><big>(</big><em>orb_list</em>, <em>nocc</em>, <em>strs=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/cistring.html#gen_linkstr_index_trilidx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.cistring.gen_linkstr_index_trilidx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate linkstr_index with the assumption that <span class="math">\(p^+ q|0\rangle\)</span>
+where <span class="math">\(p &gt; q\)</span>.
+So the resultant link_index has the structure <tt class="docutils literal"><span class="pre">[pq,</span> <span class="pre">*,</span> <span class="pre">str1,</span> <span class="pre">sign]</span></tt>.
+It is identical to a call to <tt class="docutils literal"><span class="pre">reform_linkstr_index(gen_linkstr_index(...))</span></tt>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.cistring.gen_strings4orblist">
+<tt class="descclassname">pyscf.fci.cistring.</tt><tt class="descname">gen_strings4orblist</tt><big>(</big><em>orb_list</em>, <em>nelec</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/cistring.html#gen_strings4orblist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.cistring.gen_strings4orblist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate string from the given orbital list.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>list of int64.  One int64 element represents one string in binary format.
+The binary format takes the convention that the one bit stands for one
+orbital, bit-1 means occupied and bit-0 means unoccupied.  The lowest
+(right-most) bit corresponds to the lowest orbital in the orb_list.</dd>
+</dl>
+<p>Exampels:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">bin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gen_strings4orblist</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span><span class="mi">2</span><span class="p">)]</span>
+<span class="go">[0b11, 0b101, 0b110, 0b1001, 0b1010, 0b1100]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">bin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gen_strings4orblist</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="mi">2</span><span class="p">)]</span>
+<span class="go">[0b1010, 0b1001, 0b11, 0b1100, 0b110, 0b101]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.cistring.reform_linkstr_index">
+<tt class="descclassname">pyscf.fci.cistring.</tt><tt class="descname">reform_linkstr_index</tt><big>(</big><em>link_index</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/cistring.html#reform_linkstr_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.cistring.reform_linkstr_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compress the (a, i) pair index in linkstr_index to a lower triangular
+index, to match the 4-fold symmetry of integrals.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.cistring.str2addr">
+<tt class="descclassname">pyscf.fci.cistring.</tt><tt class="descname">str2addr</tt><big>(</big><em>norb</em>, <em>nelec</em>, <em>string</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/cistring.html#str2addr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.cistring.str2addr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the string to the CI determinant address</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-pyscf.fci.spin_op">
 <span id="spin-operator"></span><h2>spin operator<a class="headerlink" href="#module-pyscf.fci.spin_op" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyscf.fci.spin_op.contract_ss">
+<tt class="descclassname">pyscf.fci.spin_op.</tt><tt class="descname">contract_ss</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/spin_op.html#contract_ss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.spin_op.contract_ss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contract spin square operator with FCI wavefunction <span class="math">\(S^2 |CI&gt;\)</span></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.spin_op.spin_square">
+<tt class="descclassname">pyscf.fci.spin_op.</tt><tt class="descname">spin_square</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>mo_coeff=None</em>, <em>ovlp=1</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/spin_op.html#spin_square"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.spin_op.spin_square" title="Permalink to this definition">¶</a></dt>
+<dd><p>General spin square operator.</p>
+<p>... math:</p>
+<div class="highlight-python"><div class="highlight"><pre>\begin{align}
+&lt;CI|S_+*S_-|CI&gt; &amp;= neleca + \delta_{ik}\delta_{jl}Gamma_{iakb,jbla} \\
+&lt;CI|S_-*S_+|CI&gt; &amp;= nelecb + \delta_{ik}\delta_{jl}Gamma_{ibka,jalb} \\
+&lt;CI|S_z*S_z|CI&gt; &amp;= \delta_{ik}\delta_{jl}(Gamma_{iaka,jala} - Gamma_{iaka,jblb}
+                 -Gamma_{ibkb,jala} + Gamma_{ibkb,jblb}) + (n_\alpha+n_\beta)/4
+\end{align}
+</pre></div>
+</div>
+<p>Given the overlap betwen non-degenerate alpha and beta orbitals, this
+function can compute the expectation value spin square operator for
+UHF-FCI wavefunction</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.spin_op.spin_square0">
+<tt class="descclassname">pyscf.fci.spin_op.</tt><tt class="descname">spin_square0</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/spin_op.html#spin_square0"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.spin_op.spin_square0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin square for RHF-FCI CI wfn only (obtained from spin-degenerated
+Hamiltonian)</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-pyscf.fci.rdm">
 <span id="rdm"></span><h2>rdm<a class="headerlink" href="#module-pyscf.fci.rdm" title="Permalink to this headline">¶</a></h2>
 <dl class="data">
 <dt id="pyscf.fci.rdm.librdm">
-<tt class="descclassname">pyscf.fci.rdm.</tt><tt class="descname">librdm</tt><em class="property"> = &lt;CDLL '/home/sunqm/workspace/program/pyscf/lib/libmcscf.so', handle 3070450 at 2b45d7f10890&gt;</em><a class="headerlink" href="#pyscf.fci.rdm.librdm" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.fci.rdm.</tt><tt class="descname">librdm</tt><em class="property"> = &lt;CDLL '/home/sunqm/workspace/program/pyscf/lib/libfci.so', handle 16f98d0 at 2b8304f8b290&gt;</em><a class="headerlink" href="#pyscf.fci.rdm.librdm" title="Permalink to this definition">¶</a></dt>
 <dd><p>FCI 1, 2, 3, 4-particle density matrices.</p>
-<dl class="docutils">
-<dt>Note the index difference to the mean-field density matrix.  Here,</dt>
-<dd>dm[p,q,r,s,...] = &lt;p^+ q r^+ s ... &gt;</dd>
-<dt>rather than the mean-field DM</dt>
-<dd>dm[p,q] = &lt; q^+ p &gt;</dd>
-</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.rdm.make_dm123">
+<tt class="descclassname">pyscf.fci.rdm.</tt><tt class="descname">make_dm123</tt><big>(</big><em>fname</em>, <em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/rdm.html#make_dm123"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.rdm.make_dm123" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin traced 1, 2 and 3-particle density matrices.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The 2pdm is <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span> but is
+stored as [p,r,q,s];
+The 3pdm is <span class="math">\(\langle p^\dagger q^\dagger r^\dagger u t s\rangle\)</span>,
+stored as [p,s,q,t,r,u].</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.rdm.make_dm1234">
+<tt class="descclassname">pyscf.fci.rdm.</tt><tt class="descname">make_dm1234</tt><big>(</big><em>fname</em>, <em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/rdm.html#make_dm1234"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.rdm.make_dm1234" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin traced 1, 2, 3 and 4-particle density matrices.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The 2pdm is <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span> but is
+stored as [p,r,q,s];
+The 3pdm is <span class="math">\(\langle p^\dagger q^\dagger r^\dagger u t s\rangle\)</span>,
+stored as [p,s,q,t,r,u];
+The 4pdm is <span class="math">\(\langle p^\dagger q^\dagger r^\dagger s^dagger w v u t\rangle\)</span>,
+stored as [p,w,q,v,r,u,s,t].</p>
+</div>
 </dd></dl>
 
 </div>
 <div class="section" id="module-pyscf.fci.addons">
 <span id="addons"></span><h2>addons<a class="headerlink" href="#module-pyscf.fci.addons" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyscf.fci.addons.cre_a">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">cre_a</tt><big>(</big><em>ci0</em>, <em>norb</em>, <em>nelec</em>, <em>ap_id</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#cre_a"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.cre_a" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct (N+1)-electron wavefunction by adding an alpha electron in
+the N-electron wavefunction.</p>
+<p>... math:</p>
+<div class="highlight-python"><div class="highlight"><pre>|N+1\rangle = \hat{a}^+_p |N\rangle
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>ci0 <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>CI coefficients, row for alpha strings and column for beta strings.</dd>
+<dt>norb <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of orbitals.</dd>
+<dt>nelec <span class="classifier-delimiter">:</span> <span class="classifier">int or 2-item list</span></dt>
+<dd>Number of electrons, or 2-item list for (alpha, beta) electrons</dd>
+<dt>ap_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Orbital index (0-based), for the creation operator</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>2D array, row for alpha strings and column for beta strings. Note it
+has different number of rows to the input CI coefficients.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.cre_b">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">cre_b</tt><big>(</big><em>ci0</em>, <em>norb</em>, <em>nelec</em>, <em>ap_id</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#cre_b"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.cre_b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct (N+1)-electron wavefunction by adding a beta electron in
+the N-electron wavefunction.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>ci0 <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>CI coefficients, row for alpha strings and column for beta strings.</dd>
+<dt>norb <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of orbitals.</dd>
+<dt>nelec <span class="classifier-delimiter">:</span> <span class="classifier">int or 2-item list</span></dt>
+<dd>Number of electrons, or 2-item list for (alpha, beta) electrons</dd>
+<dt>ap_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Orbital index (0-based), for the creation operator</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>2D array, row for alpha strings and column for beta strings. Note it
+has different number of columns to the input CI coefficients.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.des_a">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">des_a</tt><big>(</big><em>ci0</em>, <em>norb</em>, <em>nelec</em>, <em>ap_id</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#des_a"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.des_a" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct (N-1)-electron wavefunction by removing an alpha electron from
+the N-electron wavefunction.</p>
+<p>... math:</p>
+<div class="highlight-python"><div class="highlight"><pre>|N-1\rangle = \hat{a}_p |N\rangle
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>ci0 <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>CI coefficients, row for alpha strings and column for beta strings.</dd>
+<dt>norb <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of orbitals.</dd>
+<dt>nelec <span class="classifier-delimiter">:</span> <span class="classifier">int or 2-item list</span></dt>
+<dd>Number of electrons, or 2-item list for (alpha, beta) electrons</dd>
+<dt>ap_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Orbital index (0-based), for the annihilation operator</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>2D array, row for alpha strings and column for beta strings.  Note it
+has different number of rows to the input CI coefficients</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.des_b">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">des_b</tt><big>(</big><em>ci0</em>, <em>norb</em>, <em>nelec</em>, <em>ap_id</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#des_b"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.des_b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct (N-1)-electron wavefunction by removing a beta electron from
+N-electron wavefunction.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>ci0 <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>CI coefficients, row for alpha strings and column for beta strings.</dd>
+<dt>norb <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of orbitals.</dd>
+<dt>nelec <span class="classifier-delimiter">:</span> <span class="classifier">int or 2-item list</span></dt>
+<dd>Number of electrons, or 2-item list for (alpha, beta) electrons</dd>
+<dt>ap_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Orbital index (0-based), for the annihilation operator</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>2D array, row for alpha strings and column for beta strings. Note it
+has different number of columns to the input CI coefficients.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.energy">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">energy</tt><big>(</big><em>h1e</em>, <em>eri</em>, <em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the FCI electronic energy for given Hamiltonian and FCI vector.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.fix_spin_">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">fix_spin_</tt><big>(</big><em>fciobj</em>, <em>shift=0.1</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#fix_spin_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.fix_spin_" title="Permalink to this definition">¶</a></dt>
+<dd><p>If FCI solver cannot stick on spin eigenfunction, modify the solver by
+adding a shift on spin square operator</p>
+<div class="math">
+\[(H + shift*S^2) |\Psi\rangle = E |\Psi\rangle\]</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>fciobj : An instance of <tt class="xref py py-class docutils literal"><span class="pre">FCISolver</span></tt></dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>shift <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Level shift for states which have different spin</dd>
+</dl>
+</dd>
+<dt>Returns</dt>
+<dd>A modified FCI object based on fciobj.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.initguess_triplet">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">initguess_triplet</tt><big>(</big><em>norb</em>, <em>nelec</em>, <em>binstring</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#initguess_triplet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.initguess_triplet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a triplet initial guess for FCI solver</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.large_ci">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">large_ci</tt><big>(</big><em>ci</em>, <em>norb</em>, <em>nelec</em>, <em>tol=0.1</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#large_ci"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.large_ci" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search for the largest CI coefficients</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.overlap">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">overlap</tt><big>(</big><em>string1</em>, <em>string2</em>, <em>norb</em>, <em>s=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#overlap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.overlap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determinants overlap on non-orthogonal one-particle basis</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.reorder">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">reorder</tt><big>(</big><em>ci</em>, <em>nelec</em>, <em>orbidxa</em>, <em>orbidxb=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#reorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.reorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reorder the CI coefficients, to adapt the reordered orbitals (The relation
+of the reordered orbitals and original orbitals is  new = old[idx]).  Eg.</p>
+<p>The orbital ordering indices <tt class="docutils literal"><span class="pre">orbidx</span> <span class="pre">=</span> <span class="pre">[2,0,1]</span></tt> indicates the map
+old orbital  a b c  -&gt;   new orbital  c a b.  The strings are reordered as
+old-strings   0b011, 0b101, 0b110 ==  (1,2), (1,3), (2,3)   &lt;= apply orbidx to get orb-strings
+orb-strings   (3,1), (3,2), (1,2) ==  0B101, 0B110, 0B011   &lt;= by gen_strings4orblist
+then argsort to translate the string representation to the address
+[2(=0B011), 0(=0B101), 1(=0B110)]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.symm_initguess">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">symm_initguess</tt><big>(</big><em>norb</em>, <em>nelec</em>, <em>orbsym</em>, <em>wfnsym=0</em>, <em>irrep_nelec=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#symm_initguess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.symm_initguess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate CI wavefunction initial guess which has the given symmetry.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>norb <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of orbitals.</dd>
+<dt>nelec <span class="classifier-delimiter">:</span> <span class="classifier">int or 2-item list</span></dt>
+<dd>Number of electrons, or 2-item list for (alpha, beta) electrons</dd>
+<dt>orbsym <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>The irrep ID for each orbital.</dd>
+</dl>
+</dd>
+<dt>Kwags:</dt>
+<dd><dl class="first last docutils">
+<dt>wfnsym <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The irrep ID of target symmetry</dd>
+<dt>irrep_nelec <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Freeze occupancy for certain irreps</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>CI coefficients 2D array which has the target symmetry.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.symmetrize_wfn">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">symmetrize_wfn</tt><big>(</big><em>ci</em>, <em>norb</em>, <em>nelec</em>, <em>orbsym</em>, <em>wfnsym=0</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#symmetrize_wfn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.symmetrize_wfn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Symmetrize the CI wavefunction by zeroing out the determinants which
+do not have the right symmetry.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>ci <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>CI coefficients, row for alpha strings and column for beta strings.</dd>
+<dt>norb <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of orbitals.</dd>
+<dt>nelec <span class="classifier-delimiter">:</span> <span class="classifier">int or 2-item list</span></dt>
+<dd>Number of electrons, or 2-item list for (alpha, beta) electrons</dd>
+<dt>orbsym <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>The irrep ID for each orbital.</dd>
+</dl>
+</dd>
+<dt>Kwags:</dt>
+<dd><dl class="first last docutils">
+<dt>wfnsym <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The irrep ID of target symmetry</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>2D array which is the symmetrized CI coefficients</dd>
+</dl>
+</dd></dl>
+
 </div>
 </div>
 
@@ -110,7 +562,7 @@
                         title="next chapter">symm</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="sources/fci.txt"
+    <li><a href="_sources/fci.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -145,12 +597,12 @@
         <li class="right" >
           <a href="mcscf.html" title="mcscf"
              >previous</a> |</li>
-        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

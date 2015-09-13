@@ -1,0 +1,566 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyscf.dft.gen_grid &mdash; PySCF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 1.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyscf.dft.gen_grid</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># File: gen_grid.py</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Generate DFT grids and weights, based on the code provided by Gerald Knizia &lt;&gt;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">ctypes</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">pyscf.lib</span>
+<span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+<span class="kn">from</span> <span class="nn">pyscf.dft</span> <span class="kn">import</span> <span class="n">radi</span>
+
+<span class="n">libdft</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">load_library</span><span class="p">(</span><span class="s">&#39;libdft&#39;</span><span class="p">)</span>
+
+<span class="c"># ~= (L+1)**2/3</span>
+<span class="n">SPHERICAL_POINTS_ORDER</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mi">0</span><span class="p">:</span>    <span class="mi">1</span><span class="p">,</span>
+      <span class="mi">3</span><span class="p">:</span>    <span class="mi">6</span><span class="p">,</span>
+      <span class="mi">5</span><span class="p">:</span>   <span class="mi">14</span><span class="p">,</span>
+      <span class="mi">7</span><span class="p">:</span>   <span class="mi">26</span><span class="p">,</span>
+      <span class="mi">9</span><span class="p">:</span>   <span class="mi">38</span><span class="p">,</span>
+     <span class="mi">11</span><span class="p">:</span>   <span class="mi">50</span><span class="p">,</span>
+     <span class="mi">13</span><span class="p">:</span>   <span class="mi">74</span><span class="p">,</span>
+     <span class="mi">15</span><span class="p">:</span>   <span class="mi">86</span><span class="p">,</span>
+     <span class="mi">17</span><span class="p">:</span>  <span class="mi">110</span><span class="p">,</span>
+     <span class="mi">19</span><span class="p">:</span>  <span class="mi">146</span><span class="p">,</span>
+     <span class="mi">21</span><span class="p">:</span>  <span class="mi">170</span><span class="p">,</span>
+     <span class="mi">23</span><span class="p">:</span>  <span class="mi">194</span><span class="p">,</span>
+     <span class="mi">25</span><span class="p">:</span>  <span class="mi">230</span><span class="p">,</span>
+     <span class="mi">27</span><span class="p">:</span>  <span class="mi">266</span><span class="p">,</span>
+     <span class="mi">29</span><span class="p">:</span>  <span class="mi">302</span><span class="p">,</span>
+     <span class="mi">31</span><span class="p">:</span>  <span class="mi">350</span><span class="p">,</span>
+     <span class="mi">35</span><span class="p">:</span>  <span class="mi">434</span><span class="p">,</span>
+     <span class="mi">41</span><span class="p">:</span>  <span class="mi">590</span><span class="p">,</span>
+     <span class="mi">47</span><span class="p">:</span>  <span class="mi">770</span><span class="p">,</span>
+     <span class="mi">53</span><span class="p">:</span>  <span class="mi">974</span><span class="p">,</span>
+     <span class="mi">59</span><span class="p">:</span> <span class="mi">1202</span><span class="p">,</span>
+     <span class="mi">65</span><span class="p">:</span> <span class="mi">1454</span><span class="p">,</span>
+     <span class="mi">71</span><span class="p">:</span> <span class="mi">1730</span><span class="p">,</span>
+     <span class="mi">77</span><span class="p">:</span> <span class="mi">2030</span><span class="p">,</span>
+     <span class="mi">83</span><span class="p">:</span> <span class="mi">2354</span><span class="p">,</span>
+     <span class="mi">89</span><span class="p">:</span> <span class="mi">2702</span><span class="p">,</span>
+     <span class="mi">95</span><span class="p">:</span> <span class="mi">3074</span><span class="p">,</span>
+    <span class="mi">101</span><span class="p">:</span> <span class="mi">3470</span><span class="p">,</span>
+    <span class="mi">107</span><span class="p">:</span> <span class="mi">3890</span><span class="p">,</span>
+    <span class="mi">113</span><span class="p">:</span> <span class="mi">4334</span><span class="p">,</span>
+    <span class="mi">119</span><span class="p">:</span> <span class="mi">4802</span><span class="p">,</span>
+    <span class="mi">125</span><span class="p">:</span> <span class="mi">5294</span><span class="p">,</span>
+    <span class="mi">131</span><span class="p">:</span> <span class="mi">5810</span>
+<span class="p">}</span>
+
+<span class="c"># SG0</span>
+<span class="c"># S. Chien and P. Gill,  J. Comput. Chem. 27 (2006) 730-739.</span>
+
+<span class="c"># P.M.W. Gill, B.G. Johnson, J.A. Pople, Chem. Phys. Letters 209 (1993) 506-512</span>
+<span class="n">SG1RADII</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span>
+    <span class="mi">0</span><span class="p">,</span>
+    <span class="mf">1.0000</span><span class="p">,</span>                                                 <span class="mf">0.5882</span><span class="p">,</span>
+    <span class="mf">3.0769</span><span class="p">,</span> <span class="mf">2.0513</span><span class="p">,</span> <span class="mf">1.5385</span><span class="p">,</span> <span class="mf">1.2308</span><span class="p">,</span> <span class="mf">1.0256</span><span class="p">,</span> <span class="mf">0.8791</span><span class="p">,</span> <span class="mf">0.7692</span><span class="p">,</span> <span class="mf">0.6838</span><span class="p">,</span>
+    <span class="mf">4.0909</span><span class="p">,</span> <span class="mf">3.1579</span><span class="p">,</span> <span class="mf">2.5714</span><span class="p">,</span> <span class="mf">2.1687</span><span class="p">,</span> <span class="mf">1.8750</span><span class="p">,</span> <span class="mf">1.6514</span><span class="p">,</span> <span class="mf">1.4754</span><span class="p">,</span> <span class="mf">1.3333</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="sg1_prune"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.gen_grid.sg1_prune">[docs]</a><span class="k">def</span> <span class="nf">sg1_prune</span><span class="p">(</span><span class="n">nuc</span><span class="p">,</span> <span class="n">rads</span><span class="p">,</span> <span class="n">n_ang</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;SG1, CPL, 209, 506</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        nuc : int</span>
+<span class="sd">            Nuclear charge.</span>
+
+<span class="sd">        rads : 1D array</span>
+<span class="sd">            Grid coordinates on radical axis.</span>
+
+<span class="sd">        n_ang : int</span>
+<span class="sd">            Max number of grids over angular part.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list has the same length as rads. The list element is the number of</span>
+<span class="sd">        grids over angular part for each radial grid.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+<span class="c"># In SG1 the ang grids for the five regions</span>
+<span class="c">#            6  38 86  194 86</span>
+    <span class="n">leb_ngrid</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">6</span><span class="p">,</span> <span class="mi">38</span><span class="p">,</span> <span class="mi">86</span><span class="p">,</span> <span class="mi">194</span><span class="p">,</span> <span class="mi">86</span><span class="p">])</span>
+    <span class="n">alphas</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span>
+        <span class="p">(</span><span class="mf">0.25</span>  <span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">),</span>
+        <span class="p">(</span><span class="mf">0.1667</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">),</span>
+        <span class="p">(</span><span class="mf">0.1</span>   <span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">nuc</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>  <span class="c"># H, He</span>
+        <span class="n">place</span> <span class="o">=</span> <span class="p">((</span><span class="n">rads</span><span class="o">/</span><span class="n">SG1RADII</span><span class="p">[</span><span class="n">nuc</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">alphas</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">nuc</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">:</span>  <span class="c"># Li - Ne</span>
+        <span class="n">place</span> <span class="o">=</span> <span class="p">((</span><span class="n">rads</span><span class="o">/</span><span class="n">SG1RADII</span><span class="p">[</span><span class="n">nuc</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">alphas</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">place</span> <span class="o">=</span> <span class="p">((</span><span class="n">rads</span><span class="o">/</span><span class="n">SG1RADII</span><span class="p">[</span><span class="n">nuc</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">alphas</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">leb_ngrid</span><span class="p">[</span><span class="n">place</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="nwchem_prune"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.gen_grid.nwchem_prune">[docs]</a><span class="k">def</span> <span class="nf">nwchem_prune</span><span class="p">(</span><span class="n">nuc</span><span class="p">,</span> <span class="n">rads</span><span class="p">,</span> <span class="n">n_ang</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;NWChem</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        nuc : int</span>
+<span class="sd">            Nuclear charge.</span>
+
+<span class="sd">        rads : 1D array</span>
+<span class="sd">            Grid coordinates on radical axis.</span>
+
+<span class="sd">        n_ang : int</span>
+<span class="sd">            Max number of grids over angular part.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list has the same length as rads. The list element is the number of</span>
+<span class="sd">        grids over angular part for each radial grid.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">alphas</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span>
+        <span class="p">(</span><span class="mf">0.25</span>  <span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">),</span>
+        <span class="p">(</span><span class="mf">0.1667</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">),</span>
+        <span class="p">(</span><span class="mf">0.1</span>   <span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)))</span>
+    <span class="n">leb_ngrid</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="mi">38</span><span class="p">,</span>  <span class="mi">50</span><span class="p">,</span>  <span class="mi">74</span> <span class="p">,</span> <span class="mi">86</span><span class="p">,</span>  <span class="mi">110</span><span class="p">,</span> <span class="mi">146</span><span class="p">,</span> <span class="mi">170</span><span class="p">,</span> <span class="mi">194</span><span class="p">,</span> <span class="mi">230</span><span class="p">,</span> <span class="mi">266</span><span class="p">,</span> <span class="mi">302</span><span class="p">,</span> <span class="mi">350</span><span class="p">,</span>
+         <span class="mi">434</span><span class="p">,</span> <span class="mi">590</span><span class="p">,</span> <span class="mi">770</span><span class="p">,</span> <span class="mi">974</span><span class="p">,</span> <span class="mi">1202</span><span class="p">,</span><span class="mi">1454</span><span class="p">,</span><span class="mi">1730</span><span class="p">,</span><span class="mi">2030</span><span class="p">,</span><span class="mi">2354</span><span class="p">,</span><span class="mi">2702</span><span class="p">,</span><span class="mi">3074</span><span class="p">,</span><span class="mi">3470</span><span class="p">,</span>
+         <span class="mi">3890</span><span class="p">,</span><span class="mi">4334</span><span class="p">,</span><span class="mi">4802</span><span class="p">,</span><span class="mi">5294</span><span class="p">,</span><span class="mi">5810</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">n_ang</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">:</span>
+        <span class="n">angs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rads</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">angs</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">n_ang</span>
+        <span class="k">return</span> <span class="n">angs</span>
+    <span class="k">elif</span> <span class="n">n_ang</span> <span class="o">==</span> <span class="mi">50</span><span class="p">:</span>
+        <span class="n">leb_l</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">leb_ngrid</span><span class="o">==</span><span class="n">n_ang</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">leb_l</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">idx</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">idx</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">nuc</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>  <span class="c"># H, He</span>
+        <span class="n">place</span> <span class="o">=</span> <span class="p">((</span><span class="n">rads</span><span class="o">/</span><span class="n">SG1RADII</span><span class="p">[</span><span class="n">nuc</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">alphas</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">nuc</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">:</span>  <span class="c"># Li - Ne</span>
+        <span class="n">place</span> <span class="o">=</span> <span class="p">((</span><span class="n">rads</span><span class="o">/</span><span class="n">SG1RADII</span><span class="p">[</span><span class="n">nuc</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">alphas</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">place</span> <span class="o">=</span> <span class="p">((</span><span class="n">rads</span><span class="o">/</span><span class="n">SG1RADII</span><span class="p">[</span><span class="n">nuc</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">alphas</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">angs</span> <span class="o">=</span> <span class="n">leb_l</span><span class="p">[</span><span class="n">place</span><span class="p">]</span>
+    <span class="n">angs</span> <span class="o">=</span> <span class="n">leb_ngrid</span><span class="p">[</span><span class="n">angs</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">angs</span>
+
+<span class="c"># Prune scheme JCP 102, 346</span></div>
+<div class="viewcode-block" id="treutler_prune"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.gen_grid.treutler_prune">[docs]</a><span class="k">def</span> <span class="nf">treutler_prune</span><span class="p">(</span><span class="n">nuc</span><span class="p">,</span> <span class="n">rads</span><span class="p">,</span> <span class="n">n_ang</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Treutler-Ahlrichs</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        nuc : int</span>
+<span class="sd">            Nuclear charge.</span>
+
+<span class="sd">        rads : 1D array</span>
+<span class="sd">            Grid coordinates on radical axis.</span>
+
+<span class="sd">        n_ang : int</span>
+<span class="sd">            Max number of grids over angular part.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list has the same length as rads. The list element is the number of</span>
+<span class="sd">        grids over angular part for each radial grid.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">nr</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rads</span><span class="p">)</span>
+    <span class="n">leb_ngrid</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">leb_ngrid</span><span class="p">[:</span><span class="n">nr</span><span class="o">//</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">14</span> <span class="c"># l=5</span>
+    <span class="n">leb_ngrid</span><span class="p">[</span><span class="n">nr</span><span class="o">//</span><span class="mi">3</span><span class="p">:</span><span class="n">nr</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span> <span class="c"># l=11</span>
+    <span class="n">leb_ngrid</span><span class="p">[</span><span class="n">nr</span><span class="o">//</span><span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">n_ang</span>
+    <span class="k">return</span> <span class="n">leb_ngrid</span>
+
+
+
+<span class="c">###########################################################</span>
+<span class="c"># Becke partitioning</span>
+
+<span class="c"># Stratmann, Scuseria, Frisch. CPL, 257, 213 (1996), eq.11</span></div>
+<div class="viewcode-block" id="stratmann"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.gen_grid.stratmann">[docs]</a><span class="k">def</span> <span class="nf">stratmann</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Stratmann, Scuseria, Frisch. CPL, 257, 213 (1996)&#39;&#39;&#39;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="o">.</span><span class="mi">64</span>  <span class="c"># comment after eq. 14</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">ma</span> <span class="o">=</span> <span class="n">g</span><span class="o">/</span><span class="n">a</span>
+        <span class="n">ma2</span> <span class="o">=</span> <span class="n">ma</span> <span class="o">*</span> <span class="n">ma</span>
+        <span class="n">g1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mf">16.</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ma</span><span class="o">*</span><span class="p">(</span><span class="mi">35</span> <span class="o">+</span> <span class="n">ma2</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="mi">35</span> <span class="o">+</span> <span class="n">ma2</span><span class="o">*</span><span class="p">(</span><span class="mi">21</span> <span class="o">-</span> <span class="mi">5</span> <span class="o">*</span><span class="n">ma2</span><span class="p">))))</span>
+        <span class="n">g1</span><span class="p">[</span><span class="n">g</span><span class="o">&lt;=-</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">g1</span><span class="p">[</span><span class="n">g</span><span class="o">&gt;=</span> <span class="n">a</span><span class="p">]</span> <span class="o">=</span>  <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">g1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">g</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">a</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">g</span> <span class="o">&gt;=</span> <span class="n">a</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ma</span> <span class="o">=</span> <span class="n">g</span><span class="o">/</span><span class="n">a</span>
+            <span class="n">ma2</span> <span class="o">=</span> <span class="n">ma</span><span class="o">*</span><span class="n">ma</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mf">16.</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ma</span><span class="o">*</span><span class="p">(</span><span class="mi">35</span> <span class="o">+</span> <span class="n">ma2</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="mi">35</span> <span class="o">+</span> <span class="n">ma2</span><span class="o">*</span><span class="p">(</span><span class="mi">21</span> <span class="o">-</span> <span class="mi">5</span> <span class="o">*</span><span class="n">ma2</span><span class="p">))))</span>
+        <span class="k">return</span> <span class="n">g</span>
+</div>
+<div class="viewcode-block" id="original_becke"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.gen_grid.original_becke">[docs]</a><span class="k">def</span> <span class="nf">original_becke</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Becke, JCP, 88, 2547 (1988)&#39;&#39;&#39;</span>
+    <span class="c"># g = (3 - g**2) * g * .5</span>
+    <span class="c"># g = (3 - g**2) * g * .5</span>
+    <span class="c"># g = (3 - g**2) * g * .5</span>
+    <span class="c"># return g</span>
+    <span class="n">g1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="n">libdft</span><span class="o">.</span><span class="n">VXCoriginal_becke</span><span class="p">(</span><span class="n">g1</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                             <span class="n">g</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                             <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">g1</span>
+</div>
+<div class="viewcode-block" id="gen_atomic_grids"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.gen_grid.gen_atomic_grids">[docs]</a><span class="k">def</span> <span class="nf">gen_atomic_grids</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">atom_grid</span><span class="o">=</span><span class="p">{},</span> <span class="n">radi_method</span><span class="o">=</span><span class="n">radi</span><span class="o">.</span><span class="n">gauss_chebyshev</span><span class="p">,</span>
+                     <span class="n">level</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">prune_scheme</span><span class="o">=</span><span class="n">treutler_prune</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Generate number of radial grids and angular grids for the given molecule.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dict, with the atom symbol for the dict key.  For each atom type,</span>
+<span class="sd">        the dict value has two items: one is the meshgrid coordinates wrt the</span>
+<span class="sd">        atom center; the second is the volume of that grid.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">atom_grids_tab</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">ia</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">):</span>
+        <span class="n">symb</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="n">ia</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">symb</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">atom_grids_tab</span><span class="p">:</span>
+            <span class="n">chg</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_charge</span><span class="p">(</span><span class="n">ia</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">symb</span> <span class="ow">in</span> <span class="n">atom_grid</span><span class="p">:</span>
+                <span class="n">n_rad</span><span class="p">,</span> <span class="n">n_ang</span> <span class="o">=</span> <span class="n">atom_grid</span><span class="p">[</span><span class="n">symb</span><span class="p">]</span>
+                <span class="k">assert</span><span class="p">(</span><span class="n">n_ang</span> <span class="ow">in</span> <span class="n">SPHERICAL_POINTS_ORDER</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">n_rad</span> <span class="o">=</span> <span class="n">_default_rad</span><span class="p">(</span><span class="n">chg</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+                <span class="n">n_ang</span> <span class="o">=</span> <span class="n">_default_ang</span><span class="p">(</span><span class="n">chg</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+            <span class="n">rad</span><span class="p">,</span> <span class="n">rad_weight</span> <span class="o">=</span> <span class="n">radi_method</span><span class="p">(</span><span class="n">n_rad</span><span class="p">)</span>
+            <span class="c"># atomic_scale = 1</span>
+            <span class="c"># rad *= atomic_scale</span>
+            <span class="c"># rad_weight *= atomic_scale</span>
+
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">prune_scheme</span><span class="p">):</span>
+                <span class="n">angs</span> <span class="o">=</span> <span class="n">prune_scheme</span><span class="p">(</span><span class="n">chg</span><span class="p">,</span> <span class="n">rad</span><span class="p">,</span> <span class="n">n_ang</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">angs</span> <span class="o">=</span> <span class="p">[</span><span class="n">n_ang</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_rad</span>
+            <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;atom </span><span class="si">%s</span><span class="s"> rad-grids = </span><span class="si">%d</span><span class="s">, ang-grids = </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                                   <span class="n">symb</span><span class="p">,</span> <span class="n">n_rad</span><span class="p">,</span> <span class="n">angs</span><span class="p">)</span>
+
+            <span class="n">angs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">angs</span><span class="p">)</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">vol</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">angs</span><span class="p">):</span>
+                <span class="n">grid</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+                <span class="n">libdft</span><span class="o">.</span><span class="n">MakeAngularGrid</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                                       <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+                <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;i,jk-&gt;ijk&#39;</span><span class="p">,</span><span class="n">rad</span><span class="p">[</span><span class="n">angs</span><span class="o">==</span><span class="n">n</span><span class="p">],</span>
+                                           <span class="n">grid</span><span class="p">[:,:</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+                <span class="n">vol</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;i,j-&gt;ij&#39;</span><span class="p">,</span> <span class="n">rad_weight</span><span class="p">[</span><span class="n">angs</span><span class="o">==</span><span class="n">n</span><span class="p">],</span>
+                                        <span class="n">grid</span><span class="p">[:,</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+            <span class="n">atom_grids_tab</span><span class="p">[</span><span class="n">symb</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">coords</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">vol</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">atom_grids_tab</span>
+
+</div>
+<div class="viewcode-block" id="gen_partition"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.gen_grid.gen_partition">[docs]</a><span class="k">def</span> <span class="nf">gen_partition</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">atom_grids_tab</span><span class="p">,</span> <span class="n">atomic_radii_adjust</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="n">becke_scheme</span><span class="o">=</span><span class="n">original_becke</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Generate the mesh grid coordinates and weights for DFT numerical integration.</span>
+<span class="sd">    We can change atomic_radii_adjust becke_scheme to generate different meshgrid.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        grid_coord and grid_weight arrays.  grid_coord array has shape (N,3);</span>
+<span class="sd">        weight 1D array has N elements.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">atm_coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_coord</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">)])</span>
+    <span class="n">atm_dist</span> <span class="o">=</span> <span class="n">radi</span><span class="o">.</span><span class="n">_inter_distance</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">gen_grid_partition</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
+        <span class="n">ngrid</span> <span class="o">=</span> <span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">grid_dist</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">,</span><span class="n">ngrid</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">ia</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">):</span>
+            <span class="n">dc</span> <span class="o">=</span> <span class="n">coords</span> <span class="o">-</span> <span class="n">atm_coords</span><span class="p">[</span><span class="n">ia</span><span class="p">]</span>
+            <span class="n">grid_dist</span><span class="p">[</span><span class="n">ia</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ij,ij-&gt;i&#39;</span><span class="p">,</span><span class="n">dc</span><span class="p">,</span><span class="n">dc</span><span class="p">))</span>
+        <span class="n">pbecke</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">,</span><span class="n">ngrid</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                <span class="n">g</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">atm_dist</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">grid_dist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">grid_dist</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">atomic_radii_adjust</span><span class="p">):</span>
+                    <span class="n">g</span> <span class="o">=</span> <span class="n">atomic_radii_adjust</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+                <span class="n">g</span> <span class="o">=</span> <span class="n">becke_scheme</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+                <span class="n">pbecke</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">g</span><span class="p">)</span>
+                <span class="n">pbecke</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*=</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">g</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pbecke</span>
+
+    <span class="n">coords_all</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">weights_all</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ia</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">):</span>
+        <span class="n">coords</span><span class="p">,</span> <span class="n">vol</span> <span class="o">=</span> <span class="n">atom_grids_tab</span><span class="p">[</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="n">ia</span><span class="p">)]</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span> <span class="o">+</span> <span class="n">atm_coords</span><span class="p">[</span><span class="n">ia</span><span class="p">]</span>
+        <span class="n">pbecke</span> <span class="o">=</span> <span class="n">gen_grid_partition</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">vol</span> <span class="o">*</span> <span class="n">pbecke</span><span class="p">[</span><span class="n">ia</span><span class="p">]</span> <span class="o">/</span> <span class="n">pbecke</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">coords_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+        <span class="n">weights_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">coords_all</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">weights_all</span><span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="Grids"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.gen_grid.Grids">[docs]</a><span class="k">class</span> <span class="nc">Grids</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;DFT mesh grids</span>
+
+<span class="sd">    Attributes for Grids:</span>
+<span class="sd">        level : int (0 - 6)</span>
+<span class="sd">            big number for large mesh grids, default is 3</span>
+
+<span class="sd">        atomic_radii : function or None</span>
+<span class="sd">            can be one of</span>
+<span class="sd">            | radi.treutler_atomic_radii_adjust(mol, radi.BRAGG_RADII)</span>
+<span class="sd">            | radi.treutler_atomic_radii_adjust(mol, radi.COVALENT_RADII)</span>
+<span class="sd">            | radi.becke_atomic_radii_adjust(mol, radi.BRAGG_RADII)</span>
+<span class="sd">            | radi.becke_atomic_radii_adjust(mol, radi.COVALENT_RADII)</span>
+<span class="sd">            | None,          to switch off atomic radii adjustment</span>
+
+<span class="sd">        radi_method : function(n) =&gt; (rad_grids, rad_weights)</span>
+<span class="sd">            scheme for radial grids, can be one of</span>
+<span class="sd">            | radi.treutler</span>
+<span class="sd">            | radi.gauss_chebyshev</span>
+
+<span class="sd">        becke_scheme : function(v) =&gt; array_like_v</span>
+<span class="sd">            weight partition function, can be one of</span>
+<span class="sd">            | gen_grid.stratmann</span>
+<span class="sd">            | gen_grid.original_becke</span>
+
+<span class="sd">        prune_scheme : function(nuc, rad_grids, n_ang) =&gt; list_n_ang_for_each_rad_grid</span>
+<span class="sd">            scheme to reduce number of grids, can be one of</span>
+<span class="sd">            | gen_grid.sg1_prune</span>
+<span class="sd">            | gen_grid.nwchem_prune</span>
+<span class="sd">            | gen_grid.treutler_prune</span>
+
+<span class="sd">        symmetry : bool</span>
+<span class="sd">            whether to symmetrize mesh grids (TODO)</span>
+
+<span class="sd">        atom_grid : dict</span>
+<span class="sd">            Set (radial, angular) grids for particular atoms.</span>
+<span class="sd">            Eg, grids.atom_grid = {&#39;H&#39;: (20,110)} will generate 20 radial</span>
+<span class="sd">            grids and 110 angular grids for H atom.</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">        &gt;&gt;&gt; mol = gto.M(atom=&#39;H 0 0 0; H 0 0 1.1&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; grids = dft.gen_grid.Grids(mol)</span>
+<span class="sd">        &gt;&gt;&gt; grids.level = 4</span>
+<span class="sd">        &gt;&gt;&gt; grids.build_()</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mol</span> <span class="o">=</span> <span class="n">mol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">stdout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atomic_radii</span> <span class="o">=</span> <span class="n">radi</span><span class="o">.</span><span class="n">treutler_atomic_radii_adjust</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">radi</span><span class="o">.</span><span class="n">BRAGG_RADII</span><span class="p">)</span>
+        <span class="c">#self.atomic_radii = radi.becke_atomic_radii_adjust(mol, radi.BRAGG_RADII)</span>
+        <span class="c">#self.atomic_radii = radi.becke_atomic_radii_adjust(mol, radi.COVALENT_RADII)</span>
+        <span class="c">#self.atomic_radii = None # to switch off atomic radii adjustment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radi_method</span> <span class="o">=</span> <span class="n">radi</span><span class="o">.</span><span class="n">treutler</span>
+        <span class="c">#self.radi_method = radi.gauss_chebyshev</span>
+        <span class="c">#self.becke_scheme = stratmann</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">becke_scheme</span> <span class="o">=</span> <span class="n">original_becke</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prune_scheme</span> <span class="o">=</span> <span class="n">treutler_prune</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">symmetry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atom_grid</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c">##################################################</span>
+<span class="c"># don&#39;t modify the following attributes, they are not input options</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coords</span>  <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;radial grids: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radi_method</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;becke partition: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">becke_scheme</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;pruning grids: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prune_scheme</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;grids dens level: </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;symmetrized grids: </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">atomic_radii</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;atom radii adjust function: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">atomic_radii</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_grid</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;User specified grid scheme </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atom_grid</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">build_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">setup_grids_</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_grids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">setup_grids_</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">setup_grids_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="n">logger</span><span class="o">.</span><span class="n">QUIET</span><span class="p">:</span>
+            <span class="n">gto</span><span class="o">.</span><span class="n">mole</span><span class="o">.</span><span class="n">check_sanity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+        <span class="n">atom_grids_tab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen_atomic_grids</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">atom_grid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atom_grid</span><span class="p">,</span>
+                                               <span class="n">radi_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">radi_method</span><span class="p">,</span>
+                                               <span class="n">level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">,</span>
+                                               <span class="n">prune_scheme</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prune_scheme</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">gen_partition</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">atom_grids_tab</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atomic_radii</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">becke_scheme</span><span class="p">)</span>
+        <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;tot grids = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span>
+
+    <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">setup_grids_</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Grids.gen_atomic_grids"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.gen_grid.Grids.gen_atomic_grids">[docs]</a>    <span class="k">def</span> <span class="nf">gen_atomic_grids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">atom_grid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">radi_method</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                         <span class="n">level</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">prune_scheme</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; See gen_grid.gen_atomic_grids function&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">atom_grid</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">atom_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_grid</span>
+        <span class="k">if</span> <span class="n">radi_method</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">radi_method</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">radi_method</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span>
+        <span class="k">if</span> <span class="n">prune_scheme</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">prune_scheme</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prune_scheme</span>
+        <span class="k">return</span> <span class="n">gen_atomic_grids</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">atom_grid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radi_method</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span>
+                                <span class="n">prune_scheme</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Grids.gen_partition"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.gen_grid.Grids.gen_partition">[docs]</a>    <span class="k">def</span> <span class="nf">gen_partition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">atom_grids_tab</span><span class="p">,</span> <span class="n">atomic_radii</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">becke_scheme</span><span class="o">=</span><span class="n">original_becke</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; See gen_grid.gen_partition function&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">gen_partition</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">atom_grids_tab</span><span class="p">,</span> <span class="n">atomic_radii</span><span class="p">,</span>
+                             <span class="n">becke_scheme</span><span class="p">)</span>
+
+
+</div></div>
+<span class="k">def</span> <span class="nf">_default_rad</span><span class="p">(</span><span class="n">nuc</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Number of radial grids &#39;&#39;&#39;</span>
+    <span class="n">tab</span>   <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">(</span><span class="mi">2</span> <span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="mi">54</span><span class="p">,</span> <span class="mi">86</span><span class="p">,</span> <span class="mi">118</span><span class="p">))</span>
+    <span class="c">#           Period    1   2   3   4   5   6   7         # level</span>
+    <span class="n">grids</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(((</span><span class="mi">20</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">70</span> <span class="p">),</span>     <span class="c"># 0</span>
+                         <span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mi">55</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">75</span> <span class="p">),</span>     <span class="c"># 1</span>
+                         <span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">80</span> <span class="p">),</span>     <span class="c"># 2</span>
+                         <span class="p">(</span><span class="mi">35</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">55</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">75</span><span class="p">,</span> <span class="mi">85</span> <span class="p">),</span>     <span class="c"># 3</span>
+                         <span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mi">55</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">90</span> <span class="p">),</span>     <span class="c"># 4</span>
+                         <span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">75</span><span class="p">,</span> <span class="mi">85</span><span class="p">,</span> <span class="mi">95</span> <span class="p">),</span>     <span class="c"># 5</span>
+                         <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">55</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">100</span><span class="p">),))</span>   <span class="c"># 6</span>
+    <span class="n">period</span> <span class="o">=</span> <span class="p">(</span><span class="n">nuc</span> <span class="o">&gt;</span> <span class="n">tab</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">grids</span><span class="p">[</span><span class="n">level</span><span class="p">,</span><span class="n">period</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">_default_ang</span><span class="p">(</span><span class="n">nuc</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Order of angular grids. See SPHERICAL_POINTS_ORDER for the mapping of</span>
+<span class="sd">    the order and the number of angular grids&#39;&#39;&#39;</span>
+    <span class="n">tab</span>   <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">(</span><span class="mi">2</span> <span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="mi">54</span><span class="p">,</span> <span class="mi">86</span><span class="p">,</span> <span class="mi">118</span><span class="p">))</span>
+    <span class="c">#           Period    1   2   3   4   5   6   7         # level</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(((</span><span class="mi">15</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">17</span> <span class="p">),</span>     <span class="c"># 0</span>
+                         <span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">23</span> <span class="p">),</span>     <span class="c"># 1</span>
+                         <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">29</span> <span class="p">),</span>     <span class="c"># 2</span>
+                         <span class="p">(</span><span class="mi">29</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">35</span> <span class="p">),</span>     <span class="c"># 3</span>
+                         <span class="p">(</span><span class="mi">35</span><span class="p">,</span> <span class="mi">41</span><span class="p">,</span> <span class="mi">41</span><span class="p">,</span> <span class="mi">41</span><span class="p">,</span> <span class="mi">41</span><span class="p">,</span> <span class="mi">41</span><span class="p">,</span> <span class="mi">41</span> <span class="p">),</span>     <span class="c"># 4</span>
+                         <span class="p">(</span><span class="mi">41</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span> <span class="mi">47</span> <span class="p">),</span>     <span class="c"># 5</span>
+                         <span class="p">(</span><span class="mi">47</span><span class="p">,</span> <span class="mi">53</span><span class="p">,</span> <span class="mi">53</span><span class="p">,</span> <span class="mi">53</span><span class="p">,</span> <span class="mi">53</span><span class="p">,</span> <span class="mi">53</span><span class="p">,</span> <span class="mi">53</span> <span class="p">),))</span>   <span class="c"># 6</span>
+    <span class="n">period</span> <span class="o">=</span> <span class="p">(</span><span class="n">nuc</span> <span class="o">&gt;</span> <span class="n">tab</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">SPHERICAL_POINTS_ORDER</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">level</span><span class="p">,</span><span class="n">period</span><span class="p">]]</span>
+
+
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">gto</span>
+    <span class="n">h2o</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+    <span class="n">h2o</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">h2o</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="bp">None</span><span class="c">#&quot;out_h2o&quot;</span>
+    <span class="n">h2o</span><span class="o">.</span><span class="n">atom</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+        <span class="p">[</span><span class="s">&#39;O&#39;</span> <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span>     <span class="p">,</span> <span class="mf">0.</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&#39;H&#39;</span> <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="o">-</span><span class="mf">0.757</span> <span class="p">,</span> <span class="mf">0.587</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s">&#39;H&#39;</span> <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.757</span>  <span class="p">,</span> <span class="mf">0.587</span><span class="p">)]</span> <span class="p">])</span>
+
+    <span class="n">h2o</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;H&quot;</span><span class="p">:</span> <span class="s">&#39;6-31g&#39;</span><span class="p">,</span>
+                 <span class="s">&quot;O&quot;</span><span class="p">:</span> <span class="s">&#39;6-31g&#39;</span><span class="p">,}</span>
+    <span class="n">h2o</span><span class="o">.</span><span class="n">grids</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;H&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">302</span><span class="p">),</span>
+                 <span class="s">&quot;O&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">302</span><span class="p">),}</span>
+    <span class="n">h2o</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+    <span class="kn">import</span> <span class="nn">time</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">Grids</span><span class="p">(</span><span class="n">h2o</span><span class="p">)</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">setup_grids</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

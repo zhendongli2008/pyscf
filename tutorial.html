@@ -6,26 +6,26 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; PySCF 0.10 documentation</title>
+    <title>Tutorial &mdash; PySCF 1.0 documentation</title>
     
-    <link rel="stylesheet" href="static/default.css" type="text/css" />
-    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.10',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="static/jquery.js"></script>
-    <script type="text/javascript" src="static/underscore.js"></script>
-    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 0.10 documentation" href="index.html" />
-    <link rel="next" title="gto — Molecular structure and GTO basis" href="gto.html" />
+    <link rel="top" title="PySCF 1.0 documentation" href="index.html" />
+    <link rel="next" title="Advanced topics" href="advanced.html" />
     <link rel="prev" title="An overview of PySCF" href="overview.html" /> 
   </head>
   <body>
@@ -39,12 +39,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="gto.html" title="gto — Molecular structure and GTO basis"
+          <a href="advanced.html" title="Advanced topics"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="overview.html" title="An overview of PySCF"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -55,43 +55,29 @@
             
   <div class="section" id="tutorial">
 <span id="getting-started"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="installing">
-<span id="id1"></span><h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
-<p>You may already have <a class="reference external" href="http://www.cmake.org">cmake</a>,
-<a class="reference external" href="http://www.numpy.org/">numpy</a>, <a class="reference external" href="http://www.scipy.org/">scipy</a>
-and <a class="reference external" href="http://www.h5py.org/">h5py</a> installed.  If not, you can use pip
-to install numpy, scipy and h5py:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ pip install --target=/path/to/python/libs numpy
-$ pip install --target=/path/to/python/libs scipy
-$ pip install --target=/path/to/python/libs h5py
+<div class="section" id="quick-setup">
+<h2>Quick setup<a class="headerlink" href="#quick-setup" title="Permalink to this headline">¶</a></h2>
+<p>The prerequisites of PySCF include <a class="reference external" href="http://www.cmake.org">cmake</a>,
+<a class="reference external" href="http://www.numpy.org/">numpy</a>, <a class="reference external" href="http://www.scipy.org/">scipy</a>,
+and <a class="reference external" href="http://www.h5py.org/">h5py</a>.  On the Ubuntu host, you can quickly
+install them:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ sudo apt-get install python-h5py python-scipy cmake
 </pre></div>
 </div>
-<p>Download the latest version of <a class="reference external" href="https://github.com/sunqm/pyscf.git/">pyscf</a>:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/sunqm/pyscf.git
-</pre></div>
-</div>
-<p>Now you need build C extensions in <tt class="file docutils literal"><span class="pre">pyscf/lib</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ cd pyscf/lib
+<p>Then download the latest version of <a class="reference external" href="https://github.com/sunqm/pyscf.git/">pyscf</a>
+and build C extensions in <tt class="file docutils literal"><span class="pre">pyscf/lib</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/sunqm/pyscf
+$ cd pyscf/lib
 $ mkdir build
 $ cd build
 $ cmake ..
 $ make
 </pre></div>
 </div>
-<p>It will automatically download the analytical GTO integral library
-<tt class="docutils literal"><span class="pre">libcint</span></tt> <a class="reference external" href="https://github.com/sunqm/libcint.git">https://github.com/sunqm/libcint.git</a> and the DFT
-exchange correlation functional library <tt class="docutils literal"><span class="pre">libxc</span></tt>
-<a class="reference external" href="http://www.tddft.org/programs/Libxc">http://www.tddft.org/programs/Libxc</a>.  If you like, you can compile the
-package with other BLAS venders, such as MKL, instead of the default one
-to improve the performance:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ cd pyscf/lib/build
-$ BLA_VENDOR=Intel10_64lp_seq cmake ..
-$ make
-</pre></div>
-</div>
-<p>Finally, to make Python find pyscf package, add the <strong>parent directory</strong>
-of pyscf to <tt class="code docutils literal"><span class="pre">PYTHONPATH</span></tt>, e.g. if pyscf is put in <tt class="docutils literal"><span class="pre">/home/abc</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre>export PYTHONPATH=/home/abc:$PYTHONPATH
+<p>Finally, update the Python runtime path <tt class="code docutils literal"><span class="pre">PYTHONPATH</span></tt> (assuming pyscf
+is put in /home/abc, replace it with your own path):</p>
+<div class="highlight-python"><div class="highlight"><pre>$ echo &#39;export PYTHONPATH=/home/abc:$PYTHONPATH&#39; &gt;&gt; ~/.bashrc
+$ source ~/.bashrc
 </pre></div>
 </div>
 <p>To ensure the installation is successed, start a Python shell, and type:</p>
@@ -102,9 +88,14 @@ of pyscf to <tt class="code docutils literal"><span class="pre">PYTHONPATH</span
 <div class="highlight-python"><div class="highlight"><pre>ImportError: No module named pyscf
 </pre></div>
 </div>
-<p>It&#8217;s very possible that you put <tt class="docutils literal"><span class="pre">/home/abc/pyscf</span></tt> in the <tt class="code docutils literal"><span class="pre">PYTHONPATH</span></tt>.
-You need to remove the <tt class="docutils literal"><span class="pre">/pyscf</span></tt> in that string and try import
-<tt class="docutils literal"><span class="pre">pyscf</span></tt> in the python shell again.</p>
+<p>It&#8217;s very possible that you put <tt class="docutils literal"><span class="pre">/home/abc/pyscf</span></tt> in <tt class="code docutils literal"><span class="pre">PYTHONPATH</span></tt>.
+You need to remove the <tt class="docutils literal"><span class="pre">/pyscf</span></tt> in that string and try
+<tt class="docutils literal"><span class="pre">import</span> <span class="pre">pyscf</span></tt> in the python shell again.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The quick setup will not provide the best performance.
+Please refer to <a class="reference internal" href="install.html#installing"><em>Installation</em></a> for the optimized libraries.</p>
+</div>
 </div>
 <div class="section" id="a-simple-example">
 <h2>A simple example<a class="headerlink" href="#a-simple-example" title="Permalink to this headline">¶</a></h2>
@@ -160,7 +151,7 @@ They are used to hold the molecular geometry and basis sets.</p>
 </pre></div>
 </div>
 <p>You can input the geometry in this format.  Therefore, you are able to
-use all the possible feature provided by Python to make up the
+use all the possible feature provided by Python to construct the
 geometry:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="p">[[</span><span class="s">&#39;O&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="p">[</span><span class="s">&#39;H&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="p">[</span><span class="s">&#39;H&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]]</span>
@@ -187,7 +178,7 @@ takes <tt class="docutils literal"><span class="pre">;</span></tt> or <tt class=
 the atomic symbol and the coordinates.  Blank lines will be ignored.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Z-matrix string is not supported in the present version 0.10.</p>
+<p class="last">Z-matrix string is not supported in the present version.</p>
 </div>
 <p>To specify the atoms type, you can use the atomic symbol (case-insensitive),
 or the atomic nuclear charge:</p>
@@ -340,7 +331,7 @@ can be assgined from command line:</p>
 <p>The command line arguments are parsed in <tt class="xref py py-func docutils literal"><span class="pre">Mole.build()</span></tt>.  By
 default, they have the highest priority, which means our settings in the
 script will be overwritten by the command line arguments.  To prevent
-that, we can all <tt class="xref py py-func docutils literal"><span class="pre">Mole.build()</span></tt> with:</p>
+that, we can call <tt class="xref py py-func docutils literal"><span class="pre">Mole.build()</span></tt> with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -353,7 +344,7 @@ second 0 prevent <tt class="xref py py-func docutils literal"><span class="pre">
 <div class="section" id="hartree-fock">
 <h3>Hartree-Fock<a class="headerlink" href="#hartree-fock" title="Permalink to this headline">¶</a></h3>
 <p>Now we are ready to study electronic structure theory with pyscf.  Let&#8217;s
-use oxygen molecule as the first example:</p>
+take oxygen molecule as the first example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">5</span>
@@ -375,7 +366,7 @@ use oxygen molecule as the first example:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">o2_tri</span><span class="o">.</span><span class="n">spin</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">o2_tri</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c"># two &quot;0&quot;s to prevent dumping input and parsing command line</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rhf3</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">o2_tri</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">rhf3</span><span class="o">.</span><span class="n">scf</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">rhf3</span><span class="o">.</span><span class="n">kernel</span><span class="p">())</span>
 <span class="go">-149.609461122</span>
 </pre></div>
 </div>
@@ -394,7 +385,7 @@ You can impose symmetry:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">o2_sym</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">o2_sym</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rhf3_sym</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">o2_sym</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">rhf3_sym</span><span class="o">.</span><span class="n">scf</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">rhf3_sym</span><span class="o">.</span><span class="n">kernel</span><span class="p">())</span>
 <span class="go">-149.609461122</span>
 </pre></div>
 </div>
@@ -474,7 +465,7 @@ state, we can write our own function to compute the MP2 correlation energy</p>
     <span class="n">nv</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">noa</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">mo_occ</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">nva</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">mo_occ</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">eri</span> <span class="o">=</span> <span class="n">ao2mo</span><span class="o">.</span><span class="n">outcore</span><span class="o">.</span><span class="n">general_iofree</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">o</span><span class="p">,</span><span class="n">v</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">no</span><span class="p">,</span><span class="n">nv</span><span class="p">,</span><span class="n">no</span><span class="p">,</span><span class="n">nv</span><span class="p">)</span>
+    <span class="n">eri</span> <span class="o">=</span> <span class="n">ao2mo</span><span class="o">.</span><span class="n">general</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">o</span><span class="p">,</span><span class="n">v</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">no</span><span class="p">,</span><span class="n">nv</span><span class="p">,</span><span class="n">no</span><span class="p">,</span><span class="n">nv</span><span class="p">)</span>
     <span class="n">eri</span><span class="p">[:</span><span class="n">noa</span><span class="p">,</span><span class="n">nva</span><span class="p">:]</span> <span class="o">=</span> <span class="n">eri</span><span class="p">[</span><span class="n">noa</span><span class="p">:,:</span><span class="n">nva</span><span class="p">]</span> <span class="o">=</span> <span class="n">eri</span><span class="p">[:,:,:</span><span class="n">noa</span><span class="p">,</span><span class="n">nva</span><span class="p">:]</span> <span class="o">=</span> <span class="n">eri</span><span class="p">[:,:,</span><span class="n">noa</span><span class="p">:,:</span><span class="n">nva</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">g</span> <span class="o">=</span> <span class="n">eri</span> <span class="o">-</span> <span class="n">eri</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">eov</span> <span class="o">=</span> <span class="n">eo</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">ev</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
@@ -498,19 +489,19 @@ code gives the <tt class="docutils literal"><span class="pre">(ov|vv)</span></tt
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">h5py</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mocc</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">m</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mvir</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">m</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ao2mo</span><span class="o">.</span><span class="n">outcore</span><span class="o">.</span><span class="n">general</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="p">(</span><span class="n">mocc</span><span class="p">,</span><span class="n">mvir</span><span class="p">,</span><span class="n">mvir</span><span class="p">,</span><span class="n">mvir</span><span class="p">),</span> <span class="s">&#39;tmp.h5&#39;</span><span class="p">,</span> <span class="n">compact</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ao2mo</span><span class="o">.</span><span class="n">general</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="p">(</span><span class="n">mocc</span><span class="p">,</span><span class="n">mvir</span><span class="p">,</span><span class="n">mvir</span><span class="p">,</span><span class="n">mvir</span><span class="p">),</span> <span class="s">&#39;tmp.h5&#39;</span><span class="p">,</span> <span class="n">compact</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">feri</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s">&#39;tmp.h5&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ovvv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">feri</span><span class="p">[</span><span class="s">&#39;eri_mo&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">ovvv</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="go">(160, 400)</span>
 </pre></div>
 </div>
-<p>We pass <tt class="docutils literal"><span class="pre">compact=False</span></tt> to <tt class="xref py py-func docutils literal"><span class="pre">ao2mo.outcore.general()</span></tt> to prevent
-the function using the permutation symmetry between the virtual-virtual
-pair of <tt class="docutils literal"><span class="pre">|vv)</span></tt>.  So the shape of <tt class="docutils literal"><span class="pre">ovvv</span></tt> corresponds to 8 occupied
+<p>We pass <tt class="docutils literal"><span class="pre">compact=False</span></tt> to <tt class="xref py py-func docutils literal"><span class="pre">ao2mo.general()</span></tt> to prevent the
+function using the permutation symmetry between the virtual-virtual pair
+of <tt class="docutils literal"><span class="pre">|vv)</span></tt>.  So the shape of <tt class="docutils literal"><span class="pre">ovvv</span></tt> corresponds to 8 occupied
 orbitals by 20 virtual orbitals for electron 1 <tt class="docutils literal"><span class="pre">(ov|</span></tt> and 20 by 20 for
 electron 2 <tt class="docutils literal"><span class="pre">|vv)</span></tt>.  In the following example, we transformed the
-nuclear graident of 2-electron integrals</p>
+analytical gradients of 2-electron integrals</p>
 <div class="math">
 \[\langle (\frac{\partial}{\partial R} \varphi_i) \varphi_k | \varphi_j \varphi_l \rangle
 = \int \frac{\frac{\partial\varphi_i(r_1)}{\partial R}
@@ -519,7 +510,7 @@ nuclear graident of 2-electron integrals</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">co</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,:</span><span class="n">nocc</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cv</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">nocc</span><span class="p">:]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">nvir</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eri</span> <span class="o">=</span> <span class="n">ao2mo</span><span class="o">.</span><span class="n">outcore</span><span class="o">.</span><span class="n">general_iofree</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="p">(</span><span class="n">co</span><span class="p">,</span><span class="n">cv</span><span class="p">,</span><span class="n">co</span><span class="p">,</span><span class="n">cv</span><span class="p">),</span> <span class="n">intor</span><span class="o">=</span><span class="s">&#39;cint2e_ip1_sph&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eri</span> <span class="o">=</span> <span class="n">ao2mo</span><span class="o">.</span><span class="n">general</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="p">(</span><span class="n">co</span><span class="p">,</span><span class="n">cv</span><span class="p">,</span><span class="n">co</span><span class="p">,</span><span class="n">cv</span><span class="p">),</span> <span class="n">intor</span><span class="o">=</span><span class="s">&#39;cint2e_ip1_sph&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">eri</span> <span class="o">=</span> <span class="n">eri</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">nvir</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">nvir</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">eri</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="go">(3, 8, 20, 8, 20)</span>
@@ -567,7 +558,7 @@ state.  Using the ROHF ground state, we have:</p>
 The energy is lower than the RHF based wavefunction. Alternatively, we
 can also use the UHF ground state to start a CASSCF calculation:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">uhf3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;E(CASSCF) = </span><span class="si">%.9g</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">mc</span><span class="o">.</span><span class="n">mc1step</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;E(CASSCF) = </span><span class="si">%.9g</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
 <span class="go">E(CASSCF) = -149.661324</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;S^2 = </span><span class="si">%.7f</span><span class="s">, 2S+1 = </span><span class="si">%.7f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">spin_square</span><span class="p">(</span><span class="n">mc</span><span class="p">))</span>
 <span class="go">S^2 = 3.9713105, 2S+1 = 4.1091656</span>
@@ -580,88 +571,94 @@ can also use the UHF ground state to start a CASSCF calculation:</p>
 <h2>Restore previous calculation<a class="headerlink" href="#restore-previous-calculation" title="Permalink to this headline">¶</a></h2>
 <p>There is no <cite>restart</cite> mechanism in this package.  Alternatively,
 calculations can be &#8220;restored&#8221; by proper initial guess.  The initial
-guess can be prepared in may ways.  One is to read the <tt class="docutils literal"><span class="pre">chkpoint</span></tt> file
+guess can be prepared in many ways.  One is to read the <tt class="docutils literal"><span class="pre">chkpoint</span></tt> file
 which is generated in the previous or the other computations:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">chkfile</span> <span class="o">=</span> <span class="s">&#39;/path/to/chkfile&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">init_guess</span> <span class="o">=</span> <span class="s">&#39;chkfile&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 </pre></div>
 </div>
 <p><tt class="docutils literal"><span class="pre">/path/to/chkfile</span></tt> can be found in the output of the other calculation
 (if mol.verbose &gt;= 4, there is an entry &#8220;chkfile to save SCF result&#8221; to
-record the name of chkfile in the output).  With settings
+record the name of chkfile in the output).  By setting
 <tt class="xref py py-attr docutils literal"><span class="pre">chkfile</span></tt> and <tt class="xref py py-attr docutils literal"><span class="pre">init_guess</span></tt>, the SCF module can read the
 molecular orbitals stored in the given <tt class="xref py py-attr docutils literal"><span class="pre">chkfile</span></tt> and rotate them to
 the proper basis sets.  There is another way to read the initial guess:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">init_guess_by_chkfile</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;/path/to/chkfile&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">from_chk</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;/path/to/chkfile&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><tt class="xref py py-func docutils literal"><span class="pre">scf.hf.init_guess_by_chkfile()</span></tt> reads the chkpoint file and
-generated the density matrix based on that.  The density matrix is then
-feed to <tt class="xref py py-func docutils literal"><span class="pre">mf.scf()</span></tt>, which takes one parameter as the start point for
-SCF loops.</p>
+<p><tt class="xref py py-func docutils literal"><span class="pre">scf.hf.from_chk()</span></tt> reads the chkpoint file and generated the
+corresponding density matrix.  The density matrix is then
+feed to <tt class="xref py py-func docutils literal"><span class="pre">mf.kernel()</span></tt>, which takes one parameter as the start point
+for SCF loops.</p>
 <p>The &#8220;chkfile&#8221; is not limited to the calculation based on the same
 molecular and same basis set.  One can also first do a cheap SCF (with
-small basis sets) or a model SCF (dropping a few atoms, orcharged
-system), then use <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.init_guess_by_chkfile()</span></tt> to project the
+small basis sets) or a model SCF (dropping a few atoms, or charged
+system), then use <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.from_chk()</span></tt> to project the
 results to the target basis sets.  <tt class="xref py py-mod docutils literal"><span class="pre">scf</span></tt> provides other initial
 guess methods such as <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.init_guess_by_minao()</span></tt>,
 <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.init_guess_by_atom()</span></tt>, <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.init_guess_by_1e()</span></tt> (you
 can use <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.get_init_guess()</span></tt> function to call them).  If you
-like, you can mix all kinds of methods to make up a initial guess for
+like, you can mix all kinds of methods to make a initial guess for
 density matrix and feed it to <tt class="xref py py-func docutils literal"><span class="pre">mf.scf()</span></tt></p>
 <p>To restore CASSCF calculation, you need prepare either CASSCF orbitals
 or CI coefficients (not that useful unless doing DMRG-CASSCF) or both.
-For instance, see <tt class="docutils literal"><span class="pre">pyscf/examples/mcscf/save-load.py</span></tt></p>
+For instance, see <tt class="docutils literal"><span class="pre">pyscf/examples/mcscf/13-restart.py</span></tt></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
-<span class="kn">import</span> <span class="nn">numpy</span>
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">mcscf</span>
-<span class="kn">import</span> <span class="nn">pyscf.mcscf.mc1step</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lib</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Restart CASSCF from previous calculation.</span>
+
+<span class="sd">There is no &quot;restart&quot; keyword for CASSCF solver.  The CASSCF solver is</span>
+<span class="sd">completely controlled by initial guess.  So we can mimic the restart feature</span>
+<span class="sd">by providing proper initial guess from previous calculation.</span>
+
+<span class="sd">We need assign the .chkfile a string to indicate the file where to save the</span>
+<span class="sd">CASSCF intermediate results.  Then we can &quot;restart&quot; the calculation from the</span>
+<span class="sd">intermediate results.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="n">tmpchk</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">()</span>
 
 <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
-<span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">5</span>
-<span class="n">b</span> <span class="o">=</span> <span class="mf">1.6</span>
-<span class="n">mol</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s">&#39;out_hf-</span><span class="si">%2.1f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">b</span>
-<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">[</span><span class="s">&quot;F&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)],</span>
-    <span class="p">[</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">b</span><span class="p">)],]</span>
-
-<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;F&#39;</span><span class="p">:</span> <span class="s">&#39;cc-pvdz&#39;</span><span class="p">,</span>
-             <span class="s">&#39;H&#39;</span><span class="p">:</span> <span class="s">&#39;cc-pvdz&#39;</span><span class="p">,}</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;C 0 0 0; C 0 0 1.2&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;ccpvdz&#39;</span>
 <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-<span class="n">m</span><span class="o">.</span><span class="n">get_occ</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">dynamic_occ</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">)</span>
-<span class="n">m</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 
-<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
-<span class="c"># Change the default CASSCF save_mo_coeff function. Save every MO coefficients</span>
-<span class="c"># for each CAS iteration step</span>
-<span class="k">def</span> <span class="nf">save_mo_coeff</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">imacro</span><span class="p">,</span> <span class="n">imicro</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">imacro</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;mcscf-mo-</span><span class="si">%d</span><span class="s">-</span><span class="si">%d</span><span class="s">.npy&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">imacro</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">imicro</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s">&#39;Save MO of step </span><span class="si">%d</span><span class="s">-</span><span class="si">%d</span><span class="s"> in file </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">imacro</span><span class="p">,</span> <span class="n">imicro</span><span class="p">,</span> <span class="n">fname</span><span class="p">))</span>
-        <span class="n">numpy</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">)</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">save_mo_coeff</span> <span class="o">=</span> <span class="n">save_mo_coeff</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">max_orb_stepsize</span> <span class="o">=</span> <span class="o">.</span><span class="mo">01</span> <span class="c"># max. orbital-rotation angle</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">max_cycle_micro</span> <span class="o">=</span> <span class="mi">1</span>    <span class="c"># small value for frequently call CI solver</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">max_cycle_macro</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-4</span>
-<span class="n">e1</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">mc1step</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 
-<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">fci</span><span class="o">.</span><span class="n">direct_spin1</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">max_orb_stepsize</span> <span class="o">=</span> <span class="o">.</span><span class="mo">05</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">max_cycle_micro</span> <span class="o">=</span> <span class="mi">3</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-8</span>
-<span class="n">mo</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;mcscf-mo-6-1.npy&#39;</span><span class="p">)</span>
-<span class="n">e1</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">mc1step</span><span class="p">(</span><span class="n">mo</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">chkfile</span> <span class="o">=</span> <span class="n">tmpchk</span><span class="o">.</span><span class="n">name</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">max_cycle_macro</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="c">#######################################################################</span>
+<span class="c">#</span>
+<span class="c"># Assuming the CASSCF was interrupted.  Intermediate data were saved in</span>
+<span class="c"># tmpchk file.  Here we read the chkfile to restart the previous calculation.</span>
+<span class="c">#</span>
+<span class="c">#######################################################################</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;C 0 0 0; C 0 0 1.2&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;ccpvdz&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">),</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">mo</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">chkfile</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">tmpchk</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;mcscf/mo_coeff&#39;</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -676,7 +673,7 @@ to call the functions provided by <tt class="docutils literal"><span class="pre"
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">df</span>
 <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; h 0 -0.757 0.587; h 0 0.757 0.587&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
-<span class="n">auxmol</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">incore</span><span class="o">.</span><span class="n">format_aux_basis</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;weigend&#39;</span><span class="p">)</span>
+<span class="n">auxmol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; h 0 -0.757 0.587; h 0 0.757 0.587&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;weigend&#39;</span><span class="p">)</span>
 <span class="n">atm</span><span class="p">,</span> <span class="n">bas</span><span class="p">,</span> <span class="n">env</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">conc_env</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_env</span><span class="p">,</span> <span class="n">auxmol</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="n">auxmol</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="n">auxmol</span><span class="o">.</span><span class="n">_env</span><span class="p">)</span>
 <span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
 <span class="n">naux</span> <span class="o">=</span> <span class="n">auxmol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
@@ -726,13 +723,13 @@ center integrals:</p>
     <span class="n">jmat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;p,ijp-&gt;ij&#39;</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">eri3c</span><span class="p">)</span>
     <span class="n">kpj</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ijp,jk-&gt;ikp&#39;</span><span class="p">,</span> <span class="n">eri3c</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
     <span class="n">pik</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">eri2c</span><span class="p">,</span> <span class="n">kpj</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">naux</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-    <span class="n">kmat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pik,pkj-&gt;ij&#39;</span><span class="p">,</span> <span class="n">kip</span><span class="p">,</span> <span class="n">eri3c</span><span class="p">)</span>
+    <span class="n">kmat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pik,kjp-&gt;ij&#39;</span><span class="p">,</span> <span class="n">pik</span><span class="p">,</span> <span class="n">eri3c</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">jmat</span> <span class="o">-</span> <span class="n">kmat</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
 
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">get_veff</span> <span class="o">=</span> <span class="n">get_vhf</span>
-<span class="k">print</span><span class="p">(</span><span class="s">&#39;E(DF-HF) = </span><span class="si">%.12f</span><span class="s">, ref = </span><span class="si">%.12f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">(),</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span><span class="o">.</span><span class="n">scf</span><span class="p">()))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;E(DF-HF) = </span><span class="si">%.12f</span><span class="s">, ref = </span><span class="si">%.12f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">(),</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span><span class="o">.</span><span class="n">kernel</span><span class="p">()))</span>
 </pre></div>
 </div>
 <p>Hopefully, your screen will print out</p>
@@ -765,8 +762,27 @@ method is to call <tt class="xref py py-func docutils literal"><span class="pre"
 <div class="section" id="more-examples">
 <h2>More examples<a class="headerlink" href="#more-examples" title="Permalink to this headline">¶</a></h2>
 <p>Hartree-Fock with density fitting</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Density fitting method by decorating the scf object with scf.density_fit function.</span>
+
+<span class="sd">There is no flag to control the program to do density fitting for 2-electron</span>
+<span class="sd">integration.  The way to call density fitting is to decorate the existed scf</span>
+<span class="sd">object with scf.density_fit function.</span>
+
+<span class="sd">NOTE scf.density_fit function generates a new object, which works exactly the</span>
+<span class="sd">same way as the regular scf method.  The density fitting scf object is an</span>
+<span class="sd">independent object to the regular scf object which is to be decorated.  By</span>
+<span class="sd">doing so, density fitting can be applied anytime, anywhere in your script</span>
+<span class="sd">without affecting the exsited scf object.</span>
+<span class="sd">&#39;&#39;&#39;</span>
 
 <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
 <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
@@ -778,7 +794,7 @@ method is to call <tt class="xref py py-func docutils literal"><span class="pre"
 <span class="p">)</span>
 
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span>
-<span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.12f</span><span class="s">, ref = -76.0259362997&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
 
 
@@ -786,25 +802,47 @@ method is to call <tt class="xref py py-func docutils literal"><span class="pre"
 <span class="n">mol</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
-<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">UHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">UKS</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span>
 <span class="c"># the default auxiliary basis is Weigend Coulomb Fitting basis.</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">auxbasis</span> <span class="o">=</span> <span class="s">&#39;cc-pvdz-fit&#39;</span>
-<span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
-<span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.12f</span><span class="s">, ref = -75.6310072359&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.12f</span><span class="s">, ref = -75.390940646297&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Use <tt class="xref py py-mod docutils literal"><span class="pre">scf.hf.SCF</span></tt> to simulate Hubbard model</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">scipy.linalg</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">ao2mo</span>
 
-<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
-<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">User-defined Hamiltonian for SCF module.</span>
+
+<span class="sd">Three steps to define Hamiltonian for SCF:</span>
+<span class="sd">1. Specify the number of electrons. (Note mole object must be &quot;built&quot; before doing this step)</span>
+<span class="sd">2. Overwrite three attributes of scf object</span>
+<span class="sd">    .get_hcore</span>
+<span class="sd">    .get_ovlp</span>
+<span class="sd">    ._eri</span>
+<span class="sd">3. Specify initial guess (to overwrite the default atomic density initial guess)</span>
+
+<span class="sd">Note you will see warning message on the screen:</span>
+
+<span class="sd">        overwrite keys get_ovlp get_hcore of &lt;class &#39;pyscf.scf.hf.RHF&#39;&gt;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">()</span>
 <span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span> <span class="o">=</span> <span class="mi">6</span>
 
+<span class="c">#</span>
+<span class="c"># 1D anti-PBC Hubbard model at half filling</span>
+<span class="c">#</span>
 <span class="n">n</span> <span class="o">=</span> <span class="mi">12</span>
 
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
@@ -816,40 +854,49 @@ method is to call <tt class="xref py py-func docutils literal"><span class="pre"
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
     <span class="n">eri</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">4.0</span>
 
-<span class="n">e</span><span class="p">,</span><span class="n">c</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">h1</span><span class="p">)</span>
-<span class="n">dm0</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">c</span><span class="p">[:,:</span><span class="mi">3</span><span class="p">],</span><span class="n">c</span><span class="p">[:,:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
-<span class="n">hf_energy_initguess</span> <span class="o">=</span> <span class="mi">0</span>
-
 <span class="n">mf</span><span class="o">.</span><span class="n">get_hcore</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">h1</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">get_ovlp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">_eri</span> <span class="o">=</span> <span class="n">ao2mo</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+<span class="n">e</span><span class="p">,</span><span class="n">c</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">h1</span><span class="p">)</span>
+<span class="n">dm0</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">c</span><span class="p">[:,:</span><span class="mi">3</span><span class="p">],</span><span class="n">c</span><span class="p">[:,:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+<span class="c"># Another way to generate initial guess is to set .init_guess attribute to &#39;1e&#39;</span>
+<span class="c">#mf.init_guess = &#39;1e&#39;</span>
 
 <span class="c"># dm0 is the initial guess</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">(</span><span class="n">dm0</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Symmetry in CASSCF</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">mcscf</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Symmetry is not immutable</span>
+
+<span class="sd">In PySCF, symmetry is not built-in data structure.  Orbitals are stored in C1</span>
+<span class="sd">symmetry.  The irreps and symmetry information are generated on the fly.</span>
+<span class="sd">We can switch on symmetry for CASSCF solver even the Hartree-Fock is not</span>
+<span class="sd">optimized with symmetry.</span>
+<span class="sd">&#39;&#39;&#39;</span>
 
 <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
 <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-    <span class="n">verbose</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
     <span class="n">atom</span> <span class="o">=</span> <span class="p">[[</span><span class="s">&#39;O&#39;</span> <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span>     <span class="p">,</span> <span class="mf">0.</span><span class="p">)],</span>
             <span class="p">[</span><span class="mi">1</span>   <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="o">-</span><span class="mf">0.757</span> <span class="p">,</span> <span class="mf">0.587</span><span class="p">)],</span>
             <span class="p">[</span><span class="mi">1</span>   <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.757</span>  <span class="p">,</span> <span class="mf">0.587</span><span class="p">)]],</span>
-    <span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;O&#39;</span><span class="p">:</span> <span class="s">&#39;cc-pvdz&#39;</span><span class="p">,</span> <span class="s">&#39;H&#39;</span><span class="p">:</span> <span class="s">&#39;cc-pvdz&#39;</span><span class="p">},</span>
-    <span class="n">symmetry</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;cc-pvdz&#39;</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">mol</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="bp">False</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-<span class="n">m</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="n">m</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 
-<span class="n">mol</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="bp">True</span>
-<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">mc1step</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">symmetry</span> <span class="o">=</span> <span class="s">&#39;C2v&#39;</span><span class="p">)</span>
+<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -864,7 +911,7 @@ method is to call <tt class="xref py py-func docutils literal"><span class="pre"
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Tutorial</a><ul>
-<li><a class="reference internal" href="#installing">Installing</a></li>
+<li><a class="reference internal" href="#quick-setup">Quick setup</a></li>
 <li><a class="reference internal" href="#a-simple-example">A simple example</a></li>
 <li><a class="reference internal" href="#input-molecule">Input molecule</a><ul>
 <li><a class="reference internal" href="#geometry">Geometry</a></li>
@@ -893,11 +940,11 @@ method is to call <tt class="xref py py-func docutils literal"><span class="pre"
   <p class="topless"><a href="overview.html"
                         title="previous chapter">An overview of PySCF</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="gto.html"
-                        title="next chapter">gto &#8212; Molecular structure and GTO basis</a></p>
+  <p class="topless"><a href="advanced.html"
+                        title="next chapter">Advanced topics</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="sources/tutorial.txt"
+    <li><a href="_sources/tutorial.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -927,17 +974,17 @@ method is to call <tt class="xref py py-func docutils literal"><span class="pre"
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="gto.html" title="gto — Molecular structure and GTO basis"
+          <a href="advanced.html" title="Advanced topics"
              >next</a> |</li>
         <li class="right" >
           <a href="overview.html" title="An overview of PySCF"
              >previous</a> |</li>
-        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

@@ -6,27 +6,27 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>dft &mdash; PySCF 0.10 documentation</title>
+    <title>dft &mdash; PySCF 1.0 documentation</title>
     
-    <link rel="stylesheet" href="static/default.css" type="text/css" />
-    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.10',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="static/jquery.js"></script>
-    <script type="text/javascript" src="static/underscore.js"></script>
-    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 0.10 documentation" href="index.html" />
-    <link rel="next" title="dmrgscf" href="dmrgscf.html" />
-    <link rel="prev" title="Code standard" href="code-rule.html" /> 
+    <link rel="top" title="PySCF 1.0 documentation" href="index.html" />
+    <link rel="next" title="tools" href="tools.html" />
+    <link rel="prev" title="df — density fitting" href="df.html" /> 
   </head>
   <body>
     <div class="related">
@@ -39,12 +39,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="dmrgscf.html" title="dmrgscf"
+          <a href="tools.html" title="tools"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="code-rule.html" title="Code standard"
+          <a href="df.html" title="df — density fitting"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -53,8 +53,778 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-pyscf.future.dft">
-<span id="dft"></span><h1>dft<a class="headerlink" href="#module-pyscf.future.dft" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="dft">
+<h1>dft<a class="headerlink" href="#dft" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-pyscf.dft.rks">
+<span id="kohn-sham-dft"></span><h2>Kohn-Sham DFT<a class="headerlink" href="#module-pyscf.dft.rks" title="Permalink to this headline">¶</a></h2>
+<p>Non-relativistic Restricted Kohn-Sham</p>
+<dl class="class">
+<dt id="pyscf.dft.rks.RKS">
+<em class="property">class </em><tt class="descclassname">pyscf.dft.rks.</tt><tt class="descname">RKS</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/rks.html#RKS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.rks.RKS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restricted Kohn-Sham
+SCF base class.   non-relativistic RHF.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first last docutils">
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Print level.  Default value equals to <tt class="xref py py-class docutils literal"><span class="pre">Mole.verbose</span></tt></dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dd>Allowed memory in MB.  Default equals to <tt class="xref py py-class docutils literal"><span class="pre">Mole.max_memory</span></tt></dd>
+<dt>chkfile <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>checkpoint file to save MOs, orbital energies etc.</dd>
+<dt>conv_tol <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>converge threshold.  Default is 1e-10</dd>
+<dt>conv_tol_grad <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>gradients converge threshold.  Default is sqrt(conv_tol)</dd>
+<dt>max_cycle <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>max number of iterations.  Default is 50</dd>
+<dt>init_guess <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>initial guess method.  It can be one of &#8216;minao&#8217;, &#8216;atom&#8217;, &#8216;1e&#8217;, &#8216;chkfile&#8217;.
+Default is &#8216;minao&#8217;</dd>
+<dt>DIIS <span class="classifier-delimiter">:</span> <span class="classifier">class listed in <tt class="xref py py-mod docutils literal"><span class="pre">scf.diis</span></tt></span></dt>
+<dd>Default is <tt class="xref py py-class docutils literal"><span class="pre">diis.SCF_DIIS</span></tt>. Set it to None to turn off DIIS.</dd>
+<dt>diis <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>whether to do DIIS.  Default is True.</dd>
+<dt>diis_space <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>DIIS space size.  By default, 8 Fock matrices and errors vector are stored.</dd>
+<dt>diis_start_cycle <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The step to start DIIS.  Default is 1.</dd>
+<dt>diis_file: &#8216;str&#8217;</dt>
+<dd>File to store DIIS vectors and error vectors.</dd>
+<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
+<dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Direct SCF is used by default.</dd>
+<dt>direct_scf_tol <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Direct SCF cutoff threshold.  Default is 1e-13.</dd>
+<dt>callback <span class="classifier-delimiter">:</span> <span class="classifier">function(envs_dict) =&gt; None</span></dt>
+<dd>callback function takes one dict as the argument which is
+generated by the builtin function <tt class="xref py py-func docutils literal"><span class="pre">locals()</span></tt>, so that the
+callback function can access all local variables in the current
+envrionment.</dd>
+</dl>
+</dd>
+</dl>
+<p>Saved results</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>SCF converged or not</dd>
+<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
+<dt>mo_energy :</dt>
+<dd>Orbital energies</dd>
+<dt>mo_occ</dt>
+<dd>Orbital occupancy</dd>
+<dt>mo_coeff</dt>
+<dd>Orbital coefficients</dd>
+</dl>
+</div></blockquote>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="go">-1.0811707843775884</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Attributes for RKS:</dt>
+<dd><dl class="first last docutils">
+<dt>xc <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>&#8216;X_name,C_name&#8217; for the XC functional</dd>
+<dt>grids <span class="classifier-delimiter">:</span> <span class="classifier">Grids object</span></dt>
+<dd><p class="first">grids.level (0 - 6)  big number for large mesh grids, default is 3</p>
+<dl class="docutils">
+<dt>grids.atomic_radii  can be one of</dt>
+<dd><div class="first last line-block">
+<div class="line">radi.treutler_atomic_radii_adjust(mol, radi.BRAGG_RADII)</div>
+<div class="line">radi.treutler_atomic_radii_adjust(mol, radi.COVALENT_RADII)</div>
+<div class="line">radi.becke_atomic_radii_adjust(mol, radi.BRAGG_RADII)</div>
+<div class="line">radi.becke_atomic_radii_adjust(mol, radi.COVALENT_RADII)</div>
+<div class="line">None,          to switch off atomic radii adjustment</div>
+</div>
+</dd>
+<dt>grids.radi_method  scheme for radial grids, can be one of</dt>
+<dd><div class="first last line-block">
+<div class="line">radi.treutler</div>
+<div class="line">radi.gauss_chebyshev</div>
+</div>
+</dd>
+<dt>grids.becke_scheme  weight partition function, can be one of</dt>
+<dd><div class="first last line-block">
+<div class="line">gen_grid.stratmann</div>
+<div class="line">gen_grid.original_becke</div>
+</div>
+</dd>
+<dt>grids.prune_scheme  scheme to reduce number of grids, can be one of</dt>
+<dd><div class="first last line-block">
+<div class="line">gen_grid.sg1_prune</div>
+<div class="line">gen_grid.nwchem_prune</div>
+<div class="line">gen_grid.treutler_prune</div>
+</div>
+</dd>
+</dl>
+<p>grids.symmetry  True/False  to symmetrize mesh grids (TODO)</p>
+<p class="last">grids.atom_grid  Set (radial, angular) grids for particular atoms.
+Eg, grids.atom_grid = {&#8216;H&#8217;: (20,110)} will generate 20 radial
+grids and 110 angular grids for H atom.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; H 0 0 1; H 0 1 0&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">RKS</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s">&#39;b3lyp&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">-76.415443079840458</span>
+</pre></div>
+</div>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyscf.dft.rks.ROKS">
+<em class="property">class </em><tt class="descclassname">pyscf.dft.rks.</tt><tt class="descname">ROKS</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/rks.html#ROKS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.rks.ROKS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restricted open-shell Kohn-Sham
+See pyscf/dft/rks.py RKS class for the usage of the attributes</p>
+<dl class="method">
+<dt id="pyscf.dft.rks.ROKS.get_veff">
+<tt class="descname">get_veff</tt><big>(</big><em>mol=None</em>, <em>dm=None</em>, <em>dm_last=0</em>, <em>vhf_last=0</em>, <em>hermi=1</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/rks.html#ROKS.get_veff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.rks.ROKS.get_veff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coulomb + XC functional</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.rks.energy_elec">
+<tt class="descclassname">pyscf.dft.rks.</tt><tt class="descname">energy_elec</tt><big>(</big><em>ks</em>, <em>dm</em>, <em>h1e</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/rks.html#energy_elec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.rks.energy_elec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Electronic part of RKS energy.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">ks : an instance of DFT class</p>
+<dl class="last docutils">
+<dt>dm <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span></dt>
+<dd>one-partical density matrix</dd>
+<dt>h1e <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span></dt>
+<dd>Core hamiltonian</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>RKS electronic energy and the 2-electron part contribution</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.rks.get_veff_">
+<tt class="descclassname">pyscf.dft.rks.</tt><tt class="descname">get_veff_</tt><big>(</big><em>ks</em>, <em>mol</em>, <em>dm</em>, <em>dm_last=0</em>, <em>vhf_last=0</em>, <em>hermi=1</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/rks.html#get_veff_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.rks.get_veff_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coulomb + XC functional</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function will change the ks object.</p>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>ks <span class="classifier-delimiter">:</span> <span class="classifier">an instance of <a class="reference internal" href="#pyscf.dft.rks.RKS" title="pyscf.dft.rks.RKS"><tt class="xref py py-class docutils literal"><span class="pre">RKS</span></tt></a></span></dt>
+<dd>XC functional are controlled by ks.xc attribute.  Attribute
+ks.grids might be initialized.  The ._exc and ._ecoul attributes
+will be updated after return.  Attributes ._dm_last, ._vj_last and
+._vk_last might be changed if direct SCF method is applied.</dd>
+<dt>dm <span class="classifier-delimiter">:</span> <span class="classifier">ndarray or list of ndarrays</span></dt>
+<dd>A density matrix or a list of density matrices</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>dm_last <span class="classifier-delimiter">:</span> <span class="classifier">ndarray or a list of ndarrays or 0</span></dt>
+<dd>The density matrix baseline.  If not 0, this function computes the
+increment of HF potential w.r.t. the reference HF potential matrix.</dd>
+<dt>vhf_last <span class="classifier-delimiter">:</span> <span class="classifier">ndarray or a list of ndarrays or 0</span></dt>
+<dd>The reference HF potential matrix.  If vhf_last is not given,
+the function will not call direct_scf and attacalites ._dm_last,
+._vj_last and ._vk_last will not be updated.</dd>
+<dt>hermi <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first">Whether J, K matrix is hermitian</p>
+<div class="last line-block">
+<div class="line">0 : no hermitian or symmetric</div>
+<div class="line">1 : hermitian</div>
+<div class="line">2 : anti-hermitian</div>
+</div>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>matrix Veff = J + Vxc.  Veff can be a list matrices, if the input
+dm is a list of density matrices.</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-pyscf.dft.uks"></span><p>Non-relativistic Unrestricted Kohn-Sham</p>
+<dl class="class">
+<dt id="pyscf.dft.uks.UKS">
+<em class="property">class </em><tt class="descclassname">pyscf.dft.uks.</tt><tt class="descname">UKS</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/uks.html#UKS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.uks.UKS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unrestricted Kohn-Sham
+See pyscf/dft/rks.py RKS class for the usage of the attributes</p>
+<dl class="method">
+<dt id="pyscf.dft.uks.UKS.get_veff">
+<tt class="descname">get_veff</tt><big>(</big><em>mol=None</em>, <em>dm=None</em>, <em>dm_last=0</em>, <em>vhf_last=0</em>, <em>hermi=1</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/uks.html#UKS.get_veff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.uks.UKS.get_veff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coulomb + XC functional</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.uks.get_veff_">
+<tt class="descclassname">pyscf.dft.uks.</tt><tt class="descname">get_veff_</tt><big>(</big><em>ks</em>, <em>mol</em>, <em>dm</em>, <em>dm_last=0</em>, <em>vhf_last=0</em>, <em>hermi=1</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/uks.html#get_veff_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.uks.get_veff_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coulomb + XC functional for UKS.  See pyscf/dft/rks.py
+<a class="reference internal" href="#pyscf.dft.uks.get_veff_" title="pyscf.dft.uks.get_veff_"><tt class="xref py py-func docutils literal"><span class="pre">get_veff_()</span></tt></a> fore more details</p>
+</dd></dl>
+
+<span class="target" id="module-pyscf.dft.gen_grid"></span><p>Generate DFT grids and weights, based on the code provided by Gerald Knizia &lt;&gt;</p>
+<dl class="class">
+<dt id="pyscf.dft.gen_grid.Grids">
+<em class="property">class </em><tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">Grids</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#Grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.Grids" title="Permalink to this definition">¶</a></dt>
+<dd><p>DFT mesh grids</p>
+<dl class="docutils">
+<dt>Attributes for Grids:</dt>
+<dd><dl class="first docutils">
+<dt>level <span class="classifier-delimiter">:</span> <span class="classifier">int (0 - 6)</span></dt>
+<dd>big number for large mesh grids, default is 3</dd>
+<dt>atomic_radii <span class="classifier-delimiter">:</span> <span class="classifier">function or None</span></dt>
+<dd>can be one of
+| radi.treutler_atomic_radii_adjust(mol, radi.BRAGG_RADII)
+| radi.treutler_atomic_radii_adjust(mol, radi.COVALENT_RADII)
+| radi.becke_atomic_radii_adjust(mol, radi.BRAGG_RADII)
+| radi.becke_atomic_radii_adjust(mol, radi.COVALENT_RADII)
+| None,          to switch off atomic radii adjustment</dd>
+<dt>radi_method <span class="classifier-delimiter">:</span> <span class="classifier">function(n) =&gt; (rad_grids, rad_weights)</span></dt>
+<dd>scheme for radial grids, can be one of
+| radi.treutler
+| radi.gauss_chebyshev</dd>
+<dt>becke_scheme <span class="classifier-delimiter">:</span> <span class="classifier">function(v) =&gt; array_like_v</span></dt>
+<dd>weight partition function, can be one of
+| gen_grid.stratmann
+| gen_grid.original_becke</dd>
+<dt>prune_scheme <span class="classifier-delimiter">:</span> <span class="classifier">function(nuc, rad_grids, n_ang) =&gt; list_n_ang_for_each_rad_grid</span></dt>
+<dd>scheme to reduce number of grids, can be one of
+| gen_grid.sg1_prune
+| gen_grid.nwchem_prune
+| gen_grid.treutler_prune</dd>
+<dt>symmetry <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>whether to symmetrize mesh grids (TODO)</dd>
+<dt>atom_grid <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Set (radial, angular) grids for particular atoms.
+Eg, grids.atom_grid = {&#8216;H&#8217;: (20,110)} will generate 20 radial
+grids and 110 angular grids for H atom.</dd>
+</dl>
+<p>Examples:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">gen_grid</span><span class="o">.</span><span class="n">Grids</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">build_</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="method">
+<dt id="pyscf.dft.gen_grid.Grids.gen_atomic_grids">
+<tt class="descname">gen_atomic_grids</tt><big>(</big><em>mol</em>, <em>atom_grid=None</em>, <em>radi_method=None</em>, <em>level=None</em>, <em>prune_scheme=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#Grids.gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.Grids.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
+<dd><p>See gen_grid.gen_atomic_grids function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.dft.gen_grid.Grids.gen_partition">
+<tt class="descname">gen_partition</tt><big>(</big><em>mol</em>, <em>atom_grids_tab</em>, <em>atomic_radii=None</em>, <em>becke_scheme=&lt;function original_becke at 0x2b82fc2ab578&gt;</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#Grids.gen_partition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.Grids.gen_partition" title="Permalink to this definition">¶</a></dt>
+<dd><p>See gen_grid.gen_partition function</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.gen_grid.gen_atomic_grids">
+<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">gen_atomic_grids</tt><big>(</big><em>mol</em>, <em>atom_grid={}</em>, <em>radi_method=&lt;function gauss_chebyshev at 0x2b82fc2ab140&gt;</em>, <em>level=3</em>, <em>prune_scheme=&lt;function treutler_prune at 0x2b82fc2ab488&gt;</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate number of radial grids and angular grids for the given molecule.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>A dict, with the atom symbol for the dict key.  For each atom type,
+the dict value has two items: one is the meshgrid coordinates wrt the
+atom center; the second is the volume of that grid.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.gen_grid.gen_partition">
+<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">gen_partition</tt><big>(</big><em>mol</em>, <em>atom_grids_tab</em>, <em>atomic_radii_adjust=None</em>, <em>becke_scheme=&lt;function original_becke at 0x2b82fc2ab578&gt;</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#gen_partition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.gen_partition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the mesh grid coordinates and weights for DFT numerical integration.
+We can change atomic_radii_adjust becke_scheme to generate different meshgrid.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>grid_coord and grid_weight arrays.  grid_coord array has shape (N,3);
+weight 1D array has N elements.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.gen_grid.nwchem_prune">
+<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">nwchem_prune</tt><big>(</big><em>nuc</em>, <em>rads</em>, <em>n_ang</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#nwchem_prune"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.nwchem_prune" title="Permalink to this definition">¶</a></dt>
+<dd><p>NWChem</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>nuc <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Nuclear charge.</dd>
+<dt>rads <span class="classifier-delimiter">:</span> <span class="classifier">1D array</span></dt>
+<dd>Grid coordinates on radical axis.</dd>
+<dt>n_ang <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Max number of grids over angular part.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>A list has the same length as rads. The list element is the number of
+grids over angular part for each radial grid.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.gen_grid.original_becke">
+<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">original_becke</tt><big>(</big><em>g</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#original_becke"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.original_becke" title="Permalink to this definition">¶</a></dt>
+<dd><p>Becke, JCP, 88, 2547 (1988)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.gen_grid.sg1_prune">
+<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">sg1_prune</tt><big>(</big><em>nuc</em>, <em>rads</em>, <em>n_ang</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#sg1_prune"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.sg1_prune" title="Permalink to this definition">¶</a></dt>
+<dd><p>SG1, CPL, 209, 506</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>nuc <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Nuclear charge.</dd>
+<dt>rads <span class="classifier-delimiter">:</span> <span class="classifier">1D array</span></dt>
+<dd>Grid coordinates on radical axis.</dd>
+<dt>n_ang <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Max number of grids over angular part.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>A list has the same length as rads. The list element is the number of
+grids over angular part for each radial grid.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.gen_grid.stratmann">
+<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">stratmann</tt><big>(</big><em>g</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#stratmann"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.stratmann" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stratmann, Scuseria, Frisch. CPL, 257, 213 (1996)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.gen_grid.treutler_prune">
+<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">treutler_prune</tt><big>(</big><em>nuc</em>, <em>rads</em>, <em>n_ang</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#treutler_prune"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.treutler_prune" title="Permalink to this definition">¶</a></dt>
+<dd><p>Treutler-Ahlrichs</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>nuc <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Nuclear charge.</dd>
+<dt>rads <span class="classifier-delimiter">:</span> <span class="classifier">1D array</span></dt>
+<dd>Grid coordinates on radical axis.</dd>
+<dt>n_ang <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Max number of grids over angular part.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>A list has the same length as rads. The list element is the number of
+grids over angular part for each radial grid.</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-pyscf.dft.numint"></span><dl class="function">
+<dt id="pyscf.dft.numint.eval_ao">
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_ao</tt><big>(</big><em>mol</em>, <em>coords</em>, <em>isgga=False</em>, <em>relativity=0</em>, <em>bastart=0</em>, <em>bascount=None</em>, <em>non0tab=None</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_ao"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_ao" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate AO function value on the given grids, for LDA and GGA functional.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">mol : an instance of <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></p>
+<dl class="last docutils">
+<dt>coords <span class="classifier-delimiter">:</span> <span class="classifier">2D array, shape (N,3)</span></dt>
+<dd>The coordinates of the grids.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>isgga <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Whether to evalute the AO gradients for GGA functional.  It affects
+the shape of the return array.  If isgga=False,  the returned AO
+values are stored in a (N,nao) array.  Otherwise the AO values are
+stored in an array of shape (4,N,nao).  Here N is the number of
+grids, nao is the number of AO functions.</dd>
+<dt>relativity <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>No effects.</dd>
+<dt>bastart, bascount <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>If given, only part of AOs (bastart &lt;= shell_id &lt; bastart+bascount) are evaluated.</dd>
+<dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
+<dd>mask array to indicate whether the AO values are zero.  The mask
+array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
+<dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>2D array of shape (N,nao) for AO values if isgga is False.
+Or 3D array of shape (4,N,nao) for AO values and AO gradients if isgga is True.
+In the 3D array, the first (N,nao) elements are the AO values.  The
+following (3,N,nao) are the AO gradients for x,y,z compoents.</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; H 0 0 1; H 0 1 0&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>  <span class="c"># 100 random points</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ao_value</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">ao_value</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(100, 24)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ao_value</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bastart</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bascount</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">ao_value</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(4, 100, 7)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.numint.eval_c">
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_c</tt><big>(</big><em>c_id</em>, <em>rho</em>, <em>sigma</em>, <em>spin=0</em>, <em>relativity=0</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interface to call libxc library to evaluate correlation functional and potential.
+For hybrid functional, the returned ec, vcrho, vcsigma are all zero.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>c_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Correlation functional ID used by libxc library.  See pyscf/dft/vxc.py for more details.</dd>
+<dt>rho <span class="classifier-delimiter">:</span> <span class="classifier">1D array or 2D array</span></dt>
+<dd>Shape of (N) for electron density if spin = 0;
+Shape of (N,2) for alpha electron density and beta density if spin = 1
+where N is number of grids</dd>
+<dt>sigma <span class="classifier-delimiter">:</span> <span class="classifier">1D array or 2D array</span></dt>
+<dd>(Density derivatives)^2.
+Shape of (N) if spin = 0;
+Shape of (N,3) for alpha*alpha, alpha*beta, beta*beta components if spin = 1
+where N is the number of grids</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>spin polarized if spin = 1</dd>
+<dt>relativity <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>No effects.</dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
+<dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>3 1D arrays ec, vrho, vsigma  where ec is the correlation functional
+value on each grid, vrho is correlation potential on each grid, vsigma
+is the derivative potential for GGA</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.numint.eval_mat">
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_mat</tt><big>(</big><em>mol</em>, <em>ao</em>, <em>weight</em>, <em>rho</em>, <em>vrho</em>, <em>vsigma=None</em>, <em>non0tab=None</em>, <em>isgga=False</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_mat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_mat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate XC potential matrix.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">mol : an instance of <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></p>
+<dl class="last docutils">
+<dt>ao <span class="classifier-delimiter">:</span> <span class="classifier">2D array of shape (N,nao) for LDA or 3D array of shape (4,N,nao) for GGA</span></dt>
+<dd>N is the number of grids, nao is the number of AO functions.
+AO values on a set of grids.  If isgga is True, the AO values
+need to be 3D array in which ao[0] is the AO values and ao[1:3]
+are the AO gradients.</dd>
+<dt>weight <span class="classifier-delimiter">:</span> <span class="classifier">1D array</span></dt>
+<dd>Integral weights on grids.</dd>
+<dt>rho <span class="classifier-delimiter">:</span> <span class="classifier">1D array of size N for LDA or 2D array of shape (4,N) for GGA</span></dt>
+<dd>electron density on each grid.  If isgga is True, it also stores
+the density derivatives.</dd>
+<dt>vrho <span class="classifier-delimiter">:</span> <span class="classifier">1D array of size N</span></dt>
+<dd>XC potential value on each grid.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>vsigma <span class="classifier-delimiter">:</span> <span class="classifier">2D array of shape (3,N)</span></dt>
+<dd>GGA potential value on each grid</dd>
+<dt>isgga <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Whether to evalute the AO gradients for GGA functional.  It affects
+the shape of the argument <cite>ao</cite> and <cite>rho</cite>.</dd>
+<dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
+<dd>mask array to indicate whether the AO values are zero.  The mask
+array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
+<dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>XC potential matrix in 2D array of shape (nao,nao) where nao is the
+number of AO functions.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.numint.eval_rho">
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_rho</tt><big>(</big><em>mol</em>, <em>ao</em>, <em>dm</em>, <em>non0tab=None</em>, <em>isgga=False</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_rho"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_rho" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the electron density for LDA functional, and the density
+derivatives for GGA functional.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">mol : an instance of <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></p>
+<dl class="last docutils">
+<dt>ao <span class="classifier-delimiter">:</span> <span class="classifier">2D array of shape (N,nao) for LDA or 3D array of shape (4,N,nao) for GGA</span></dt>
+<dd>N is the number of grids, nao is the number of AO functions.
+AO values on a set of grids.  If isgga is True, the AO values
+need to be 3D array in which ao[0] is the AO values and ao[1:3]
+are the AO gradients.</dd>
+<dt>dm <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>Density matrix</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>isgga <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Whether to evalute the AO gradients for GGA functional.  It affects
+the shape of the argument <cite>ao</cite> and the returned density.</dd>
+<dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
+<dd>mask array to indicate whether the AO values are zero.  The mask
+array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
+<dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>1D array of size N to store electron density if isgga is False.  2D
+array of (4,N) to store density and &#8220;density derivatives&#8221; for x,y,z
+components if isgga is True.</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; H 0 0 1; H 0 1 0&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>  <span class="c"># 100 random points</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ao_value</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">(),</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">dm</span> <span class="o">+</span> <span class="n">dm</span><span class="o">.</span><span class="n">T</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rho</span><span class="p">,</span> <span class="n">dx_rho</span><span class="p">,</span> <span class="n">dy_rho</span><span class="p">,</span> <span class="n">dz_rho</span> <span class="o">=</span> <span class="n">eval_rho</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.numint.eval_rho2">
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_rho2</tt><big>(</big><em>mol</em>, <em>ao</em>, <em>mo_coeff</em>, <em>mo_occ</em>, <em>non0tab=None</em>, <em>isgga=False</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_rho2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_rho2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the electron density for LDA functional, and the density
+derivatives for GGA functional.  This function has the same functionality
+as <a class="reference internal" href="#pyscf.dft.numint.eval_rho" title="pyscf.dft.numint.eval_rho"><tt class="xref py py-func docutils literal"><span class="pre">eval_rho()</span></tt></a> except that the density are evaluated based on orbital
+coefficients and orbital occupancy.  It is more efficient than
+<a class="reference internal" href="#pyscf.dft.numint.eval_rho" title="pyscf.dft.numint.eval_rho"><tt class="xref py py-func docutils literal"><span class="pre">eval_rho()</span></tt></a> in most scenario.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">mol : an instance of <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></p>
+<dl class="last docutils">
+<dt>ao <span class="classifier-delimiter">:</span> <span class="classifier">2D array of shape (N,nao) for LDA or 3D array of shape (4,N,nao) for GGA</span></dt>
+<dd>N is the number of grids, nao is the number of AO functions.
+AO values on a set of grids.  If isgga is True, the AO values
+need to be 3D array in which ao[0] is the AO values and ao[1:3]
+are the AO gradients.</dd>
+<dt>mo_coeff <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>Orbital coefficients</dd>
+<dt>mo_occ <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>Orbital occupancy</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>isgga <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Whether to evalute the AO gradients for GGA functional.  It affects
+the shape of the argument <cite>ao</cite> and the returned density.</dd>
+<dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
+<dd>mask array to indicate whether the AO values are zero.  The mask
+array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
+<dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>1D array of size N to store electron density if isgga is False.  2D
+array of (4,N) to store density and &#8220;density derivatives&#8221; for x,y,z
+components if isgga is True.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.numint.eval_x">
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_x</tt><big>(</big><em>x_id</em>, <em>rho</em>, <em>sigma</em>, <em>spin=0</em>, <em>relativity=0</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_x" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interface to call libxc library to evaluate exchange functional and potential.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>x_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Exchange functional ID used by libxc library.  See pyscf/dft/vxc.py for more details.</dd>
+<dt>rho <span class="classifier-delimiter">:</span> <span class="classifier">1D array or 2D array</span></dt>
+<dd>Shape of (N) for electron density if spin = 0;
+Shape of (N,2) for alpha electron density and beta density if spin = 1
+where N is number of grids</dd>
+<dt>sigma <span class="classifier-delimiter">:</span> <span class="classifier">1D array or 2D array</span></dt>
+<dd>(Density derivatives)^2.
+Shape of (N) if spin = 0;
+Shape of (N,3) for alpha*alpha, alpha*beta, beta*beta components if spin = 1
+where N is the number of grids</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>spin polarized if spin = 1</dd>
+<dt>relativity <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>No effects.</dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
+<dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>3 1D arrays ex, vrho, vsigma  where exc is the exchange functional
+value on each grid, vrho is exchange potential on each grid, vsigma is
+the derivative potential for GGA</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.numint.eval_xc">
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_xc</tt><big>(</big><em>x_id</em>, <em>c_id</em>, <em>rho</em>, <em>sigma</em>, <em>spin=0</em>, <em>relativity=0</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_xc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_xc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interface to call libxc library to evaluate XC functional and potential.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>x_id, c_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Exchange/Correlation functional ID used by libxc library.
+See pyscf/dft/vxc.py for more details.</dd>
+<dt>rho <span class="classifier-delimiter">:</span> <span class="classifier">1D array or 2D array</span></dt>
+<dd>Shape of (N) for electron density if spin = 0;
+Shape of (N,2) for alpha electron density and beta density if spin = 1
+where N is number of grids</dd>
+<dt>sigma <span class="classifier-delimiter">:</span> <span class="classifier">1D array or 2D array</span></dt>
+<dd>(Density derivatives)^2.
+Shape of (N) if spin = 0;
+Shape of (N,3) for alpha*alpha, alpha*beta, beta*beta components if spin = 1
+where N is the number of grids</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>spin polarized if spin = 1</dd>
+<dt>relativity <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>No effects.</dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
+<dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>3 1D arrays ec, vrho, vsigma  where ec is the correlation functional
+value on each grid, vrho is correlation potential on each grid, vsigma
+is the derivative potential for GGA</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.numint.make_mask">
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">make_mask</tt><big>(</big><em>mol</em>, <em>coords</em>, <em>relativity=0</em>, <em>bastart=0</em>, <em>bascount=None</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#make_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.make_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mask to indicate whether a shell is zero on particular grid</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">mol : an instance of <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></p>
+<dl class="last docutils">
+<dt>coords <span class="classifier-delimiter">:</span> <span class="classifier">2D array, shape (N,3)</span></dt>
+<dd>The coordinates of the grids.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>relativity <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>No effects.</dd>
+<dt>bastart, bascount <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>If given, only part of AOs (bastart &lt;= shell_id &lt; bastart+bascount) are evaluated.</dd>
+<dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
+<dd>mask array to indicate whether the AO values are zero.  The mask
+array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
+<dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>2D bool array of shape (N,nbas), where N is the number of grids, nbas
+is the number of shells</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.numint.nr_vxc">
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_vxc</tt><big>(</big><em>mol</em>, <em>grids</em>, <em>x_id</em>, <em>c_id</em>, <em>dm</em>, <em>spin=0</em>, <em>relativity=0</em>, <em>hermi=1</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_vxc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_vxc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate RKS XC functional and potential matrix for given meshgrids and density matrix</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">mol : an instance of <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></p>
+<dl class="last docutils">
+<dt>grids <span class="classifier-delimiter">:</span> <span class="classifier">an instance of <tt class="xref py py-class docutils literal"><span class="pre">Grids</span></tt></span></dt>
+<dd>grids.coords and grids.weights are needed for coordinates and weights of meshgrids.</dd>
+<dt>x_id, c_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Exchange/Correlation functional ID used by libxc library.
+See pyscf/dft/vxc.py for more details.</dd>
+<dt>dm <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>Density matrix</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>spin polarized if spin = 1</dd>
+<dt>relativity <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>No effects.</dd>
+<dt>hermi <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>No effects</dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">int or float</span></dt>
+<dd>The maximum size of cache to use (in MB).</dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
+<dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>nelec, excsum, vmat.
+nelec is the number of electrons generated by numerical integration.
+excsum is the XC functional value.  vmat is the XC potential matrix in
+2D array of shape (nao,nao) where nao is the number of AO functions.</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">dft</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">gen_grid</span><span class="o">.</span><span class="n">Grids</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>  <span class="c"># 100 random points</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">vxc</span><span class="o">.</span><span class="n">parse_xc_name</span><span class="p">(</span><span class="s">&#39;lda,vwn&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">(),</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nelec</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">numint</span><span class="o">.</span><span class="n">nr_vxc</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<span class="target" id="module-pyscf.dft.vxc"></span><p>XC functional, this is the interface to libxc</p>
+<dl class="function">
+<dt id="pyscf.dft.vxc.parse_xc_name">
+<tt class="descclassname">pyscf.dft.vxc.</tt><tt class="descname">parse_xc_name</tt><big>(</big><em>xc_name='LDA</em>, <em>VWN'</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/vxc.html#parse_xc_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.vxc.parse_xc_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the XC functional name to libxc library internal ID.</p>
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -63,15 +833,23 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">dft</a><ul>
+<li><a class="reference internal" href="#module-pyscf.dft.rks">Kohn-Sham DFT</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
-  <p class="topless"><a href="code-rule.html"
-                        title="previous chapter">Code standard</a></p>
+  <p class="topless"><a href="df.html"
+                        title="previous chapter">df &#8212; density fitting</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="dmrgscf.html"
-                        title="next chapter">dmrgscf</a></p>
+  <p class="topless"><a href="tools.html"
+                        title="next chapter">tools</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="sources/dft.txt"
+    <li><a href="_sources/dft.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -101,17 +879,17 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="dmrgscf.html" title="dmrgscf"
+          <a href="tools.html" title="tools"
              >next</a> |</li>
         <li class="right" >
-          <a href="code-rule.html" title="Code standard"
+          <a href="df.html" title="df — density fitting"
              >previous</a> |</li>
-        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

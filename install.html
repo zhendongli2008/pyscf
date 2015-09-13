@@ -1,0 +1,237 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &mdash; PySCF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 1.0 documentation" href="index.html" />
+    <link rel="next" title="gto — Molecular structure and GTO basis" href="gto.html" />
+    <link rel="prev" title="Advanced topics" href="advanced.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gto.html" title="gto — Molecular structure and GTO basis"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="advanced.html" title="Advanced topics"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installation">
+<span id="installing"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>You may already have <a class="reference external" href="http://www.cmake.org">cmake</a>,
+<a class="reference external" href="http://www.numpy.org/">numpy</a>, <a class="reference external" href="http://www.scipy.org/">scipy</a>
+and <a class="reference external" href="http://www.h5py.org/">h5py</a> installed.  If not, you can use pip
+to install numpy, scipy and h5py:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install --target=/path/to/python/libs numpy
+$ pip install --target=/path/to/python/libs scipy
+$ pip install --target=/path/to/python/libs h5py
+</pre></div>
+</div>
+<p>Download the latest version of <a class="reference external" href="https://github.com/sunqm/pyscf.git/">pyscf</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/sunqm/pyscf
+</pre></div>
+</div>
+<p>Now you need build the C extensions in <tt class="file docutils literal"><span class="pre">pyscf/lib</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd pyscf/lib
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+</pre></div>
+</div>
+<p>It will automatically download the analytical GTO integral library
+<tt class="docutils literal"><span class="pre">libcint</span></tt> <a class="reference external" href="https://github.com/sunqm/libcint.git">https://github.com/sunqm/libcint.git</a> and the DFT
+exchange correlation functional library <tt class="docutils literal"><span class="pre">libxc</span></tt>
+<a class="reference external" href="http://www.tddft.org/programs/Libxc">http://www.tddft.org/programs/Libxc</a>.  Finally, to make Python find pyscf
+package, add the <strong>parent directory</strong> of pyscf to <tt class="code docutils literal"><span class="pre">PYTHONPATH</span></tt>,
+e.g. assuming pyscf is put in <tt class="docutils literal"><span class="pre">/home/abc</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre>export PYTHONPATH=/home/abc:$PYTHONPATH
+</pre></div>
+</div>
+<p>To ensure the installation is successed, start a Python shell, and type:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pyscf</span>
+</pre></div>
+</div>
+<p>If you got errors like:</p>
+<div class="highlight-python"><div class="highlight"><pre>ImportError: No module named pyscf
+</pre></div>
+</div>
+<p>It&#8217;s very possible that you put <tt class="docutils literal"><span class="pre">/home/abc/pyscf</span></tt> in the <tt class="code docutils literal"><span class="pre">PYTHONPATH</span></tt>.
+You need to remove the <tt class="docutils literal"><span class="pre">/pyscf</span></tt> in that string and try import
+<tt class="docutils literal"><span class="pre">pyscf</span></tt> in the python shell again.</p>
+<div class="section" id="using-optimized-blas">
+<span id="installing-blas"></span><h2>Using optimized BLAS<a class="headerlink" href="#using-optimized-blas" title="Permalink to this headline">¶</a></h2>
+<p>The Linear algebra libraries have significant affects on the performance
+of the PySCF package.  The default installation does not require to
+provide external linear algebra libraries.  It&#8217;s possible that the setup
+script only find and link to the slow BLAS/LAPACK libraries.  You can
+install the package with other BLAS venders instead of the default one
+to improve the performance,  eg MKL (it can provide 10 times speedup in
+many modules):</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd pyscf/lib/build
+$ BLA_VENDOR=Intel10_64lp_seq cmake ..
+$ make
+</pre></div>
+</div>
+<p>You can link to other BLAS libraries by setting <tt class="docutils literal"><span class="pre">BLA_VENDOR</span></tt>, eg
+<tt class="docutils literal"><span class="pre">BLA_VENDOR=ATLAS</span></tt>, <tt class="docutils literal"><span class="pre">BLA_VENDOR=IBMESSL</span></tt>.  Please refer to <a class="reference external" href="http://www.cmake.org/cmake/help/v3.0/module/FindBLAS.html">cmake
+mannual</a>
+for more details of the use of <tt class="docutils literal"><span class="pre">FindBLAS</span></tt> macro.</p>
+<p>If the cmake <tt class="docutils literal"><span class="pre">BLA_VENDOR</span></tt> cannot detect the right BLAS library as you
+expected, you can simply assign the libraries to the variable
+<tt class="docutils literal"><span class="pre">BLAS_LIBRARIES</span></tt> in <tt class="file docutils literal"><span class="pre">lib/CMakeLists.txt</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre>set(BLAS_LIBRARIES &quot;${BLAS_LIBRARIES};/path/to/mkl/lib/intel64/libmkl_intel_lp64.so&quot;)
+set(BLAS_LIBRARIES &quot;${BLAS_LIBRARIES};/path/to/mkl/lib/intel64/libmkl_sequential.so&quot;)
+set(BLAS_LIBRARIES &quot;${BLAS_LIBRARIES};/path/to/mkl/lib/intel64/libmkl_core.so&quot;)
+set(BLAS_LIBRARIES &quot;${BLAS_LIBRARIES};/path/to/mkl/lib/intel64/libmkl_avx.so&quot;)
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-optimized-integral-library">
+<span id="installing-qcint"></span><h2>Using optimized integral library<a class="headerlink" href="#using-optimized-integral-library" title="Permalink to this headline">¶</a></h2>
+<p>The default integral library used by PySCF is
+libcint (<a class="reference external" href="https://github.com/sunqm/libcint">https://github.com/sunqm/libcint</a>).  To ensure the
+compatibility on various high performance computer systems, PySCF does
+not use the fast integral library by default.  For X86-64 platforms,
+libcint library has an efficient implementation Qcint
+<a class="reference external" href="https://github.com/sunqm/qcint.git">https://github.com/sunqm/qcint.git</a>
+which is heavily optimized against SSE3 instructions.
+To replace the default libcint library with qcint library, edit the URL
+of the integral library in lib/CMakeLists.txt file:</p>
+<div class="highlight-python"><div class="highlight"><pre>ExternalProject_Add(libcint
+   GIT_REPOSITORY
+   https://github.com/sunqm/qcint.git
+   ...
+</pre></div>
+</div>
+</div>
+<div class="section" id="plugins">
+<span id="installing-plugin"></span><h2>Plugins<a class="headerlink" href="#plugins" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="dmrg-solver">
+<h3>DMRG solver<a class="headerlink" href="#dmrg-solver" title="Permalink to this headline">¶</a></h3>
+<p>There are two DMRG solver interfaces avaialbe in PySCF:
+Block (<a class="reference external" href="http://chemists.princeton.edu/chan/software/block-code-for-dmrg">http://chemists.princeton.edu/chan/software/block-code-for-dmrg</a>)
+and CheMPS2 (<a class="reference external" href="http://sebwouters.github.io/CheMPS2/index.html">http://sebwouters.github.io/CheMPS2/index.html</a>).
+Before using the DMRG, you need create a config file
+future/dmrgscf/settings.py  (as shown by settings.py.example) to store
+the path where the DMRG solver was installed.</p>
+</div>
+<div class="section" id="fciqmc">
+<h3>FCIQMC<a class="headerlink" href="#fciqmc" title="Permalink to this headline">¶</a></h3>
+<p>PySCF has an interface to call FCIQMC solver NECI
+(<a class="reference external" href="https://github.com/ghb24/NECI_STABLE">https://github.com/ghb24/NECI_STABLE</a>).  To use NECI, you need
+create a config file future/fciqmc/settings.py to store the path where
+NECI was installed.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#using-optimized-blas">Using optimized BLAS</a></li>
+<li><a class="reference internal" href="#using-optimized-integral-library">Using optimized integral library</a></li>
+<li><a class="reference internal" href="#plugins">Plugins</a><ul>
+<li><a class="reference internal" href="#dmrg-solver">DMRG solver</a></li>
+<li><a class="reference internal" href="#fciqmc">FCIQMC</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="advanced.html"
+                        title="previous chapter">Advanced topics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gto.html"
+                        title="next chapter">gto &#8212; Molecular structure and GTO basis</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/install.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gto.html" title="gto — Molecular structure and GTO basis"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="advanced.html" title="Advanced topics"
+             >previous</a> |</li>
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

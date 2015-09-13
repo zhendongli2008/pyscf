@@ -1,0 +1,514 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyscf.dft.vxc &mdash; PySCF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 1.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyscf.dft.vxc</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">XC functional, this is the interface to libxc</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">ctypes</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pyscf.lib</span>
+
+<span class="n">libdft</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">load_library</span><span class="p">(</span><span class="s">&#39;libdft&#39;</span><span class="p">)</span>
+
+<span class="c"># xc_code from libxc</span>
+<span class="n">XC_CODES</span> <span class="o">=</span> <span class="p">{</span>
+<span class="s">&#39;XC_LDA_X&#39;</span><span class="p">:</span>               <span class="mi">1</span><span class="p">,</span>  <span class="c"># Exchange</span>
+<span class="s">&#39;XC_LDA_C_WIGNER&#39;</span><span class="p">:</span>        <span class="mi">2</span><span class="p">,</span>  <span class="c"># Wigner parametrization</span>
+<span class="s">&#39;XC_LDA_C_RPA&#39;</span><span class="p">:</span>           <span class="mi">3</span><span class="p">,</span>  <span class="c"># Random Phase Approximation</span>
+<span class="s">&#39;XC_LDA_C_HL&#39;</span><span class="p">:</span>            <span class="mi">4</span><span class="p">,</span>  <span class="c"># Hedin &amp; Lundqvist</span>
+<span class="s">&#39;XC_LDA_C_GL&#39;</span><span class="p">:</span>            <span class="mi">5</span><span class="p">,</span>  <span class="c"># Gunnarson &amp; Lundqvist</span>
+<span class="s">&#39;XC_LDA_C_XALPHA&#39;</span><span class="p">:</span>        <span class="mi">6</span><span class="p">,</span>  <span class="c"># Slater Xalpha</span>
+<span class="s">&#39;XC_LDA_C_VWN&#39;</span><span class="p">:</span>           <span class="mi">7</span><span class="p">,</span>  <span class="c"># Vosko, Wilk, &amp; Nussair</span>
+<span class="s">&#39;XC_LDA_C_VWN_RPA&#39;</span><span class="p">:</span>       <span class="mi">8</span><span class="p">,</span>  <span class="c"># Vosko, Wilk, &amp; Nussair (RPA)</span>
+<span class="s">&#39;XC_LDA_C_PZ&#39;</span><span class="p">:</span>            <span class="mi">9</span><span class="p">,</span>  <span class="c"># Perdew &amp; Zunger</span>
+<span class="s">&#39;XC_LDA_C_PZ_MOD&#39;</span><span class="p">:</span>       <span class="mi">10</span><span class="p">,</span>  <span class="c"># Perdew &amp; Zunger (Modified)</span>
+<span class="s">&#39;XC_LDA_C_OB_PZ&#39;</span><span class="p">:</span>        <span class="mi">11</span><span class="p">,</span>  <span class="c"># Ortiz &amp; Ballone (PZ)</span>
+<span class="s">&#39;XC_LDA_C_PW&#39;</span><span class="p">:</span>           <span class="mi">12</span><span class="p">,</span>  <span class="c"># Perdew &amp; Wang</span>
+<span class="s">&#39;XC_LDA_C_PW_MOD&#39;</span><span class="p">:</span>       <span class="mi">13</span><span class="p">,</span>  <span class="c"># Perdew &amp; Wang (Modified)</span>
+<span class="s">&#39;XC_LDA_C_OB_PW&#39;</span><span class="p">:</span>        <span class="mi">14</span><span class="p">,</span>  <span class="c"># Ortiz &amp; Ballone (PW)</span>
+<span class="s">&#39;XC_LDA_C_2D_AMGB&#39;</span><span class="p">:</span>      <span class="mi">15</span><span class="p">,</span>  <span class="c"># Attacalite et al</span>
+<span class="s">&#39;XC_LDA_C_2D_PRM&#39;</span><span class="p">:</span>       <span class="mi">16</span><span class="p">,</span>  <span class="c"># Pittalis, Rasanen &amp; Marques correlation in 2D</span>
+<span class="s">&#39;XC_LDA_C_vBH&#39;</span><span class="p">:</span>          <span class="mi">17</span><span class="p">,</span>  <span class="c"># von Barth &amp; Hedin</span>
+<span class="s">&#39;XC_LDA_C_VBH&#39;</span><span class="p">:</span>          <span class="mi">17</span><span class="p">,</span>  <span class="c"># von Barth &amp; Hedin</span>
+<span class="s">&#39;XC_LDA_C_1D_CSC&#39;</span><span class="p">:</span>       <span class="mi">18</span><span class="p">,</span>  <span class="c"># Casula, Sorella, and Senatore 1D correlation</span>
+<span class="s">&#39;XC_LDA_X_2D&#39;</span><span class="p">:</span>           <span class="mi">19</span><span class="p">,</span>  <span class="c"># Exchange in 2D</span>
+<span class="s">&#39;XC_LDA_XC_TETER93&#39;</span><span class="p">:</span>     <span class="mi">20</span><span class="p">,</span>  <span class="c"># Teter 93 parametrization</span>
+<span class="s">&#39;XC_LDA_X_1D&#39;</span><span class="p">:</span>           <span class="mi">21</span><span class="p">,</span>  <span class="c"># Exchange in 1D</span>
+<span class="s">&#39;XC_LDA_C_ML1&#39;</span><span class="p">:</span>          <span class="mi">22</span><span class="p">,</span>  <span class="c"># Modified LSD (version 1) of Proynov and Salahub</span>
+<span class="s">&#39;XC_LDA_C_ML2&#39;</span><span class="p">:</span>          <span class="mi">23</span><span class="p">,</span>  <span class="c"># Modified LSD (version 2) of Proynov and Salahub</span>
+<span class="s">&#39;XC_LDA_C_GOMBAS&#39;</span><span class="p">:</span>       <span class="mi">24</span><span class="p">,</span>  <span class="c"># Gombas parametrization</span>
+<span class="s">&#39;XC_LDA_C_PW_RPA&#39;</span><span class="p">:</span>       <span class="mi">25</span><span class="p">,</span>  <span class="c"># Perdew &amp; Wang fit of the RPA</span>
+<span class="s">&#39;XC_LDA_K_TF&#39;</span><span class="p">:</span>           <span class="mi">50</span><span class="p">,</span>  <span class="c"># Thomas-Fermi kinetic energy functional</span>
+<span class="s">&#39;XC_LDA_K_LP&#39;</span><span class="p">:</span>           <span class="mi">51</span><span class="p">,</span>  <span class="c"># Lee and Parr Gaussian ansatz</span>
+<span class="c">#&#39;XC_GGA_C_OP_XALPHA&#39;:    84,  # one-parameter progressive functional (G96 version)</span>
+<span class="c">#&#39;XC_GGA_C_OP_G96&#39;:       85,  # one-parameter progressive functional (G96 version)</span>
+<span class="c">#&#39;XC_GGA_C_OP_PBE&#39;:       86,  # one-parameter progressive functional (PBE version)</span>
+<span class="c">#&#39;XC_GGA_C_OP_B88&#39;:       87,  # one-parameter progressive functional (B88 version)</span>
+<span class="c">#&#39;XC_GGA_C_FT97&#39;:         88,  # Filatov &amp; Thiel correlation</span>
+<span class="c">#&#39;XC_GGA_C_SPBE&#39;:         89,  # PBE correlation to be used with the SSB exchange</span>
+<span class="c">#&#39;XC_GGA_X_SSB_SW&#39;:       90,  # Swarta, Sola and Bickelhaupt correction to PBE</span>
+<span class="c">#&#39;XC_GGA_X_SSB&#39;:          91,  # Swarta, Sola and Bickelhaupt</span>
+<span class="c">#&#39;XC_GGA_X_SSB_D&#39;:        92,  # Swarta, Sola and Bickelhaupt dispersion</span>
+<span class="c">#&#39;XC_GGA_XC_HCTH_407P&#39;:   93,  # HCTH/407+</span>
+<span class="c">#&#39;XC_GGA_XC_HCTH_P76&#39;:    94,  # HCTH p=7/6</span>
+<span class="c">#&#39;XC_GGA_XC_HCTH_P14&#39;:    95,  # HCTH p=1/4</span>
+<span class="c">#&#39;XC_GGA_XC_B97_GGA1&#39;:    96,  # Becke 97 GGA-1</span>
+<span class="c">#&#39;XC_GGA_XC_HCTH_A&#39;:      97,  # HCTH-A</span>
+<span class="c">#&#39;XC_GGA_X_BPCCAC&#39;:       98,  # BPCCAC (GRAC for the energy)</span>
+<span class="c">#&#39;XC_GGA_C_REVTCA&#39;:       99,  # Tognetti, Cortona, Adamo (revised)</span>
+<span class="c">#&#39;XC_GGA_C_TCA&#39;:         100,  # Tognetti, Cortona, Adamo</span>
+<span class="s">&#39;XC_GGA_X_PBE&#39;</span><span class="p">:</span>         <span class="mi">101</span><span class="p">,</span>  <span class="c"># Perdew, Burke &amp; Ernzerhof exchange</span>
+<span class="s">&#39;XC_GGA_X_PBE_R&#39;</span><span class="p">:</span>       <span class="mi">102</span><span class="p">,</span>  <span class="c"># Perdew, Burke &amp; Ernzerhof exchange (revised)</span>
+<span class="s">&#39;XC_GGA_X_B86&#39;</span><span class="p">:</span>         <span class="mi">103</span><span class="p">,</span>  <span class="c"># Becke 86 Xalfa,beta,gamma</span>
+<span class="s">&#39;XC_GGA_X_HERMAN&#39;</span><span class="p">:</span>      <span class="mi">104</span><span class="p">,</span>  <span class="c"># Herman et al original GGA</span>
+<span class="s">&#39;XC_GGA_X_B86_MGC&#39;</span><span class="p">:</span>     <span class="mi">105</span><span class="p">,</span>  <span class="c"># Becke 86 Xalfa,beta,gamma (with mod. grad. correction)</span>
+<span class="s">&#39;XC_GGA_X_B88&#39;</span><span class="p">:</span>         <span class="mi">106</span><span class="p">,</span>  <span class="c"># Becke 88</span>
+<span class="s">&#39;XC_GGA_X_G96&#39;</span><span class="p">:</span>         <span class="mi">107</span><span class="p">,</span>  <span class="c"># Gill 96</span>
+<span class="s">&#39;XC_GGA_X_PW86&#39;</span><span class="p">:</span>        <span class="mi">108</span><span class="p">,</span>  <span class="c"># Perdew &amp; Wang 86</span>
+<span class="s">&#39;XC_GGA_X_PW91&#39;</span><span class="p">:</span>        <span class="mi">109</span><span class="p">,</span>  <span class="c"># Perdew &amp; Wang 91</span>
+<span class="s">&#39;XC_GGA_X_OPTX&#39;</span><span class="p">:</span>        <span class="mi">110</span><span class="p">,</span>  <span class="c"># Handy &amp; Cohen OPTX 01</span>
+<span class="s">&#39;XC_GGA_X_DK87_R1&#39;</span><span class="p">:</span>     <span class="mi">111</span><span class="p">,</span>  <span class="c"># dePristo &amp; Kress 87 (version R1)</span>
+<span class="s">&#39;XC_GGA_X_DK87_R2&#39;</span><span class="p">:</span>     <span class="mi">112</span><span class="p">,</span>  <span class="c"># dePristo &amp; Kress 87 (version R2)</span>
+<span class="s">&#39;XC_GGA_X_LG93&#39;</span><span class="p">:</span>        <span class="mi">113</span><span class="p">,</span>  <span class="c"># Lacks &amp; Gordon 93</span>
+<span class="s">&#39;XC_GGA_X_FT97_A&#39;</span><span class="p">:</span>      <span class="mi">114</span><span class="p">,</span>  <span class="c"># Filatov &amp; Thiel 97 (version A)</span>
+<span class="s">&#39;XC_GGA_X_FT97_B&#39;</span><span class="p">:</span>      <span class="mi">115</span><span class="p">,</span>  <span class="c"># Filatov &amp; Thiel 97 (version B)</span>
+<span class="s">&#39;XC_GGA_X_PBE_SOL&#39;</span><span class="p">:</span>     <span class="mi">116</span><span class="p">,</span>  <span class="c"># Perdew, Burke &amp; Ernzerhof exchange (solids)</span>
+<span class="s">&#39;XC_GGA_X_RPBE&#39;</span><span class="p">:</span>        <span class="mi">117</span><span class="p">,</span>  <span class="c"># Hammer, Hansen &amp; Norskov (PBE-like)</span>
+<span class="s">&#39;XC_GGA_X_WC&#39;</span><span class="p">:</span>          <span class="mi">118</span><span class="p">,</span>  <span class="c"># Wu &amp; Cohen</span>
+<span class="s">&#39;XC_GGA_X_mPW91&#39;</span><span class="p">:</span>       <span class="mi">119</span><span class="p">,</span>  <span class="c"># Modified form of PW91 by Adamo &amp; Barone</span>
+<span class="s">&#39;XC_GGA_X_MPW91&#39;</span><span class="p">:</span>       <span class="mi">119</span><span class="p">,</span>  <span class="c"># Modified form of PW91 by Adamo &amp; Barone</span>
+<span class="s">&#39;XC_GGA_X_AM05&#39;</span><span class="p">:</span>        <span class="mi">120</span><span class="p">,</span>  <span class="c"># Armiento &amp; Mattsson 05 exchange</span>
+<span class="s">&#39;XC_GGA_X_PBEA&#39;</span><span class="p">:</span>        <span class="mi">121</span><span class="p">,</span>  <span class="c"># Madsen (PBE-like)</span>
+<span class="s">&#39;XC_GGA_X_MPBE&#39;</span><span class="p">:</span>        <span class="mi">122</span><span class="p">,</span>  <span class="c"># Adamo &amp; Barone modification to PBE</span>
+<span class="s">&#39;XC_GGA_X_XPBE&#39;</span><span class="p">:</span>        <span class="mi">123</span><span class="p">,</span>  <span class="c"># xPBE reparametrization by Xu &amp; Goddard</span>
+<span class="s">&#39;XC_GGA_X_2D_B86_MGC&#39;</span><span class="p">:</span>  <span class="mi">124</span><span class="p">,</span>  <span class="c"># Becke 86 MGC for 2D systems</span>
+<span class="s">&#39;XC_GGA_X_BAYESIAN&#39;</span><span class="p">:</span>    <span class="mi">125</span><span class="p">,</span>  <span class="c"># Bayesian best fit for the enhancement factor</span>
+<span class="s">&#39;XC_GGA_X_PBE_JSJR&#39;</span><span class="p">:</span>    <span class="mi">126</span><span class="p">,</span>  <span class="c"># JSJR reparametrization by Pedroza, Silva &amp; Capelle</span>
+<span class="s">&#39;XC_GGA_X_2D_B88&#39;</span><span class="p">:</span>      <span class="mi">127</span><span class="p">,</span>  <span class="c"># Becke 88 in 2D</span>
+<span class="s">&#39;XC_GGA_X_2D_B86&#39;</span><span class="p">:</span>      <span class="mi">128</span><span class="p">,</span>  <span class="c"># Becke 86 Xalfa,beta,gamma</span>
+<span class="s">&#39;XC_GGA_X_2D_PBE&#39;</span><span class="p">:</span>      <span class="mi">129</span><span class="p">,</span>  <span class="c"># Perdew, Burke &amp; Ernzerhof exchange in 2D</span>
+<span class="s">&#39;XC_GGA_C_PBE&#39;</span><span class="p">:</span>         <span class="mi">130</span><span class="p">,</span>  <span class="c"># Perdew, Burke &amp; Ernzerhof correlation</span>
+<span class="s">&#39;XC_GGA_C_LYP&#39;</span><span class="p">:</span>         <span class="mi">131</span><span class="p">,</span>  <span class="c"># Lee, Yang &amp; Parr</span>
+<span class="s">&#39;XC_GGA_C_P86&#39;</span><span class="p">:</span>         <span class="mi">132</span><span class="p">,</span>  <span class="c"># Perdew 86</span>
+<span class="s">&#39;XC_GGA_C_PBE_SOL&#39;</span><span class="p">:</span>     <span class="mi">133</span><span class="p">,</span>  <span class="c"># Perdew, Burke &amp; Ernzerhof correlation SOL</span>
+<span class="s">&#39;XC_GGA_C_PW91&#39;</span><span class="p">:</span>        <span class="mi">134</span><span class="p">,</span>  <span class="c"># Perdew &amp; Wang 91</span>
+<span class="s">&#39;XC_GGA_C_AM05&#39;</span><span class="p">:</span>        <span class="mi">135</span><span class="p">,</span>  <span class="c"># Armiento &amp; Mattsson 05 correlation</span>
+<span class="s">&#39;XC_GGA_C_XPBE&#39;</span><span class="p">:</span>        <span class="mi">136</span><span class="p">,</span>  <span class="c"># xPBE reparametrization by Xu &amp; Goddard</span>
+<span class="s">&#39;XC_GGA_C_LM&#39;</span><span class="p">:</span>          <span class="mi">137</span><span class="p">,</span>  <span class="c"># Langreth and Mehl correlation</span>
+<span class="s">&#39;XC_GGA_C_PBE_JRGX&#39;</span><span class="p">:</span>    <span class="mi">138</span><span class="p">,</span>  <span class="c"># JRGX reparametrization by Pedroza, Silva &amp; Capelle</span>
+<span class="s">&#39;XC_GGA_X_OPTB88_VDW&#39;</span><span class="p">:</span>  <span class="mi">139</span><span class="p">,</span>  <span class="c"># Becke 88 reoptimized to be used with vdW functional of Dion et al</span>
+<span class="s">&#39;XC_GGA_X_PBEK1_VDW&#39;</span><span class="p">:</span>   <span class="mi">140</span><span class="p">,</span>  <span class="c"># PBE reparametrization for vdW</span>
+<span class="s">&#39;XC_GGA_X_OPTPBE_VDW&#39;</span><span class="p">:</span>  <span class="mi">141</span><span class="p">,</span>  <span class="c"># PBE reparametrization for vdW</span>
+<span class="s">&#39;XC_GGA_X_RGE2&#39;</span><span class="p">:</span>        <span class="mi">142</span><span class="p">,</span>  <span class="c"># Regularized PBE</span>
+<span class="s">&#39;XC_GGA_C_RGE2&#39;</span><span class="p">:</span>        <span class="mi">143</span><span class="p">,</span>  <span class="c"># Regularized PBE</span>
+<span class="s">&#39;XC_GGA_X_RPW86&#39;</span><span class="p">:</span>       <span class="mi">144</span><span class="p">,</span>  <span class="c"># refitted Perdew &amp; Wang 86</span>
+<span class="s">&#39;XC_GGA_X_KT1&#39;</span><span class="p">:</span>         <span class="mi">145</span><span class="p">,</span>  <span class="c"># Keal and Tozer version 1</span>
+<span class="s">&#39;XC_GGA_XC_KT2&#39;</span><span class="p">:</span>        <span class="mi">146</span><span class="p">,</span>  <span class="c"># Keal and Tozer version 2</span>
+<span class="s">&#39;XC_GGA_C_WL&#39;</span><span class="p">:</span>          <span class="mi">147</span><span class="p">,</span>  <span class="c"># Wilson &amp; Levy</span>
+<span class="s">&#39;XC_GGA_C_WI&#39;</span><span class="p">:</span>          <span class="mi">148</span><span class="p">,</span>  <span class="c"># Wilson &amp; Ivanov</span>
+<span class="s">&#39;XC_GGA_X_MB88&#39;</span><span class="p">:</span>        <span class="mi">149</span><span class="p">,</span>  <span class="c"># Modified Becke 88 for proton transfer</span>
+<span class="s">&#39;XC_GGA_X_SOGGA&#39;</span><span class="p">:</span>       <span class="mi">150</span><span class="p">,</span>  <span class="c"># Second-order generalized gradient approximation</span>
+<span class="s">&#39;XC_GGA_X_SOGGA11&#39;</span><span class="p">:</span>     <span class="mi">151</span><span class="p">,</span>  <span class="c"># Second-order generalized gradient approximation 2011</span>
+<span class="s">&#39;XC_GGA_C_SOGGA11&#39;</span><span class="p">:</span>     <span class="mi">152</span><span class="p">,</span>  <span class="c"># Second-order generalized gradient approximation 2011</span>
+<span class="s">&#39;XC_GGA_C_WI0&#39;</span><span class="p">:</span>         <span class="mi">153</span><span class="p">,</span>  <span class="c"># Wilson &amp; Ivanov initial version</span>
+<span class="s">&#39;XC_GGA_XC_TH1&#39;</span><span class="p">:</span>        <span class="mi">154</span><span class="p">,</span>  <span class="c"># Tozer and Handy v. 1</span>
+<span class="s">&#39;XC_GGA_XC_TH2&#39;</span><span class="p">:</span>        <span class="mi">155</span><span class="p">,</span>  <span class="c"># Tozer and Handy v. 2</span>
+<span class="s">&#39;XC_GGA_XC_TH3&#39;</span><span class="p">:</span>        <span class="mi">156</span><span class="p">,</span>  <span class="c"># Tozer and Handy v. 3</span>
+<span class="s">&#39;XC_GGA_XC_TH4&#39;</span><span class="p">:</span>        <span class="mi">157</span><span class="p">,</span>  <span class="c"># Tozer and Handy v. 4</span>
+<span class="s">&#39;XC_GGA_X_C09X&#39;</span><span class="p">:</span>        <span class="mi">158</span><span class="p">,</span>  <span class="c"># C09x to be used with the VdW of Rutgers-Chalmers</span>
+<span class="s">&#39;XC_GGA_C_SOGGA11_X&#39;</span><span class="p">:</span>   <span class="mi">159</span><span class="p">,</span>  <span class="c"># To be used with hyb_gga_x_SOGGA11-X</span>
+<span class="s">&#39;XC_GGA_X_LB&#39;</span><span class="p">:</span>          <span class="mi">160</span><span class="p">,</span>  <span class="c"># van Leeuwen &amp; Baerends</span>
+<span class="s">&#39;XC_GGA_XC_HCTH_93&#39;</span><span class="p">:</span>    <span class="mi">161</span><span class="p">,</span>  <span class="c"># HCTH functional fitted to  93 molecules</span>
+<span class="s">&#39;XC_GGA_XC_HCTH_120&#39;</span><span class="p">:</span>   <span class="mi">162</span><span class="p">,</span>  <span class="c"># HCTH functional fitted to 120 molecules</span>
+<span class="s">&#39;XC_GGA_XC_HCTH_147&#39;</span><span class="p">:</span>   <span class="mi">163</span><span class="p">,</span>  <span class="c"># HCTH functional fitted to 147 molecules</span>
+<span class="s">&#39;XC_GGA_XC_HCTH_407&#39;</span><span class="p">:</span>   <span class="mi">164</span><span class="p">,</span>  <span class="c"># HCTH functional fitted to 147 molecules</span>
+<span class="s">&#39;XC_GGA_XC_EDF1&#39;</span><span class="p">:</span>       <span class="mi">165</span><span class="p">,</span>  <span class="c"># Empirical functionals from Adamson, Gill, and Pople</span>
+<span class="s">&#39;XC_GGA_XC_XLYP&#39;</span><span class="p">:</span>       <span class="mi">166</span><span class="p">,</span>  <span class="c"># XLYP functional</span>
+<span class="s">&#39;XC_GGA_XC_B97&#39;</span><span class="p">:</span>        <span class="mi">167</span><span class="p">,</span>  <span class="c"># Becke 97</span>
+<span class="s">&#39;XC_GGA_XC_B97_1&#39;</span><span class="p">:</span>      <span class="mi">168</span><span class="p">,</span>  <span class="c"># Becke 97-1</span>
+<span class="s">&#39;XC_GGA_XC_B97_2&#39;</span><span class="p">:</span>      <span class="mi">169</span><span class="p">,</span>  <span class="c"># Becke 97-2</span>
+<span class="s">&#39;XC_GGA_XC_B97_D&#39;</span><span class="p">:</span>      <span class="mi">170</span><span class="p">,</span>  <span class="c"># Grimme functional to be used with C6 vdW term</span>
+<span class="s">&#39;XC_GGA_XC_B97_K&#39;</span><span class="p">:</span>      <span class="mi">171</span><span class="p">,</span>  <span class="c"># Boese-Martin for Kinetics</span>
+<span class="s">&#39;XC_GGA_XC_B97_3&#39;</span><span class="p">:</span>      <span class="mi">172</span><span class="p">,</span>  <span class="c"># Becke 97-3</span>
+<span class="s">&#39;XC_GGA_XC_PBE1W&#39;</span><span class="p">:</span>      <span class="mi">173</span><span class="p">,</span>  <span class="c"># Functionals fitted for water</span>
+<span class="s">&#39;XC_GGA_XC_MPWLYP1W&#39;</span><span class="p">:</span>   <span class="mi">174</span><span class="p">,</span>  <span class="c"># Functionals fitted for water</span>
+<span class="s">&#39;XC_GGA_XC_PBELYP1W&#39;</span><span class="p">:</span>   <span class="mi">175</span><span class="p">,</span>  <span class="c"># Functionals fitted for water</span>
+<span class="s">&#39;XC_GGA_XC_SB98_1a&#39;</span><span class="p">:</span>    <span class="mi">176</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1a</span>
+<span class="s">&#39;XC_GGA_XC_SB98_1b&#39;</span><span class="p">:</span>    <span class="mi">177</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1b</span>
+<span class="s">&#39;XC_GGA_XC_SB98_1c&#39;</span><span class="p">:</span>    <span class="mi">178</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1c</span>
+<span class="s">&#39;XC_GGA_XC_SB98_2a&#39;</span><span class="p">:</span>    <span class="mi">179</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2a</span>
+<span class="s">&#39;XC_GGA_XC_SB98_2b&#39;</span><span class="p">:</span>    <span class="mi">180</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2b</span>
+<span class="s">&#39;XC_GGA_XC_SB98_2c&#39;</span><span class="p">:</span>    <span class="mi">181</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2c</span>
+<span class="s">&#39;XC_GGA_XC_SB98_1A&#39;</span><span class="p">:</span>    <span class="mi">176</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1a</span>
+<span class="s">&#39;XC_GGA_XC_SB98_1B&#39;</span><span class="p">:</span>    <span class="mi">177</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1b</span>
+<span class="s">&#39;XC_GGA_XC_SB98_1C&#39;</span><span class="p">:</span>    <span class="mi">178</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1c</span>
+<span class="s">&#39;XC_GGA_XC_SB98_2A&#39;</span><span class="p">:</span>    <span class="mi">179</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2a</span>
+<span class="s">&#39;XC_GGA_XC_SB98_2B&#39;</span><span class="p">:</span>    <span class="mi">180</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2b</span>
+<span class="s">&#39;XC_GGA_XC_SB98_2C&#39;</span><span class="p">:</span>    <span class="mi">181</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2c</span>
+<span class="s">&#39;XC_GGA_X_LBM&#39;</span><span class="p">:</span>         <span class="mi">182</span><span class="p">,</span>  <span class="c"># van Leeuwen &amp; Baerends modified</span>
+<span class="s">&#39;XC_GGA_X_OL2&#39;</span><span class="p">:</span>         <span class="mi">183</span><span class="p">,</span>  <span class="c"># Exchange form based on Ou-Yang and Levy v.2</span>
+<span class="s">&#39;XC_GGA_X_APBE&#39;</span><span class="p">:</span>        <span class="mi">184</span><span class="p">,</span>  <span class="c"># mu fixed from the semiclassical neutral atom</span>
+<span class="s">&#39;XC_GGA_K_APBE&#39;</span><span class="p">:</span>        <span class="mi">185</span><span class="p">,</span>  <span class="c"># mu fixed from the semiclassical neutral atom</span>
+<span class="s">&#39;XC_GGA_C_APBE&#39;</span><span class="p">:</span>        <span class="mi">186</span><span class="p">,</span>  <span class="c"># mu fixed from the semiclassical neutral atom</span>
+<span class="s">&#39;XC_GGA_K_TW1&#39;</span><span class="p">:</span>         <span class="mi">187</span><span class="p">,</span>  <span class="c"># Tran and Wesolowski set 1 (Table II)</span>
+<span class="s">&#39;XC_GGA_K_TW2&#39;</span><span class="p">:</span>         <span class="mi">188</span><span class="p">,</span>  <span class="c"># Tran and Wesolowski set 2 (Table II)</span>
+<span class="s">&#39;XC_GGA_K_TW3&#39;</span><span class="p">:</span>         <span class="mi">189</span><span class="p">,</span>  <span class="c"># Tran and Wesolowski set 3 (Table II)</span>
+<span class="s">&#39;XC_GGA_K_TW4&#39;</span><span class="p">:</span>         <span class="mi">190</span><span class="p">,</span>  <span class="c"># Tran and Wesolowski set 4 (Table II)</span>
+<span class="s">&#39;XC_GGA_X_HTBS&#39;</span><span class="p">:</span>        <span class="mi">191</span><span class="p">,</span>  <span class="c"># Haas, Tran, Blaha, and Schwarz</span>
+<span class="s">&#39;XC_GGA_X_AIRY&#39;</span><span class="p">:</span>        <span class="mi">192</span><span class="p">,</span>  <span class="c"># Constantin et al based on the Airy gas</span>
+<span class="s">&#39;XC_GGA_X_LAG&#39;</span><span class="p">:</span>         <span class="mi">193</span><span class="p">,</span>  <span class="c"># Local Airy Gas</span>
+<span class="s">&#39;XC_GGA_XC_MOHLYP&#39;</span><span class="p">:</span>     <span class="mi">194</span><span class="p">,</span>  <span class="c"># Functional for organometallic chemistry</span>
+<span class="s">&#39;XC_GGA_XC_MOHLYP2&#39;</span><span class="p">:</span>    <span class="mi">195</span><span class="p">,</span>  <span class="c"># Functional for barrier heights</span>
+<span class="s">&#39;XC_GGA_XC_TH_FL&#39;</span><span class="p">:</span>      <span class="mi">196</span><span class="p">,</span>  <span class="c"># Tozer and Handy v. FL</span>
+<span class="s">&#39;XC_GGA_XC_TH_FC&#39;</span><span class="p">:</span>      <span class="mi">197</span><span class="p">,</span>  <span class="c"># Tozer and Handy v. FC</span>
+<span class="s">&#39;XC_GGA_XC_TH_FCFO&#39;</span><span class="p">:</span>    <span class="mi">198</span><span class="p">,</span>  <span class="c"># Tozer and Handy v. FCFO</span>
+<span class="s">&#39;XC_GGA_XC_TH_FCO&#39;</span><span class="p">:</span>     <span class="mi">199</span><span class="p">,</span>  <span class="c"># Tozer and Handy v. FCO</span>
+<span class="c">#&#39;XC_GGA_C_OPTC&#39;:        200,  # Optimized correlation functional of Cohen and Handy</span>
+<span class="s">&#39;XC_GGA_K_VW&#39;</span><span class="p">:</span>          <span class="mi">500</span><span class="p">,</span>  <span class="c"># von Weiszaecker functional</span>
+<span class="s">&#39;XC_GGA_K_GE2&#39;</span><span class="p">:</span>         <span class="mi">501</span><span class="p">,</span>  <span class="c"># Second-order gradient expansion (l = 1/9)</span>
+<span class="s">&#39;XC_GGA_K_GOLDEN&#39;</span><span class="p">:</span>      <span class="mi">502</span><span class="p">,</span>  <span class="c"># TF-lambda-vW form by Golden (l = 13/45)</span>
+<span class="s">&#39;XC_GGA_K_YT65&#39;</span><span class="p">:</span>        <span class="mi">503</span><span class="p">,</span>  <span class="c"># TF-lambda-vW form by Yonei and Tomishima (l = 1/5)</span>
+<span class="s">&#39;XC_GGA_K_BALTIN&#39;</span><span class="p">:</span>      <span class="mi">504</span><span class="p">,</span>  <span class="c"># TF-lambda-vW form by Baltin (l = 5/9)</span>
+<span class="s">&#39;XC_GGA_K_LIEB&#39;</span><span class="p">:</span>        <span class="mi">505</span><span class="p">,</span>  <span class="c"># TF-lambda-vW form by Lieb (l = 0.185909191)</span>
+<span class="s">&#39;XC_GGA_K_ABSR1&#39;</span><span class="p">:</span>       <span class="mi">506</span><span class="p">,</span>  <span class="c"># gamma-TFvW form by Acharya et al [g = 1 - 1.412/N^(1/3)]</span>
+<span class="s">&#39;XC_GGA_K_ABSR2&#39;</span><span class="p">:</span>       <span class="mi">507</span><span class="p">,</span>  <span class="c"># gamma-TFvW form by Acharya et al [g = 1 - 1.332/N^(1/3)]</span>
+<span class="s">&#39;XC_GGA_K_GR&#39;</span><span class="p">:</span>          <span class="mi">508</span><span class="p">,</span>  <span class="c"># gamma-TFvW form by G\&#39;azquez and Robles</span>
+<span class="s">&#39;XC_GGA_K_LUDENA&#39;</span><span class="p">:</span>      <span class="mi">509</span><span class="p">,</span>  <span class="c"># gamma-TFvW form by Lude\~na</span>
+<span class="s">&#39;XC_GGA_K_GP85&#39;</span><span class="p">:</span>        <span class="mi">510</span><span class="p">,</span>  <span class="c"># gamma-TFvW form by Ghosh and Parr</span>
+<span class="s">&#39;XC_GGA_K_PEARSON&#39;</span><span class="p">:</span>     <span class="mi">511</span><span class="p">,</span>  <span class="c"># Pearson</span>
+<span class="s">&#39;XC_GGA_K_OL1&#39;</span><span class="p">:</span>         <span class="mi">512</span><span class="p">,</span>  <span class="c"># Ou-Yang and Levy v.1</span>
+<span class="s">&#39;XC_GGA_K_OL2&#39;</span><span class="p">:</span>         <span class="mi">513</span><span class="p">,</span>  <span class="c"># Ou-Yang and Levy v.2</span>
+<span class="s">&#39;XC_GGA_K_FR_B88&#39;</span><span class="p">:</span>      <span class="mi">514</span><span class="p">,</span>  <span class="c"># Fuentealba &amp; Reyes (B88 version)</span>
+<span class="s">&#39;XC_GGA_K_FR_PW86&#39;</span><span class="p">:</span>     <span class="mi">515</span><span class="p">,</span>  <span class="c"># Fuentealba &amp; Reyes (PW86 version)</span>
+<span class="s">&#39;XC_GGA_K_DK&#39;</span><span class="p">:</span>          <span class="mi">516</span><span class="p">,</span>  <span class="c"># DePristo and Kress</span>
+<span class="s">&#39;XC_GGA_K_PERDEW&#39;</span><span class="p">:</span>      <span class="mi">517</span><span class="p">,</span>  <span class="c"># Perdew</span>
+<span class="s">&#39;XC_GGA_K_VSK&#39;</span><span class="p">:</span>         <span class="mi">518</span><span class="p">,</span>  <span class="c"># Vitos, Skriver, and Kollar</span>
+<span class="s">&#39;XC_GGA_K_VJKS&#39;</span><span class="p">:</span>        <span class="mi">519</span><span class="p">,</span>  <span class="c"># Vitos, Johansson, Kollar, and Skriver</span>
+<span class="s">&#39;XC_GGA_K_ERNZERHOF&#39;</span><span class="p">:</span>   <span class="mi">520</span><span class="p">,</span>  <span class="c"># Ernzerhof</span>
+<span class="s">&#39;XC_GGA_K_LC94&#39;</span><span class="p">:</span>        <span class="mi">521</span><span class="p">,</span>  <span class="c"># Lembarki &amp; Chermette</span>
+<span class="s">&#39;XC_GGA_K_LLP&#39;</span><span class="p">:</span>         <span class="mi">522</span><span class="p">,</span>  <span class="c"># Lee, Lee &amp; Parr</span>
+<span class="s">&#39;XC_GGA_K_THAKKAR&#39;</span><span class="p">:</span>     <span class="mi">523</span><span class="p">,</span>  <span class="c"># Thakkar 1992</span>
+<span class="s">&#39;XC_GGA_X_WPBEH&#39;</span><span class="p">:</span>       <span class="mi">524</span><span class="p">,</span>  <span class="c"># short-range version of the PBE</span>
+<span class="s">&#39;XC_GGA_X_HJS_PBE&#39;</span><span class="p">:</span>     <span class="mi">525</span><span class="p">,</span>  <span class="c"># HJS screened exchange PBE version</span>
+<span class="s">&#39;XC_GGA_X_HJS_PBE_SOL&#39;</span><span class="p">:</span> <span class="mi">526</span><span class="p">,</span>  <span class="c"># HJS screened exchange PBE_SOL version</span>
+<span class="s">&#39;XC_GGA_X_HJS_B88&#39;</span><span class="p">:</span>     <span class="mi">527</span><span class="p">,</span>  <span class="c"># HJS screened exchange B88 version</span>
+<span class="s">&#39;XC_GGA_X_HJS_B97X&#39;</span><span class="p">:</span>    <span class="mi">528</span><span class="p">,</span>  <span class="c"># HJS screened exchange B97x version</span>
+<span class="s">&#39;XC_GGA_X_ITYH&#39;</span><span class="p">:</span>        <span class="mi">529</span><span class="p">,</span>  <span class="c"># short-range recipe for exchange GGA functionals</span>
+<span class="s">&#39;XC_HYB_GGA_XC_B3PW91&#39;</span><span class="p">:</span> <span class="mi">401</span><span class="p">,</span>  <span class="c"># The original hybrid proposed by Becke</span>
+<span class="s">&#39;XC_HYB_GGA_XC_B3LYP&#39;</span><span class="p">:</span>  <span class="mi">402</span><span class="p">,</span>  <span class="c"># The (in)famous B3LYP</span>
+<span class="s">&#39;XC_HYB_GGA_XC_B3P86&#39;</span><span class="p">:</span>  <span class="mi">403</span><span class="p">,</span>  <span class="c"># Perdew 86 hybrid similar to B3PW91</span>
+<span class="s">&#39;XC_HYB_GGA_XC_O3LYP&#39;</span><span class="p">:</span>  <span class="mi">404</span><span class="p">,</span>  <span class="c"># hybrid using the optx functional</span>
+<span class="s">&#39;XC_HYB_GGA_XC_mPW1K&#39;</span><span class="p">:</span>  <span class="mi">405</span><span class="p">,</span>  <span class="c"># mixture of mPW91 and PW91 optimized for kinetics</span>
+<span class="s">&#39;XC_HYB_GGA_XC_MPW1K&#39;</span><span class="p">:</span>  <span class="mi">405</span><span class="p">,</span>  <span class="c"># mixture of mPW91 and PW91 optimized for kinetics</span>
+<span class="s">&#39;XC_HYB_GGA_XC_PBEH&#39;</span><span class="p">:</span>   <span class="mi">406</span><span class="p">,</span>  <span class="c"># aka PBE0 or PBE1PBE</span>
+<span class="s">&#39;XC_HYB_GGA_XC_B97&#39;</span><span class="p">:</span>    <span class="mi">407</span><span class="p">,</span>  <span class="c"># Becke 97</span>
+<span class="s">&#39;XC_HYB_GGA_XC_B97_1&#39;</span><span class="p">:</span>  <span class="mi">408</span><span class="p">,</span>  <span class="c"># Becke 97-1</span>
+<span class="s">&#39;XC_HYB_GGA_XC_B97_2&#39;</span><span class="p">:</span>  <span class="mi">410</span><span class="p">,</span>  <span class="c"># Becke 97-2</span>
+<span class="s">&#39;XC_HYB_GGA_XC_X3LYP&#39;</span><span class="p">:</span>  <span class="mi">411</span><span class="p">,</span>  <span class="c"># maybe the best hybrid</span>
+<span class="s">&#39;XC_HYB_GGA_XC_B1WC&#39;</span><span class="p">:</span>   <span class="mi">412</span><span class="p">,</span>  <span class="c"># Becke 1-parameter mixture of WC and PBE</span>
+<span class="s">&#39;XC_HYB_GGA_XC_B97_K&#39;</span><span class="p">:</span>  <span class="mi">413</span><span class="p">,</span>  <span class="c"># Boese-Martin for Kinetics</span>
+<span class="s">&#39;XC_HYB_GGA_XC_B97_3&#39;</span><span class="p">:</span>  <span class="mi">414</span><span class="p">,</span>  <span class="c"># Becke 97-3</span>
+<span class="s">&#39;XC_HYB_GGA_XC_mPW3PW&#39;</span><span class="p">:</span> <span class="mi">415</span><span class="p">,</span>  <span class="c"># mixture with the mPW functional</span>
+<span class="s">&#39;XC_HYB_GGA_XC_MPW3PW&#39;</span><span class="p">:</span> <span class="mi">415</span><span class="p">,</span>  <span class="c"># mixture with the mPW functional</span>
+<span class="s">&#39;XC_HYB_GGA_XC_B1LYP&#39;</span><span class="p">:</span>  <span class="mi">416</span><span class="p">,</span>  <span class="c"># Becke 1-parameter mixture of B88 and LYP</span>
+<span class="s">&#39;XC_HYB_GGA_XC_B1PW91&#39;</span><span class="p">:</span> <span class="mi">417</span><span class="p">,</span>  <span class="c"># Becke 1-parameter mixture of B88 and PW91</span>
+<span class="s">&#39;XC_HYB_GGA_XC_mPW1PW&#39;</span><span class="p">:</span> <span class="mi">418</span><span class="p">,</span>  <span class="c"># Becke 1-parameter mixture of mPW91 and PW91</span>
+<span class="s">&#39;XC_HYB_GGA_XC_MPW1PW&#39;</span><span class="p">:</span> <span class="mi">418</span><span class="p">,</span>  <span class="c"># Becke 1-parameter mixture of mPW91 and PW91</span>
+<span class="s">&#39;XC_HYB_GGA_XC_mPW3LYP&#39;</span><span class="p">:</span> <span class="mi">419</span><span class="p">,</span>  <span class="c"># mixture of mPW and LYP</span>
+<span class="s">&#39;XC_HYB_GGA_XC_MPW3LYP&#39;</span><span class="p">:</span> <span class="mi">419</span><span class="p">,</span>  <span class="c"># mixture of mPW and LYP</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_1a&#39;</span><span class="p">:</span> <span class="mi">420</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1a</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_1b&#39;</span><span class="p">:</span> <span class="mi">421</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1b</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_1c&#39;</span><span class="p">:</span> <span class="mi">422</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1c</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_2a&#39;</span><span class="p">:</span> <span class="mi">423</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2a</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_2b&#39;</span><span class="p">:</span> <span class="mi">424</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2b</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_2c&#39;</span><span class="p">:</span> <span class="mi">425</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2c</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_1A&#39;</span><span class="p">:</span> <span class="mi">420</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1a</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_1B&#39;</span><span class="p">:</span> <span class="mi">421</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1b</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_1C&#39;</span><span class="p">:</span> <span class="mi">422</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 1c</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_2A&#39;</span><span class="p">:</span> <span class="mi">423</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2a</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_2B&#39;</span><span class="p">:</span> <span class="mi">424</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2b</span>
+<span class="s">&#39;XC_HYB_GGA_XC_SB98_2C&#39;</span><span class="p">:</span> <span class="mi">425</span><span class="p">,</span>  <span class="c"># Schmider-Becke 98 parameterization 2c</span>
+<span class="s">&#39;XC_HYB_GGA_X_SOGGA11_X&#39;</span><span class="p">:</span> <span class="mi">426</span><span class="p">,</span> <span class="c"># Hybrid based on SOGGA11 form</span>
+<span class="c">#&#39;XC_HYB_GGA_XC_HSE03&#39;:           427, # the 2003 version of the screened hybrid HSE</span>
+<span class="c">#&#39;XC_HYB_GGA_XC_HSE06&#39;:           428, # the 2006 version of the screened hybrid HSE</span>
+<span class="c">#&#39;XC_HYB_GGA_XC_HJS_PBE&#39;:         429, # HJS hybrid screened exchange PBE version</span>
+<span class="c">#&#39;XC_HYB_GGA_XC_HJS_PBE_SOL&#39;:     430, # HJS hybrid screened exchange PBE_SOL version</span>
+<span class="c">#&#39;XC_HYB_GGA_XC_HJS_B88&#39;:         431, # HJS hybrid screened exchange B88 version</span>
+<span class="c">#&#39;XC_HYB_GGA_XC_HJS_B97X&#39;:        432, # HJS hybrid screened exchange B97x version</span>
+<span class="c">#&#39;XC_HYB_GGA_XC_CAM_B3LYP&#39;:       433, # CAM version of B3LYP</span>
+<span class="c">#&#39;XC_HYB_GGA_XC_TUNED_CAM_B3LYP&#39;: 434, # CAM version of B3LYP tunes for excitations</span>
+<span class="c">#&#39;XC_HYB_GGA_XC_BHANDH&#39;:          435, # Becke half-and-half</span>
+<span class="c">#&#39;XC_HYB_GGA_XC_BHANDHLYP&#39;:       436, # Becke half-and-half with B88 exchange</span>
+<span class="c">#&#39;XC_HYB_GGA_XC_MB3LYP_RC04&#39;:     437, # B3LYP with RC04 LDA</span>
+<span class="s">&#39;XC_MGGA_X_LTA&#39;</span><span class="p">:</span>        <span class="mi">201</span><span class="p">,</span>   <span class="c"># Local tau approximation of Ernzerhof &amp; Scuseria</span>
+<span class="s">&#39;XC_MGGA_X_TPSS&#39;</span><span class="p">:</span>       <span class="mi">202</span><span class="p">,</span>   <span class="c"># Perdew, Tao, Staroverov &amp; Scuseria exchange</span>
+<span class="s">&#39;XC_MGGA_X_M06L&#39;</span><span class="p">:</span>       <span class="mi">203</span><span class="p">,</span>   <span class="c"># Zhao, Truhlar exchange</span>
+<span class="s">&#39;XC_MGGA_X_GVT4&#39;</span><span class="p">:</span>       <span class="mi">204</span><span class="p">,</span>   <span class="c"># GVT4 from Van Voorhis and Scuseria (exchange part)</span>
+<span class="s">&#39;XC_MGGA_X_TAU_HCTH&#39;</span><span class="p">:</span>   <span class="mi">205</span><span class="p">,</span>   <span class="c"># tau-HCTH from Boese and Handy</span>
+<span class="s">&#39;XC_MGGA_X_BR89&#39;</span><span class="p">:</span>       <span class="mi">206</span><span class="p">,</span>   <span class="c"># Becke-Roussel 89</span>
+<span class="s">&#39;XC_MGGA_X_BJ06&#39;</span><span class="p">:</span>       <span class="mi">207</span><span class="p">,</span>   <span class="c"># Becke &amp; Johnson correction to Becke-Roussel 89</span>
+<span class="s">&#39;XC_MGGA_X_TB09&#39;</span><span class="p">:</span>       <span class="mi">208</span><span class="p">,</span>   <span class="c"># Tran &amp; Blaha correction to Becke &amp; Johnson</span>
+<span class="s">&#39;XC_MGGA_X_RPP09&#39;</span><span class="p">:</span>      <span class="mi">209</span><span class="p">,</span>   <span class="c"># Rasanen, Pittalis, and Proetto correction to Becke &amp; Johnson</span>
+<span class="s">&#39;XC_MGGA_X_2D_PRHG07&#39;</span><span class="p">:</span>  <span class="mi">210</span><span class="p">,</span>   <span class="c"># Pittalis, Rasanen, Helbig, Gross Exchange Functional</span>
+<span class="s">&#39;XC_MGGA_X_2D_PRHG07_PRP10&#39;</span><span class="p">:</span> <span class="mi">211</span><span class="p">,</span><span class="c"># PRGH07 with PRP10 correction</span>
+<span class="c">#&#39;XC_MGGA_X_REVTPSS&#39;:    212, # revised Perdew, Tao, Staroverov &amp; Scuseria exchange</span>
+<span class="c">#&#39;XC_MGGA_X_PKZB&#39;:       213, # Perdew, Kurth, Zupan, and Blaha</span>
+<span class="c">#&#39;XC_MGGA_X_M05&#39;:        214, # M05 functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_X_M05_2X&#39;:     215, # M05-2X functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_X_M06_HF&#39;:     216, # M06-HF functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_X_M06&#39;:        217, # M06 functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_X_M06_2X&#39;:     218, # M06-2X functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_X_M08_HX&#39;:     219, # M08-HX functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_X_M08_SO&#39;:     220, # M08-SO functional of Minnesota</span>
+<span class="s">&#39;XC_MGGA_C_TPSS&#39;</span><span class="p">:</span>       <span class="mi">231</span><span class="p">,</span> <span class="c"># Perdew, Tao, Staroverov &amp; Scuseria correlation</span>
+<span class="s">&#39;XC_MGGA_C_VSXC&#39;</span><span class="p">:</span>       <span class="mi">232</span><span class="p">,</span> <span class="c"># VSxc from Van Voorhis and Scuseria (correlation part)</span>
+<span class="c">#&#39;XC_MGGA_C_M06_L&#39;:      233, # M06-Local functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_C_M06_HF&#39;:     234, # M06-HF functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_C_M06&#39;:        235, # M06 functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_C_M06_2X&#39;:     236, # M06-2X functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_C_M05&#39;:        237, # M05 functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_C_M05_2X&#39;:     238, # M05-2X functional of Minnesota</span>
+<span class="c">#&#39;XC_MGGA_C_PKZB&#39;:       239, # Perdew, Kurth, Zupan, and Blaha</span>
+<span class="c">#&#39;XC_MGGA_C_BC95&#39;:       240, # Becke correlation 95</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_M05&#39;:    438, # M05 functional of Minnesota</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_M05_2X&#39;: 439, # M05-2X functional of Minnesota</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_B88B95&#39;: 440, # Mixture of B88 with BC95 (B1B95)</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_B86B95&#39;: 441, # Mixture of B86 with BC95</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_PW86B95&#39;:442, # Mixture of PW86 with BC95</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_BB1K&#39;:   443, # Mixture of B88 with BC95 from Zhao and Truhlar</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_M06_HF&#39;: 444, # M06-HF functional of Minnesota</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_MPW1B95&#39;:445, # Mixture of mPW91 with BC95 from Zhao and Truhlar</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_MPWB1K&#39;: 446, # Mixture of mPW91 with BC95 for kinetics</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_X1B95&#39;:  447, # Mixture of X with BC95</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_XB1K&#39;:   448, # Mixture of X with BC95 for kinetics</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_M06&#39;:    449, # M06 functional of Minnesota</span>
+<span class="c">#&#39;XC_HYB_MGGA_XC_M06_2X&#39;: 450, # M06-2X functional of Minnesota</span>
+<span class="p">}</span>
+
+<span class="k">def</span> <span class="nf">_is_lda</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">xc_code</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span>
+                           <span class="mi">16</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">51</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">xc_code</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> \
+                <span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">,</span>           <span class="s">&#39;C_WIGNER&#39;</span><span class="p">,</span>    <span class="s">&#39;C_RPA&#39;</span><span class="p">,</span>       <span class="s">&#39;C_HL&#39;</span><span class="p">,</span>        <span class="s">&#39;C_GL&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;C_XALPHA&#39;</span><span class="p">,</span>    <span class="s">&#39;C_VWN&#39;</span><span class="p">,</span>       <span class="s">&#39;C_VWN_RPA&#39;</span><span class="p">,</span>   <span class="s">&#39;C_PZ&#39;</span><span class="p">,</span>        <span class="s">&#39;C_PZ_MOD&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;C_OB_PZ&#39;</span><span class="p">,</span>     <span class="s">&#39;C_PW&#39;</span><span class="p">,</span>        <span class="s">&#39;C_PW_MOD&#39;</span><span class="p">,</span>    <span class="s">&#39;C_OB_PW&#39;</span><span class="p">,</span>     <span class="s">&#39;C_2D_AMGB&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;C_2D_PRM&#39;</span><span class="p">,</span>    <span class="s">&#39;C_vBH&#39;</span><span class="p">,</span>       <span class="s">&#39;C_VBH&#39;</span><span class="p">,</span>       <span class="s">&#39;C_1D_CSC&#39;</span><span class="p">,</span>    <span class="s">&#39;X_2D&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;XC_TETER93&#39;</span><span class="p">,</span>  <span class="s">&#39;X_1D&#39;</span><span class="p">,</span>        <span class="s">&#39;C_ML1&#39;</span><span class="p">,</span>       <span class="s">&#39;C_ML2&#39;</span><span class="p">,</span>       <span class="s">&#39;C_GOMBAS&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;C_PW_RPA&#39;</span><span class="p">,</span>    <span class="s">&#39;K_TF&#39;</span><span class="p">,</span>        <span class="s">&#39;K_LP&#39;</span><span class="p">,)</span>
+
+<span class="k">def</span> <span class="nf">_is_hybrid_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">xc_code</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">401</span><span class="p">,</span> <span class="mi">402</span><span class="p">,</span> <span class="mi">403</span><span class="p">,</span> <span class="mi">404</span><span class="p">,</span> <span class="mi">405</span><span class="p">,</span>
+                           <span class="mi">406</span><span class="p">,</span> <span class="mi">407</span><span class="p">,</span> <span class="mi">408</span><span class="p">,</span> <span class="mi">410</span><span class="p">,</span> <span class="mi">411</span><span class="p">,</span>
+                           <span class="mi">412</span><span class="p">,</span> <span class="mi">413</span><span class="p">,</span> <span class="mi">414</span><span class="p">,</span> <span class="mi">415</span><span class="p">,</span> <span class="mi">416</span><span class="p">,</span>
+                           <span class="mi">417</span><span class="p">,</span> <span class="mi">418</span><span class="p">,</span> <span class="mi">419</span><span class="p">,</span> <span class="mi">420</span><span class="p">,</span> <span class="mi">421</span><span class="p">,</span>
+                           <span class="mi">422</span><span class="p">,</span> <span class="mi">423</span><span class="p">,</span> <span class="mi">424</span><span class="p">,</span> <span class="mi">425</span><span class="p">,)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">xc_code</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> \
+                <span class="p">(</span><span class="s">&#39;B3PW91&#39;</span> <span class="p">,</span> <span class="s">&#39;B3LYP&#39;</span>  <span class="p">,</span> <span class="s">&#39;B3P86&#39;</span>  <span class="p">,</span> <span class="s">&#39;O3LYP&#39;</span>  <span class="p">,</span> <span class="s">&#39;MPW1K&#39;</span>  <span class="p">,</span>
+                 <span class="s">&#39;PBEH&#39;</span>   <span class="p">,</span> <span class="s">&#39;B97&#39;</span>    <span class="p">,</span> <span class="s">&#39;B97_1&#39;</span>  <span class="p">,</span> <span class="s">&#39;B97_2&#39;</span>  <span class="p">,</span> <span class="s">&#39;X3LYP&#39;</span>  <span class="p">,</span>
+                 <span class="s">&#39;B1WC&#39;</span>   <span class="p">,</span> <span class="s">&#39;B97_K&#39;</span>  <span class="p">,</span> <span class="s">&#39;B97_3&#39;</span>  <span class="p">,</span> <span class="s">&#39;MPW3PW&#39;</span> <span class="p">,</span> <span class="s">&#39;B1LYP&#39;</span>  <span class="p">,</span>
+                 <span class="s">&#39;B1PW91&#39;</span> <span class="p">,</span> <span class="s">&#39;MPW1PW&#39;</span> <span class="p">,</span> <span class="s">&#39;MPW3LYP&#39;</span><span class="p">,</span> <span class="s">&#39;SB98_1A&#39;</span><span class="p">,</span> <span class="s">&#39;SB98_1B&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;SB98_1C&#39;</span><span class="p">,</span> <span class="s">&#39;SB98_2A&#39;</span><span class="p">,</span> <span class="s">&#39;SB98_2B&#39;</span><span class="p">,</span> <span class="s">&#39;SB98_2C&#39;</span><span class="p">,)</span>
+
+<span class="k">def</span> <span class="nf">_is_x_and_c</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">xc_code</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">20</span> <span class="p">,</span> <span class="mi">146</span><span class="p">,</span> <span class="mi">154</span><span class="p">,</span> <span class="mi">155</span><span class="p">,</span> <span class="mi">156</span><span class="p">,</span> <span class="mi">157</span><span class="p">,</span> <span class="mi">161</span><span class="p">,</span> <span class="mi">162</span><span class="p">,</span> <span class="mi">163</span><span class="p">,</span> <span class="mi">164</span><span class="p">,</span>
+                           <span class="mi">165</span><span class="p">,</span> <span class="mi">166</span><span class="p">,</span> <span class="mi">167</span><span class="p">,</span> <span class="mi">168</span><span class="p">,</span> <span class="mi">169</span><span class="p">,</span> <span class="mi">170</span><span class="p">,</span> <span class="mi">171</span><span class="p">,</span> <span class="mi">172</span><span class="p">,</span> <span class="mi">173</span><span class="p">,</span> <span class="mi">174</span><span class="p">,</span>
+                           <span class="mi">175</span><span class="p">,</span> <span class="mi">176</span><span class="p">,</span> <span class="mi">177</span><span class="p">,</span> <span class="mi">178</span><span class="p">,</span> <span class="mi">179</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">181</span><span class="p">,</span> <span class="mi">176</span><span class="p">,</span> <span class="mi">177</span><span class="p">,</span> <span class="mi">178</span><span class="p">,</span>
+                           <span class="mi">179</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">181</span><span class="p">,</span> <span class="mi">194</span><span class="p">,</span> <span class="mi">195</span><span class="p">,</span> <span class="mi">196</span><span class="p">,</span> <span class="mi">197</span><span class="p">,</span> <span class="mi">198</span><span class="p">,</span> <span class="mi">199</span><span class="p">,</span> <span class="mi">401</span><span class="p">,</span>
+                           <span class="mi">402</span><span class="p">,</span> <span class="mi">403</span><span class="p">,</span> <span class="mi">404</span><span class="p">,</span> <span class="mi">405</span><span class="p">,</span> <span class="mi">405</span><span class="p">,</span> <span class="mi">406</span><span class="p">,</span> <span class="mi">407</span><span class="p">,</span> <span class="mi">408</span><span class="p">,</span> <span class="mi">410</span><span class="p">,</span> <span class="mi">411</span><span class="p">,</span>
+                           <span class="mi">412</span><span class="p">,</span> <span class="mi">413</span><span class="p">,</span> <span class="mi">414</span><span class="p">,</span> <span class="mi">415</span><span class="p">,</span> <span class="mi">415</span><span class="p">,</span> <span class="mi">416</span><span class="p">,</span> <span class="mi">417</span><span class="p">,</span> <span class="mi">418</span><span class="p">,</span> <span class="mi">418</span><span class="p">,</span> <span class="mi">419</span><span class="p">,</span>
+                           <span class="mi">419</span><span class="p">,</span> <span class="mi">420</span><span class="p">,</span> <span class="mi">421</span><span class="p">,</span> <span class="mi">422</span><span class="p">,</span> <span class="mi">423</span><span class="p">,</span> <span class="mi">424</span><span class="p">,</span> <span class="mi">425</span><span class="p">,</span> <span class="mi">420</span><span class="p">,</span> <span class="mi">421</span><span class="p">,</span> <span class="mi">422</span><span class="p">,</span>
+                           <span class="mi">423</span><span class="p">,</span> <span class="mi">424</span><span class="p">,</span> <span class="mi">425</span><span class="p">,)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">xc_code</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> \
+                <span class="p">(</span><span class="s">&#39;TETER93&#39;</span> <span class="p">,</span> <span class="s">&#39;KT2&#39;</span>    <span class="p">,</span> <span class="s">&#39;TH1&#39;</span>     <span class="p">,</span> <span class="s">&#39;TH2&#39;</span>     <span class="p">,</span> <span class="s">&#39;TH3&#39;</span>      <span class="p">,</span>
+                 <span class="s">&#39;TH4&#39;</span>     <span class="p">,</span> <span class="s">&#39;HCTH_93&#39;</span><span class="p">,</span> <span class="s">&#39;HCTH_120&#39;</span><span class="p">,</span> <span class="s">&#39;HCTH_147&#39;</span><span class="p">,</span> <span class="s">&#39;HCTH_407&#39;</span> <span class="p">,</span>
+                 <span class="s">&#39;EDF1&#39;</span>    <span class="p">,</span> <span class="s">&#39;XLYP&#39;</span>   <span class="p">,</span> <span class="s">&#39;B97&#39;</span>     <span class="p">,</span> <span class="s">&#39;B97_1&#39;</span>   <span class="p">,</span> <span class="s">&#39;B97_2&#39;</span>    <span class="p">,</span>
+                 <span class="s">&#39;B97_D&#39;</span>   <span class="p">,</span> <span class="s">&#39;B97_K&#39;</span>  <span class="p">,</span> <span class="s">&#39;B97_3&#39;</span>   <span class="p">,</span> <span class="s">&#39;PBE1W&#39;</span>   <span class="p">,</span> <span class="s">&#39;MPWLYP1W&#39;</span> <span class="p">,</span>
+                 <span class="s">&#39;PBELYP1W&#39;</span><span class="p">,</span> <span class="s">&#39;SB98_1A&#39;</span><span class="p">,</span> <span class="s">&#39;SB98_1B&#39;</span> <span class="p">,</span> <span class="s">&#39;SB98_1C&#39;</span> <span class="p">,</span> <span class="s">&#39;SB98_2A&#39;</span>  <span class="p">,</span>
+                 <span class="s">&#39;SB98_2B&#39;</span> <span class="p">,</span> <span class="s">&#39;SB98_2C&#39;</span><span class="p">,</span> <span class="s">&#39;MOHLYP&#39;</span>  <span class="p">,</span> <span class="s">&#39;MOHLYP2&#39;</span> <span class="p">,</span> <span class="s">&#39;TH_FL&#39;</span>    <span class="p">,</span>
+                 <span class="s">&#39;TH_FC&#39;</span>   <span class="p">,</span> <span class="s">&#39;TH_FCFO&#39;</span><span class="p">,</span> <span class="s">&#39;TH_FCO&#39;</span>  <span class="p">,</span>
+                 <span class="s">&#39;B3PW91&#39;</span>  <span class="p">,</span> <span class="s">&#39;B3LYP&#39;</span>  <span class="p">,</span> <span class="s">&#39;B3P86&#39;</span>   <span class="p">,</span> <span class="s">&#39;O3LYP&#39;</span>   <span class="p">,</span> <span class="s">&#39;MPW1K&#39;</span>    <span class="p">,</span>
+                 <span class="s">&#39;PBEH&#39;</span>    <span class="p">,</span> <span class="s">&#39;B97&#39;</span>    <span class="p">,</span> <span class="s">&#39;B97_1&#39;</span>   <span class="p">,</span> <span class="s">&#39;B97_2&#39;</span>   <span class="p">,</span> <span class="s">&#39;X3LYP&#39;</span>    <span class="p">,</span>
+                 <span class="s">&#39;B1WC&#39;</span>    <span class="p">,</span> <span class="s">&#39;B97_K&#39;</span>  <span class="p">,</span> <span class="s">&#39;B97_3&#39;</span>   <span class="p">,</span> <span class="s">&#39;MPW3PW&#39;</span>  <span class="p">,</span> <span class="s">&#39;B1LYP&#39;</span>    <span class="p">,</span>
+                 <span class="s">&#39;B1PW91&#39;</span>  <span class="p">,</span> <span class="s">&#39;MPW1PW&#39;</span> <span class="p">,</span> <span class="s">&#39;MPW3LYP&#39;</span> <span class="p">,</span> <span class="s">&#39;SB98_1A&#39;</span> <span class="p">,</span> <span class="s">&#39;SB98_1B&#39;</span>  <span class="p">,</span>
+                 <span class="s">&#39;SB98_1C&#39;</span> <span class="p">,</span> <span class="s">&#39;SB98_2A&#39;</span><span class="p">,</span> <span class="s">&#39;SB98_2B&#39;</span> <span class="p">,</span> <span class="s">&#39;SB98_2C&#39;</span> <span class="p">,)</span>
+
+<span class="c"># parse xc_code</span>
+<div class="viewcode-block" id="parse_xc_name"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.vxc.parse_xc_name">[docs]</a><span class="k">def</span> <span class="nf">parse_xc_name</span><span class="p">(</span><span class="n">xc_name</span><span class="o">=</span><span class="s">&#39;LDA,VWN&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Convert the XC functional name to libxc library internal ID.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="s">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">xc_name</span><span class="p">:</span>
+        <span class="n">x_name</span><span class="p">,</span> <span class="n">c_name</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;, *&#39;</span><span class="p">,</span> <span class="n">xc_name</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x_name</span><span class="p">,</span> <span class="n">c_name</span> <span class="o">=</span> <span class="n">xc_name</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="s">&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">_is_hybrid_xc</span><span class="p">(</span><span class="n">x_name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="s">&#39;XC_HYB_GGA_XC_&#39;</span><span class="o">+</span><span class="n">x_name</span><span class="p">],</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">x_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;TETER93&#39;</span><span class="p">,):</span>
+        <span class="k">return</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="s">&#39;XC_LDA_XC_&#39;</span><span class="o">+</span><span class="n">x_name</span><span class="p">],</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="n">x_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;KT2&#39;</span>    <span class="p">,</span> <span class="s">&#39;TH1&#39;</span>     <span class="p">,</span> <span class="s">&#39;TH2&#39;</span>     <span class="p">,</span> <span class="s">&#39;TH3&#39;</span>     <span class="p">,</span> <span class="s">&#39;TH4&#39;</span>     <span class="p">,</span>
+                    <span class="s">&#39;HCTH_93&#39;</span><span class="p">,</span> <span class="s">&#39;HCTH_120&#39;</span><span class="p">,</span> <span class="s">&#39;HCTH_147&#39;</span><span class="p">,</span> <span class="s">&#39;HCTH_407&#39;</span><span class="p">,</span> <span class="s">&#39;EDF1&#39;</span>    <span class="p">,</span>
+                    <span class="s">&#39;XLYP&#39;</span>   <span class="p">,</span> <span class="s">&#39;B97&#39;</span>     <span class="p">,</span> <span class="s">&#39;B97_1&#39;</span>   <span class="p">,</span> <span class="s">&#39;B97_2&#39;</span>   <span class="p">,</span> <span class="s">&#39;B97_D&#39;</span>   <span class="p">,</span>
+                    <span class="s">&#39;B97_K&#39;</span>  <span class="p">,</span> <span class="s">&#39;B97_3&#39;</span>   <span class="p">,</span> <span class="s">&#39;PBE1W&#39;</span>   <span class="p">,</span> <span class="s">&#39;MPWLYP1W&#39;</span><span class="p">,</span> <span class="s">&#39;PBELYP1W&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;SB98_1A&#39;</span><span class="p">,</span> <span class="s">&#39;SB98_1B&#39;</span> <span class="p">,</span> <span class="s">&#39;SB98_1C&#39;</span> <span class="p">,</span> <span class="s">&#39;SB98_2A&#39;</span> <span class="p">,</span> <span class="s">&#39;SB98_2B&#39;</span> <span class="p">,</span>
+                    <span class="s">&#39;SB98_2C&#39;</span><span class="p">,</span> <span class="s">&#39;MOHLYP&#39;</span>  <span class="p">,</span> <span class="s">&#39;MOHLYP2&#39;</span> <span class="p">,</span> <span class="s">&#39;TH_FL&#39;</span>   <span class="p">,</span> <span class="s">&#39;TH_FC&#39;</span>   <span class="p">,</span>
+                    <span class="s">&#39;TH_FCFO&#39;</span><span class="p">,</span> <span class="s">&#39;TH_FCO&#39;</span>  <span class="p">,):</span>
+        <span class="k">return</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="s">&#39;XC_GGA_XC_&#39;</span><span class="o">+</span><span class="n">x_name</span><span class="p">],</span> <span class="mi">0</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">x_name</span> <span class="o">==</span> <span class="s">&#39;LDA&#39;</span><span class="p">:</span>
+            <span class="n">x_code</span> <span class="o">=</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="s">&#39;XC_LDA_X&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">x_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;2D&#39;</span><span class="p">,</span> <span class="s">&#39;1D&#39;</span><span class="p">):</span>
+            <span class="n">x_code</span> <span class="o">=</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="s">&#39;XC_LDA_X_&#39;</span><span class="o">+</span><span class="n">x_name</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">x_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;PBE&#39;</span>     <span class="p">,</span> <span class="s">&#39;PBE_R&#39;</span>  <span class="p">,</span> <span class="s">&#39;B86&#39;</span>   <span class="p">,</span> <span class="s">&#39;HERMAN&#39;</span>    <span class="p">,</span> <span class="s">&#39;B86_MGC&#39;</span> <span class="p">,</span>
+                        <span class="s">&#39;B88&#39;</span>     <span class="p">,</span> <span class="s">&#39;G96&#39;</span>    <span class="p">,</span> <span class="s">&#39;PW86&#39;</span>  <span class="p">,</span> <span class="s">&#39;PW91&#39;</span>      <span class="p">,</span> <span class="s">&#39;OPTX&#39;</span>    <span class="p">,</span>
+                        <span class="s">&#39;DK87_R1&#39;</span> <span class="p">,</span> <span class="s">&#39;DK87_R2&#39;</span><span class="p">,</span> <span class="s">&#39;LG93&#39;</span>  <span class="p">,</span> <span class="s">&#39;FT97_A&#39;</span>    <span class="p">,</span> <span class="s">&#39;FT97_B&#39;</span>  <span class="p">,</span>
+                        <span class="s">&#39;PBE_SOL&#39;</span> <span class="p">,</span> <span class="s">&#39;RPBE&#39;</span>   <span class="p">,</span> <span class="s">&#39;WC&#39;</span>    <span class="p">,</span> <span class="s">&#39;MPW91&#39;</span>     <span class="p">,</span> <span class="s">&#39;AM05&#39;</span>    <span class="p">,</span>
+                        <span class="s">&#39;PBEA&#39;</span>    <span class="p">,</span> <span class="s">&#39;MPBE&#39;</span>   <span class="p">,</span> <span class="s">&#39;XPBE&#39;</span>  <span class="p">,</span> <span class="s">&#39;2D_B86_MGC&#39;</span><span class="p">,</span> <span class="s">&#39;BAYESIAN&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;PBE_JSJR&#39;</span><span class="p">,</span> <span class="s">&#39;2D_B88&#39;</span> <span class="p">,</span> <span class="s">&#39;2D_B86&#39;</span><span class="p">,</span> <span class="s">&#39;2D_PBE&#39;</span>    <span class="p">,</span> <span class="s">&#39;OPTB88_VDW&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;PBEK1_VDW&#39;</span><span class="p">,</span><span class="s">&#39;OPTPBE_VDW&#39;</span><span class="p">,</span><span class="s">&#39;RGE2&#39;</span><span class="p">,</span> <span class="s">&#39;RPW86&#39;</span>     <span class="p">,</span> <span class="s">&#39;KT1&#39;</span>     <span class="p">,</span>
+                        <span class="s">&#39;MB88&#39;</span>    <span class="p">,</span> <span class="s">&#39;SOGGA&#39;</span>  <span class="p">,</span> <span class="s">&#39;SOGGA11&#39;</span><span class="p">,</span> <span class="s">&#39;C09X&#39;</span>     <span class="p">,</span> <span class="s">&#39;LB&#39;</span>      <span class="p">,</span>
+                        <span class="s">&#39;LBM&#39;</span>     <span class="p">,</span> <span class="s">&#39;OL2&#39;</span>    <span class="p">,</span> <span class="s">&#39;APBE&#39;</span>  <span class="p">,</span>  <span class="s">&#39;HTBS&#39;</span>     <span class="p">,</span> <span class="s">&#39;AIRY&#39;</span>    <span class="p">,</span>
+                        <span class="s">&#39;LAG&#39;</span><span class="p">):</span>
+            <span class="n">x_code</span> <span class="o">=</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="s">&#39;XC_GGA_X_&#39;</span><span class="o">+</span><span class="n">x_name</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">x_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;SOGGA11_X&#39;</span><span class="p">,):</span>
+            <span class="n">x_code</span> <span class="o">=</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="s">&#39;XC_HYB_GGA_X_&#39;</span><span class="o">+</span><span class="n">x_name</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">x_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;LTA&#39;</span> <span class="p">,</span> <span class="s">&#39;TPSS&#39;</span> <span class="p">,</span> <span class="s">&#39;M06L&#39;</span> <span class="p">,</span> <span class="s">&#39;GVT4&#39;</span>  <span class="p">,</span> <span class="s">&#39;TAU_HCTH&#39;</span>  <span class="p">,</span>
+                        <span class="s">&#39;BR89&#39;</span><span class="p">,</span> <span class="s">&#39;BJ06&#39;</span> <span class="p">,</span> <span class="s">&#39;TB09&#39;</span> <span class="p">,</span> <span class="s">&#39;RPP09&#39;</span> <span class="p">,</span> <span class="s">&#39;2D_PRHG07&#39;</span> <span class="p">,</span>
+                        <span class="s">&#39;2D_PRHG07_PRP10&#39;</span><span class="p">,):</span>
+            <span class="n">x_code</span> <span class="o">=</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="s">&#39;XC_MGGA_X_&#39;</span><span class="o">+</span><span class="n">x_name</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;TODO: meta-GGA&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;Unknown exchange functional </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">x_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;WIGNER&#39;</span> <span class="p">,</span> <span class="s">&#39;RPA&#39;</span>     <span class="p">,</span> <span class="s">&#39;HL&#39;</span>      <span class="p">,</span> <span class="s">&#39;GL&#39;</span>      <span class="p">,</span> <span class="s">&#39;XALPHA&#39;</span> <span class="p">,</span>
+                      <span class="s">&#39;VWN&#39;</span>    <span class="p">,</span> <span class="s">&#39;VWN_RPA&#39;</span> <span class="p">,</span> <span class="s">&#39;PZ&#39;</span>      <span class="p">,</span> <span class="s">&#39;PZ_MOD&#39;</span>  <span class="p">,</span> <span class="s">&#39;OB_PZ&#39;</span>  <span class="p">,</span>
+                      <span class="s">&#39;PW&#39;</span>     <span class="p">,</span> <span class="s">&#39;PW_MOD&#39;</span>  <span class="p">,</span> <span class="s">&#39;OB_PW&#39;</span>   <span class="p">,</span> <span class="s">&#39;2D_AMGB&#39;</span> <span class="p">,</span> <span class="s">&#39;2D_PRM&#39;</span> <span class="p">,</span>
+                      <span class="s">&#39;vBH&#39;</span>    <span class="p">,</span> <span class="s">&#39;1D_CSC&#39;</span>  <span class="p">,</span> <span class="s">&#39;ML1&#39;</span>     <span class="p">,</span> <span class="s">&#39;ML2&#39;</span>     <span class="p">,</span> <span class="s">&#39;GOMBAS&#39;</span> <span class="p">,</span>
+                      <span class="s">&#39;PW_RPA&#39;</span>  <span class="p">,):</span>
+            <span class="n">c_code</span> <span class="o">=</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="s">&#39;XC_LDA_C_&#39;</span><span class="o">+</span><span class="n">c_name</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">c_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;PBE&#39;</span> <span class="p">,</span> <span class="s">&#39;LYP&#39;</span> <span class="p">,</span> <span class="s">&#39;P86&#39;</span>    <span class="p">,</span> <span class="s">&#39;PBE_SOL&#39;</span> <span class="p">,</span> <span class="s">&#39;PW91&#39;</span>     <span class="p">,</span>
+                                <span class="s">&#39;AM05&#39;</span><span class="p">,</span> <span class="s">&#39;XPBE&#39;</span><span class="p">,</span> <span class="s">&#39;LM&#39;</span>     <span class="p">,</span> <span class="s">&#39;PBE_JRGX&#39;</span><span class="p">,</span> <span class="s">&#39;RGE2&#39;</span>     <span class="p">,</span>
+                                <span class="s">&#39;WL&#39;</span>  <span class="p">,</span> <span class="s">&#39;WI&#39;</span>  <span class="p">,</span> <span class="s">&#39;SOGGA11&#39;</span><span class="p">,</span> <span class="s">&#39;WI0&#39;</span>     <span class="p">,</span> <span class="s">&#39;SOGGA11_X&#39;</span><span class="p">,</span>
+                                <span class="s">&#39;APBE&#39;</span><span class="p">,):</span>
+            <span class="n">c_code</span> <span class="o">=</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="s">&#39;XC_GGA_C_&#39;</span><span class="o">+</span><span class="n">c_name</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">c_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;TPSS&#39;</span><span class="p">,</span> <span class="s">&#39;VSXC&#39;</span><span class="p">,):</span>
+            <span class="n">c_code</span> <span class="o">=</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="s">&#39;XC_MGGA_C_&#39;</span><span class="o">+</span><span class="n">c_name</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;TODO: meta-GGA&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">_is_hybrid_xc</span><span class="p">(</span><span class="n">c_name</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;xc = </span><span class="si">%s</span><span class="s">, C functional </span><span class="si">%s</span><span class="s"> is hybrid&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">xc_name</span><span class="p">,</span> <span class="n">c_name</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">_is_x_and_c</span><span class="p">(</span><span class="n">c_name</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;xc = </span><span class="si">%s</span><span class="s">, C functional </span><span class="si">%s</span><span class="s"> is hybrid&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">xc_name</span><span class="p">,</span> <span class="n">c_name</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;Unknown correlation functional </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">c_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x_code</span><span class="p">,</span> <span class="n">c_code</span>
+
+</div>
+<span class="k">def</span> <span class="nf">hybrid_coeff</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">_is_hybrid_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
+        <span class="n">libdft</span><span class="o">.</span><span class="n">VXChybrid_coeff</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span>
+        <span class="k">return</span> <span class="n">libdft</span><span class="o">.</span><span class="n">VXChybrid_coeff</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xc_code</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">spin</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

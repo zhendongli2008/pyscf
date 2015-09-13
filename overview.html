@@ -6,25 +6,25 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>An overview of PySCF &mdash; PySCF 0.10 documentation</title>
+    <title>An overview of PySCF &mdash; PySCF 1.0 documentation</title>
     
-    <link rel="stylesheet" href="static/default.css" type="text/css" />
-    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.10',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="static/jquery.js"></script>
-    <script type="text/javascript" src="static/underscore.js"></script>
-    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 0.10 documentation" href="index.html" />
+    <link rel="top" title="PySCF 1.0 documentation" href="index.html" />
     <link rel="next" title="Tutorial" href="tutorial.html" />
     <link rel="prev" title="Welcome to PySCF’s documentation!" href="index.html" /> 
   </head>
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to PySCF’s documentation!"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -63,15 +63,20 @@
 <li><dl class="first docutils">
 <dt>Common quantum chemistry methods</dt>
 <dd><ul class="first last simple">
-<li>Non-relativistic and relativistic Hartree-Fock</li>
-<li>Non-relativistic DFT</li>
+<li>Hartree-Fock</li>
+<li>DFT</li>
 <li>CASSCF and FCI</li>
+<li>Full CI</li>
 <li>MP2</li>
+<li>SC-NEVPT2</li>
 <li>CCSD</li>
-<li>General non-relativistic integral transformation</li>
-<li>Non-relativistic DFT</li>
-<li>Hartree-Fock Gradient</li>
-<li>Hartree-Fock NMR</li>
+<li>CCSD lambda</li>
+<li>EOM-CCSD</li>
+<li>Density fitting</li>
+<li>relativistic correction</li>
+<li>General integral transformation</li>
+<li>Gradient</li>
+<li>NMR</li>
 </ul>
 </dd>
 </dl>
@@ -106,7 +111,7 @@ to try out the package:</p>
 </div>
 <div class="section" id="submodules">
 <h3>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h3>
-<p>In pyscf, most submodules requires explict import:</p>
+<p>In pyscf, submodules require explict import:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
 </pre></div>
 </div>
@@ -114,13 +119,13 @@ to try out the package:</p>
 <dt><tt class="xref py py-mod docutils literal"><span class="pre">gto</span></tt></dt>
 <dd>Molecular structure and basis sets.</dd>
 <dt>scf</dt>
-<dd>Non-relativistic and relativistic SCF.</dd>
+<dd>Non-relativistic and relativistic Hartree-Fock.</dd>
 <dt>mcscf</dt>
 <dd>CASCI, 1-step and 2-step CASSCF</dd>
 <dt>ao2mo</dt>
 <dd>General 2-electron AO to MO integral transformation</dd>
 <dt>dft</dt>
-<dd>Non-relativistic RKS</dd>
+<dd>Non-relativistic DFT</dd>
 <dt>df</dt>
 <dd>Density fitting</dd>
 <dt>fci</dt>
@@ -136,7 +141,7 @@ to try out the package:</p>
 <dt>lo</dt>
 <dd>Localization and orbital orthogonalization</dd>
 <dt>lib</dt>
-<dd>Basic functions and C extension</dd>
+<dd>Basic functions and C extensions</dd>
 <dt>nmr</dt>
 <dd>NMR</dd>
 <dt>mp</dt>
@@ -144,22 +149,23 @@ to try out the package:</p>
 <dt>symm</dt>
 <dd>Symmetry</dd>
 <dt>tools</dt>
-<dd>Convert pyscf data to the data format for other packages</dd>
+<dd>fcidump, molden etc</dd>
 </dl>
 </div>
 <div class="section" id="pure-function-and-class">
 <h3>Pure function and Class<a class="headerlink" href="#pure-function-and-class" title="Permalink to this headline">¶</a></h3>
-<p>The class in each method are designed to hold only the final results and the
-control parameters such as maximum number of iterations, convergence
-threshold, etc.  The intermediate status are not saved in the class.  If the
-class.kernel() function is finished without any errors,  the solution will be
-saved in the class (see documentation for each class).</p>
+<p>The class are designed to hold only the final results and the control
+parameters such as maximum number of iterations, convergence threshold, etc.
+The intermediate status are not saved in the class.  If the .kernel() function
+is finished without any errors,  the solution will be saved in the class (see
+documentation).</p>
 <p>Most useful functions are implemented at module level, and can be accessed in
 both class or module,  e.g.  <tt class="docutils literal"><span class="pre">scf.hf.get_jk(mol,</span> <span class="pre">dm)</span></tt> and
 <tt class="docutils literal"><span class="pre">SCF(mol).get_jk(mol,</span> <span class="pre">dm)</span></tt> have the same functionality.  As a result, most
 functions and class are <strong>pure</strong>, i.e. no status are saved, and the argument
-are not changed inplace.  Exception to this rule is suffixed with underscore
-in the function name.</p>
+are not changed inplace.  Exceptions (destructive functions and methods) are
+suffixed with underscore in the function name,  eg  <tt class="docutils literal"><span class="pre">scf.hf.get_fock_</span></tt>
+function may change the status of the argument <tt class="docutils literal"><span class="pre">adiis</span></tt></p>
 </div>
 </div>
 </div>
@@ -192,7 +198,7 @@ in the function name.</p>
                         title="next chapter">Tutorial</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="sources/overview.txt"
+    <li><a href="_sources/overview.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -227,12 +233,12 @@ in the function name.</p>
         <li class="right" >
           <a href="index.html" title="Welcome to PySCF’s documentation!"
              >previous</a> |</li>
-        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

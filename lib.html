@@ -6,25 +6,25 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>lib &mdash; PySCF 0.10 documentation</title>
+    <title>lib &mdash; PySCF 1.0 documentation</title>
     
-    <link rel="stylesheet" href="static/default.css" type="text/css" />
-    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.10',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="static/jquery.js"></script>
-    <script type="text/javascript" src="static/underscore.js"></script>
-    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 0.10 documentation" href="index.html" />
+    <link rel="top" title="PySCF 1.0 documentation" href="index.html" />
     <link rel="next" title="scf" href="scf.html" />
     <link rel="prev" title="gto — Molecular structure and GTO basis" href="gto.html" /> 
   </head>
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="gto.html" title="gto — Molecular structure and GTO basis"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -60,17 +60,556 @@
 </div>
 <div class="section" id="module-pyscf.lib.logger">
 <span id="logger"></span><h2>logger<a class="headerlink" href="#module-pyscf.lib.logger" title="Permalink to this headline">¶</a></h2>
-<p>logger</p>
+<div class="section" id="logging-system">
+<h3>Logging system<a class="headerlink" href="#logging-system" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="log-level">
+<h4>Log level<a class="headerlink" href="#log-level" title="Permalink to this headline">¶</a></h4>
+<table border="1" class="docutils">
+<colgroup>
+<col width="54%" />
+<col width="46%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Level</td>
+<td>number</td>
+</tr>
+<tr class="row-even"><td>DEBUG4</td>
+<td>9</td>
+</tr>
+<tr class="row-odd"><td>DEBUG3</td>
+<td>8</td>
+</tr>
+<tr class="row-even"><td>DEBUG2</td>
+<td>7</td>
+</tr>
+<tr class="row-odd"><td>DEBUG1</td>
+<td>6</td>
+</tr>
+<tr class="row-even"><td>DEBUG</td>
+<td>5</td>
+</tr>
+<tr class="row-odd"><td>INFO</td>
+<td>4</td>
+</tr>
+<tr class="row-even"><td>NOTE</td>
+<td>3</td>
+</tr>
+<tr class="row-odd"><td>WARN</td>
+<td>2</td>
+</tr>
+<tr class="row-even"><td>ERROR</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>QUIET</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Big <tt class="docutils literal"><span class="pre">verbose</span></tt> number means more noise in the output file.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">At log level 1 (ERROR) and 2 (WARN), the messages are also output to stderr.</p>
+</div>
+<p>Each Logger object has its own output destination and verbose level.  So
+multiple Logger objects can be created to manage the message system without
+affecting each other.
+The methods provided by Logger class has the direct connection to the log level.
+E.g.  <tt class="xref py py-func docutils literal"><span class="pre">info()</span></tt> print messages if the verbose level &gt;= 4 (INFO):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;info level&#39;</span><span class="p">)</span>
+<span class="go">info level</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;info level&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">note</span><span class="p">(</span><span class="s">&#39;note level&#39;</span><span class="p">)</span>
+<span class="go">note level</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="timer">
+<h4>timer<a class="headerlink" href="#timer" title="Permalink to this headline">¶</a></h4>
+<p>Logger object provides timer method for timing.  Set <tt class="xref py py-attr docutils literal"><span class="pre">TIMER_LEVEL</span></tt> to
+control which level to output the timing.  It is 5 (DEBUG) by default.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">time</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;test&#39;</span><span class="p">,</span> <span class="n">t0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lib</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">TIMER_LEVEL</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;test&#39;</span><span class="p">,</span> <span class="n">t0</span><span class="p">)</span>
+<span class="go">    CPU time for test      0.00 sec</span>
+</pre></div>
+</div>
+</div>
+</div>
 </div>
 <div class="section" id="module-pyscf.lib.numpy_helper">
 <span id="numpy-helper"></span><h2>numpy helper<a class="headerlink" href="#module-pyscf.lib.numpy_helper" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
+<dt id="pyscf.lib.numpy_helper.dot">
+<tt class="descclassname">pyscf.lib.numpy_helper.</tt><tt class="descname">dot</tt><big>(</big><em>a</em>, <em>b</em>, <em>alpha=1</em>, <em>c=None</em>, <em>beta=0</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/numpy_helper.html#dot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.numpy_helper.dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matrix-matrix multiplication for double precision arrays</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.numpy_helper.hermi_triu_">
+<tt class="descclassname">pyscf.lib.numpy_helper.</tt><tt class="descname">hermi_triu_</tt><big>(</big><em>mat</em>, <em>hermi=1</em>, <em>inplace=True</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/numpy_helper.html#hermi_triu_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.numpy_helper.hermi_triu_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use the elements of the lower triangular part to fill the upper triangular part.</p>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><p class="first">filltriu : int</p>
+<blockquote class="last">
+<div><div class="line-block">
+<div class="line">1 (default) return a hermitian matrix</div>
+<div class="line">2           return an anti-hermitian matrix</div>
+</div>
+</div></blockquote>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">unpack_row</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">9.</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">[[ 0.  3.  6.]</span>
+<span class="go"> [ 3.  4.  7.]</span>
+<span class="go"> [ 6.  7.  8.]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">unpack_row</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">9.</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">[[ 0. -3. -6.]</span>
+<span class="go"> [ 3.  4. -7.]</span>
+<span class="go"> [ 6.  7.  8.]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.numpy_helper.pack_tril">
+<tt class="descclassname">pyscf.lib.numpy_helper.</tt><tt class="descname">pack_tril</tt><big>(</big><em>mat</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/numpy_helper.html#pack_tril"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.numpy_helper.pack_tril" title="Permalink to this definition">¶</a></dt>
+<dd><p>flatten the lower triangular part of a matrix.
+Given mat, it returns mat[numpy.tril_indices(mat.shape[0])]</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pack_tril</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">[0 3 4 6 7 8]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyscf.lib.numpy_helper.solve_lineq_by_SVD">
-<tt class="descclassname">pyscf.lib.numpy_helper.</tt><tt class="descname">solve_lineq_by_SVD</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="modules/pyscf/lib/numpy_helper.html#solve_lineq_by_SVD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.numpy_helper.solve_lineq_by_SVD" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.lib.numpy_helper.</tt><tt class="descname">solve_lineq_by_SVD</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/numpy_helper.html#solve_lineq_by_SVD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.numpy_helper.solve_lineq_by_SVD" title="Permalink to this definition">¶</a></dt>
 <dd><p>a * x = b</p>
 </dd></dl>
 
-<span class="target" id="module-pyscf.lib.linalg_helper"></span></div>
+<dl class="function">
+<dt id="pyscf.lib.numpy_helper.takebak_2d_">
+<tt class="descclassname">pyscf.lib.numpy_helper.</tt><tt class="descname">takebak_2d_</tt><big>(</big><em>out</em>, <em>a</em>, <em>idx</em>, <em>idy</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/numpy_helper.html#takebak_2d_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.numpy_helper.takebak_2d_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse operation of take_2d.  out(idx,idy) = a</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">takebak_2d</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">[[ 1.  0.  1.]</span>
+<span class="go"> [ 0.  0.  0.]</span>
+<span class="go"> [ 1.  0.  1.]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.numpy_helper.transpose">
+<tt class="descclassname">pyscf.lib.numpy_helper.</tt><tt class="descname">transpose</tt><big>(</big><em>a</em>, <em>inplace=False</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/numpy_helper.html#transpose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.numpy_helper.transpose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transpose array for better memory efficiency</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">transpose</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">)))</span>
+<span class="go">[[ 1.  1.  1.]</span>
+<span class="go"> [ 1.  1.  1.]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.numpy_helper.transpose_sum">
+<tt class="descclassname">pyscf.lib.numpy_helper.</tt><tt class="descname">transpose_sum</tt><big>(</big><em>a</em>, <em>inplace=False</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/numpy_helper.html#transpose_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.numpy_helper.transpose_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>a + a.T for better memory efficiency</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">transpose_sum</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">4.</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">[[ 0.  3.]</span>
+<span class="go"> [ 3.  6.]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.numpy_helper.unpack_row">
+<tt class="descclassname">pyscf.lib.numpy_helper.</tt><tt class="descname">unpack_row</tt><big>(</big><em>tril</em>, <em>row_id</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/numpy_helper.html#unpack_row"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.numpy_helper.unpack_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract one row of the lower triangular part of a matrix.
+It is equivalent to unpack_tril(a)[row_id]</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">unpack_row</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">6.</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">[ 0. 1. 3.]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">unpack_tril</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">6.</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">[ 0. 1. 3.]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.numpy_helper.unpack_tril">
+<tt class="descclassname">pyscf.lib.numpy_helper.</tt><tt class="descname">unpack_tril</tt><big>(</big><em>tril</em>, <em>filltriu=1</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/numpy_helper.html#unpack_tril"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.numpy_helper.unpack_tril" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse operation of pack_tril.  Put a vector in the lower triangular
+part of a matrix.</p>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><p class="first">filltriu : int</p>
+<blockquote class="last">
+<div><div class="line-block">
+<div class="line">0           Do not fill the upper triangular part, random number may appear
+in the upper triangular part</div>
+<div class="line">1 (default) Transpose the lower triangular part to fill the upper triangular part</div>
+<div class="line">2           Similar to filltriu=1, negative of the lower triangular part is assign
+to the upper triangular part to make the matrix anti-hermitian</div>
+</div>
+</div></blockquote>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">unpack_tril</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">6.</span><span class="p">))</span>
+<span class="go">[[ 0. 1. 3.]</span>
+<span class="go"> [ 1. 2. 4.]</span>
+<span class="go"> [ 3. 4. 5.]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">unpack_tril</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">6.</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">[[ 0. 0. 0.]</span>
+<span class="go"> [ 1. 2. 0.]</span>
+<span class="go"> [ 3. 4. 5.]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">unpack_tril</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">6.</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">[[ 0. -1. -3.]</span>
+<span class="go"> [ 1.  2. -4.]</span>
+<span class="go"> [ 3.  4.  5.]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.numpy_helper.zdot">
+<tt class="descclassname">pyscf.lib.numpy_helper.</tt><tt class="descname">zdot</tt><big>(</big><em>a</em>, <em>b</em>, <em>alpha=1</em>, <em>c=None</em>, <em>beta=0</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/numpy_helper.html#zdot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.numpy_helper.zdot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matrix-matrix multiplication for double complex arrays using Gauss&#8217;s
+complex multiplication algorithm</p>
+</dd></dl>
+
+<span class="target" id="module-pyscf.lib.linalg_helper"></span><dl class="function">
+<dt id="pyscf.lib.linalg_helper.davidson">
+<tt class="descclassname">pyscf.lib.linalg_helper.</tt><tt class="descname">davidson</tt><big>(</big><em>aop</em>, <em>x0</em>, <em>precond</em>, <em>tol=1e-14</em>, <em>max_cycle=50</em>, <em>max_space=12</em>, <em>lindep=1e-16</em>, <em>max_memory=2000</em>, <em>dot=&lt;built-in function dot&gt;</em>, <em>callback=None</em>, <em>nroots=1</em>, <em>lessio=False</em>, <em>verbose=2</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/linalg_helper.html#davidson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.linalg_helper.davidson" title="Permalink to this definition">¶</a></dt>
+<dd><p>Davidson diagonalization method to solve  a c = e c.  Ref
+[1] E.R. Davidson, J. Comput. Phys. 17 (1), 87-94 (1975).
+[2] <a class="reference external" href="http://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter11.pdf">http://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter11.pdf</a></p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>aop <span class="classifier-delimiter">:</span> <span class="classifier">function(x) =&gt; array_like_x</span></dt>
+<dd>aop(x) to mimic the matrix vector multiplication <span class="math">\(\sum_{j}a_{ij}*x_j\)</span>.
+The argument is a 1D array.  The returned value is a 1D array.</dd>
+<dt>x0 <span class="classifier-delimiter">:</span> <span class="classifier">1D array</span></dt>
+<dd>Initial guess</dd>
+<dt>precond <span class="classifier-delimiter">:</span> <span class="classifier">function(dx, e, x0) =&gt; array_like_dx</span></dt>
+<dd>Preconditioner to generate new trial vector.
+The argument dx is a residual vector <tt class="docutils literal"><span class="pre">a*x0-e*x0</span></tt>; e is the current
+eigenvalue; x0 is the current eigenvector.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>tol <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Convergence tolerance.</dd>
+<dt>max_cycle <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>max number of iterations.</dd>
+<dt>max_space <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>space size to hold trial vectors.</dd>
+<dt>lindep <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Linear dependency threshold.  The function is terminated when the
+smallest eigenvalue of the metric of the trial vectors is lower
+than this threshold.</dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">int or float</span></dt>
+<dd>Allowed memory in MB.</dd>
+<dt>dot <span class="classifier-delimiter">:</span> <span class="classifier">function(x, y) =&gt; scalar</span></dt>
+<dd>Inner product</dd>
+<dt>callback <span class="classifier-delimiter">:</span> <span class="classifier">function(envs_dict) =&gt; None</span></dt>
+<dd>callback function takes one dict as the argument which is
+generated by the builtin function <tt class="xref py py-func docutils literal"><span class="pre">locals()</span></tt>, so that the
+callback function can access all local variables in the current
+envrionment.</dd>
+<dt>nroots <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of eigenvalues to be computed.  When nroots &gt; 1, it affects
+the shape of the return value</dd>
+<dt>lessio <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>How to compute a*x0 for current eigenvector x0.  There are two
+ways to compute a*x0.  One is to assemble the existed a*x.  The
+other is to call aop(x0).  The default is the first method which
+needs more IO and less computational cost.  When IO is slow, the
+second method can be considered.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>e <span class="classifier-delimiter">:</span> <span class="classifier">float or list of floats</span></dt>
+<dd>Eigenvalue.  By default it&#8217;s one float number.  If <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> &gt; 1, it
+is a list of floats for the lowest <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> eigenvalues.</dd>
+<dt>c <span class="classifier-delimiter">:</span> <span class="classifier">1D array or list of 1D arrays</span></dt>
+<dd>Eigenvector.  By default it&#8217;s a 1D array.  If <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> &gt; 1, it
+is a list of arrays for the lowest <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> eigenvectors.</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">T</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aop</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">precond</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">dx</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">x0</span><span class="p">:</span> <span class="n">dx</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span><span class="o">-</span><span class="n">e</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x0</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">davidson</span><span class="p">(</span><span class="n">aop</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">precond</span><span class="p">,</span> <span class="n">nroots</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.linalg_helper.dsolve">
+<tt class="descclassname">pyscf.lib.linalg_helper.</tt><tt class="descname">dsolve</tt><big>(</big><em>aop</em>, <em>b</em>, <em>precond</em>, <em>tol=1e-14</em>, <em>max_cycle=30</em>, <em>dot=&lt;built-in function dot&gt;</em>, <em>lindep=1e-16</em>, <em>verbose=0</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/linalg_helper.html#dsolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.linalg_helper.dsolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Davidson iteration to solve linear equation.  It works bad.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.linalg_helper.dsyev">
+<tt class="descclassname">pyscf.lib.linalg_helper.</tt><tt class="descname">dsyev</tt><big>(</big><em>aop</em>, <em>x0</em>, <em>precond</em>, <em>tol=1e-14</em>, <em>max_cycle=50</em>, <em>max_space=12</em>, <em>lindep=1e-16</em>, <em>max_memory=2000</em>, <em>dot=&lt;built-in function dot&gt;</em>, <em>callback=None</em>, <em>nroots=1</em>, <em>lessio=False</em>, <em>verbose=2</em><big>)</big><a class="headerlink" href="#pyscf.lib.linalg_helper.dsyev" title="Permalink to this definition">¶</a></dt>
+<dd><p>Davidson diagonalization method to solve  a c = e c.  Ref
+[1] E.R. Davidson, J. Comput. Phys. 17 (1), 87-94 (1975).
+[2] <a class="reference external" href="http://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter11.pdf">http://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter11.pdf</a></p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>aop <span class="classifier-delimiter">:</span> <span class="classifier">function(x) =&gt; array_like_x</span></dt>
+<dd>aop(x) to mimic the matrix vector multiplication <span class="math">\(\sum_{j}a_{ij}*x_j\)</span>.
+The argument is a 1D array.  The returned value is a 1D array.</dd>
+<dt>x0 <span class="classifier-delimiter">:</span> <span class="classifier">1D array</span></dt>
+<dd>Initial guess</dd>
+<dt>precond <span class="classifier-delimiter">:</span> <span class="classifier">function(dx, e, x0) =&gt; array_like_dx</span></dt>
+<dd>Preconditioner to generate new trial vector.
+The argument dx is a residual vector <tt class="docutils literal"><span class="pre">a*x0-e*x0</span></tt>; e is the current
+eigenvalue; x0 is the current eigenvector.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>tol <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Convergence tolerance.</dd>
+<dt>max_cycle <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>max number of iterations.</dd>
+<dt>max_space <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>space size to hold trial vectors.</dd>
+<dt>lindep <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Linear dependency threshold.  The function is terminated when the
+smallest eigenvalue of the metric of the trial vectors is lower
+than this threshold.</dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">int or float</span></dt>
+<dd>Allowed memory in MB.</dd>
+<dt>dot <span class="classifier-delimiter">:</span> <span class="classifier">function(x, y) =&gt; scalar</span></dt>
+<dd>Inner product</dd>
+<dt>callback <span class="classifier-delimiter">:</span> <span class="classifier">function(envs_dict) =&gt; None</span></dt>
+<dd>callback function takes one dict as the argument which is
+generated by the builtin function <tt class="xref py py-func docutils literal"><span class="pre">locals()</span></tt>, so that the
+callback function can access all local variables in the current
+envrionment.</dd>
+<dt>nroots <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of eigenvalues to be computed.  When nroots &gt; 1, it affects
+the shape of the return value</dd>
+<dt>lessio <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>How to compute a*x0 for current eigenvector x0.  There are two
+ways to compute a*x0.  One is to assemble the existed a*x.  The
+other is to call aop(x0).  The default is the first method which
+needs more IO and less computational cost.  When IO is slow, the
+second method can be considered.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>e <span class="classifier-delimiter">:</span> <span class="classifier">float or list of floats</span></dt>
+<dd>Eigenvalue.  By default it&#8217;s one float number.  If <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> &gt; 1, it
+is a list of floats for the lowest <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> eigenvalues.</dd>
+<dt>c <span class="classifier-delimiter">:</span> <span class="classifier">1D array or list of 1D arrays</span></dt>
+<dd>Eigenvector.  By default it&#8217;s a 1D array.  If <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> &gt; 1, it
+is a list of arrays for the lowest <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> eigenvectors.</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">T</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aop</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">precond</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">dx</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">x0</span><span class="p">:</span> <span class="n">dx</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span><span class="o">-</span><span class="n">e</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x0</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">davidson</span><span class="p">(</span><span class="n">aop</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">precond</span><span class="p">,</span> <span class="n">nroots</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.linalg_helper.eigh">
+<tt class="descclassname">pyscf.lib.linalg_helper.</tt><tt class="descname">eigh</tt><big>(</big><em>aop</em>, <em>x0</em>, <em>precond</em>, <em>tol=1e-14</em>, <em>max_cycle=50</em>, <em>max_space=12</em>, <em>lindep=1e-16</em>, <em>max_memory=2000</em>, <em>dot=&lt;built-in function dot&gt;</em>, <em>callback=None</em>, <em>nroots=1</em>, <em>lessio=False</em>, <em>verbose=2</em><big>)</big><a class="headerlink" href="#pyscf.lib.linalg_helper.eigh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Davidson diagonalization method to solve  a c = e c.  Ref
+[1] E.R. Davidson, J. Comput. Phys. 17 (1), 87-94 (1975).
+[2] <a class="reference external" href="http://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter11.pdf">http://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter11.pdf</a></p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>aop <span class="classifier-delimiter">:</span> <span class="classifier">function(x) =&gt; array_like_x</span></dt>
+<dd>aop(x) to mimic the matrix vector multiplication <span class="math">\(\sum_{j}a_{ij}*x_j\)</span>.
+The argument is a 1D array.  The returned value is a 1D array.</dd>
+<dt>x0 <span class="classifier-delimiter">:</span> <span class="classifier">1D array</span></dt>
+<dd>Initial guess</dd>
+<dt>precond <span class="classifier-delimiter">:</span> <span class="classifier">function(dx, e, x0) =&gt; array_like_dx</span></dt>
+<dd>Preconditioner to generate new trial vector.
+The argument dx is a residual vector <tt class="docutils literal"><span class="pre">a*x0-e*x0</span></tt>; e is the current
+eigenvalue; x0 is the current eigenvector.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>tol <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Convergence tolerance.</dd>
+<dt>max_cycle <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>max number of iterations.</dd>
+<dt>max_space <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>space size to hold trial vectors.</dd>
+<dt>lindep <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Linear dependency threshold.  The function is terminated when the
+smallest eigenvalue of the metric of the trial vectors is lower
+than this threshold.</dd>
+<dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">int or float</span></dt>
+<dd>Allowed memory in MB.</dd>
+<dt>dot <span class="classifier-delimiter">:</span> <span class="classifier">function(x, y) =&gt; scalar</span></dt>
+<dd>Inner product</dd>
+<dt>callback <span class="classifier-delimiter">:</span> <span class="classifier">function(envs_dict) =&gt; None</span></dt>
+<dd>callback function takes one dict as the argument which is
+generated by the builtin function <tt class="xref py py-func docutils literal"><span class="pre">locals()</span></tt>, so that the
+callback function can access all local variables in the current
+envrionment.</dd>
+<dt>nroots <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of eigenvalues to be computed.  When nroots &gt; 1, it affects
+the shape of the return value</dd>
+<dt>lessio <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>How to compute a*x0 for current eigenvector x0.  There are two
+ways to compute a*x0.  One is to assemble the existed a*x.  The
+other is to call aop(x0).  The default is the first method which
+needs more IO and less computational cost.  When IO is slow, the
+second method can be considered.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>e <span class="classifier-delimiter">:</span> <span class="classifier">float or list of floats</span></dt>
+<dd>Eigenvalue.  By default it&#8217;s one float number.  If <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> &gt; 1, it
+is a list of floats for the lowest <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> eigenvalues.</dd>
+<dt>c <span class="classifier-delimiter">:</span> <span class="classifier">1D array or list of 1D arrays</span></dt>
+<dd>Eigenvector.  By default it&#8217;s a 1D array.  If <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> &gt; 1, it
+is a list of arrays for the lowest <tt class="xref py py-attr docutils literal"><span class="pre">nroots</span></tt> eigenvectors.</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">T</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aop</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">precond</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">dx</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">x0</span><span class="p">:</span> <span class="n">dx</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span><span class="o">-</span><span class="n">e</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x0</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">davidson</span><span class="p">(</span><span class="n">aop</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">precond</span><span class="p">,</span> <span class="n">nroots</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.linalg_helper.krylov">
+<tt class="descclassname">pyscf.lib.linalg_helper.</tt><tt class="descname">krylov</tt><big>(</big><em>aop</em>, <em>b</em>, <em>x0=None</em>, <em>tol=1e-10</em>, <em>max_cycle=30</em>, <em>dot=&lt;built-in function dot&gt;</em>, <em>lindep=1e-16</em>, <em>callback=None</em>, <em>verbose=2</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/linalg_helper.html#krylov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.linalg_helper.krylov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Krylov subspace method to solve  (1+a) x = b.  Ref:
+J. A. Pople et al, Int. J.  Quantum. Chem.  Symp. 13, 225 (1979).</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>aop <span class="classifier-delimiter">:</span> <span class="classifier">function(x) =&gt; array_like_x</span></dt>
+<dd>aop(x) to mimic the matrix vector multiplication <span class="math">\(\sum_{j}a_{ij} x_j\)</span>.
+The argument is a 1D array.  The returned value is a 1D array.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>x0 <span class="classifier-delimiter">:</span> <span class="classifier">1D array</span></dt>
+<dd>Initial guess</dd>
+<dt>tol <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Tolerance to terminate the operation aop(x).</dd>
+<dt>max_cycle <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>max number of iterations.</dd>
+<dt>lindep <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Linear dependency threshold.  The function is terminated when the
+smallest eigenvalue of the metric of the trial vectors is lower
+than this threshold.</dd>
+<dt>dot <span class="classifier-delimiter">:</span> <span class="classifier">function(x, y) =&gt; scalar</span></dt>
+<dd>Inner product</dd>
+<dt>callback <span class="classifier-delimiter">:</span> <span class="classifier">function(envs_dict) =&gt; None</span></dt>
+<dd>callback function takes one dict as the argument which is
+generated by the builtin function <tt class="xref py py-func docutils literal"><span class="pre">locals()</span></tt>, so that the
+callback function can access all local variables in the current
+envrionment.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>x : 1D array like b</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span> <span class="o">*</span> <span class="mf">1e-2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aop</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">krylov</span><span class="p">(</span><span class="n">aop</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">x</span><span class="p">)</span><span class="o">+</span><span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.lib.linalg_helper.safe_eigh">
+<tt class="descclassname">pyscf.lib.linalg_helper.</tt><tt class="descname">safe_eigh</tt><big>(</big><em>h</em>, <em>s</em>, <em>lindep=1e-15</em><big>)</big><a class="reference internal" href="_modules/pyscf/lib/linalg_helper.html#safe_eigh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.lib.linalg_helper.safe_eigh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve generalized eigenvalue problem  h v = w s v.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The number of eigenvalues and eigenvectors might be less than the
+matrix dimension if linear dependency is found in metric s.</p>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>h, s <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>Complex Hermitian or real symmetric matrix.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>lindep <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Linear dependency threshold.  By diagonalizing the metric s, we
+consider the eigenvectors are linearly dependent subsets if their
+eigenvalues are smaller than this threshold.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>w, v, seig.  w is the eigenvalue vector; v is the eigenfunction array;
+seig is the eigenvalue vector of the metric s.</dd>
+</dl>
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -83,7 +622,14 @@
   <ul>
 <li><a class="reference internal" href="#">lib</a><ul>
 <li><a class="reference internal" href="#module-pyscf.lib.parameters">parameters</a></li>
-<li><a class="reference internal" href="#module-pyscf.lib.logger">logger</a></li>
+<li><a class="reference internal" href="#module-pyscf.lib.logger">logger</a><ul>
+<li><a class="reference internal" href="#logging-system">Logging system</a><ul>
+<li><a class="reference internal" href="#log-level">Log level</a></li>
+<li><a class="reference internal" href="#timer">timer</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-pyscf.lib.numpy_helper">numpy helper</a></li>
 </ul>
 </li>
@@ -97,7 +643,7 @@
                         title="next chapter">scf</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="sources/lib.txt"
+    <li><a href="_sources/lib.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -132,12 +678,12 @@
         <li class="right" >
           <a href="gto.html" title="gto — Molecular structure and GTO basis"
              >previous</a> |</li>
-        <li><a href="index.html">PySCF 0.10 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

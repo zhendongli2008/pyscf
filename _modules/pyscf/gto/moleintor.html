@@ -1,0 +1,539 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyscf.gto.moleintor &mdash; PySCF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 1.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyscf.gto.moleintor</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">ctypes</span>
+<span class="kn">import</span> <span class="nn">_ctypes</span>
+<span class="kn">import</span> <span class="nn">pyscf.lib</span>
+
+<span class="n">_cint</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">load_library</span><span class="p">(</span><span class="s">&#39;libcvhf&#39;</span><span class="p">)</span>
+<span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_cart</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span>
+<span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_spheric</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span>
+<span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_spinor</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span>
+
+<div class="viewcode-block" id="getints"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.moleintor.getints">[docs]</a><span class="k">def</span> <span class="nf">getints</span><span class="p">(</span><span class="n">intor_name</span><span class="p">,</span> <span class="n">atm</span><span class="p">,</span> <span class="n">bas</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">bras</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">kets</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">r&#39;&#39;&#39;One electron integral generator.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        intor_name : str</span>
+<span class="sd">            Name of the 1-electron integral.  The list of 1e integrals in</span>
+<span class="sd">            current version of libcint (v2.5.1)</span>
+
+<span class="sd">            ==========================  =========  =============</span>
+<span class="sd">            Function                    type       Expression</span>
+<span class="sd">            ==========================  =========  =============</span>
+<span class="sd">            &quot;cint1e_ovlp_sph&quot;           spheric    ( \| \)</span>
+<span class="sd">            &quot;cint1e_nuc_sph&quot;            spheric    ( \| nuc \| \)</span>
+<span class="sd">            &quot;cint1e_kin_sph&quot;            spheric    (.5 \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_ia01p_sph&quot;          spheric    (#C(0 1) \| nabla-rinv \| cross p\)</span>
+<span class="sd">            &quot;cint1e_giao_irjxp_sph&quot;     spheric    (#C(0 1) \| r cross p\)</span>
+<span class="sd">            &quot;cint1e_cg_irxp_sph&quot;        spheric    (#C(0 1) \| rc cross p\)</span>
+<span class="sd">            &quot;cint1e_giao_a11part_sph&quot;   spheric    (-.5 \| nabla-rinv \| r\)</span>
+<span class="sd">            &quot;cint1e_cg_a11part_sph&quot;     spheric    (-.5 \| nabla-rinv \| rc\)</span>
+<span class="sd">            &quot;cint1e_a01gp_sph&quot;          spheric    (g \| nabla-rinv cross p \|\)</span>
+<span class="sd">            &quot;cint1e_igkin_sph&quot;          spheric    (#C(0 .5) g \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_igovlp_sph&quot;         spheric    (#C(0 1) g \|\)</span>
+<span class="sd">            &quot;cint1e_ignuc_sph&quot;          spheric    (#C(0 1) g \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_z_sph&quot;              spheric    ( \| zc \| \)</span>
+<span class="sd">            &quot;cint1e_zz_sph&quot;             spheric    ( \| zc zc \| \)</span>
+<span class="sd">            &quot;cint1e_r_sph&quot;              spheric    ( \| rc \| \)</span>
+<span class="sd">            &quot;cint1e_r2_sph&quot;             spheric    ( \| rc dot rc \| \)</span>
+<span class="sd">            &quot;cint1e_rr_sph&quot;             spheric    ( \| rc rc \| \)</span>
+<span class="sd">            &quot;cint1e_pnucp_sph&quot;          spheric    (p* \| nuc dot p \| \)</span>
+<span class="sd">            &quot;cint1e_prinvxp_sph&quot;        spheric    (p* \| rinv cross p \| \)</span>
+<span class="sd">            &quot;cint1e_ovlp&quot;               spinor     ( \| \)</span>
+<span class="sd">            &quot;cint1e_nuc&quot;                spinor     ( \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_srsr&quot;               spinor     (sigma dot r \| sigma dot r\)</span>
+<span class="sd">            &quot;cint1e_sr&quot;                 spinor     (sigma dot r \|\)</span>
+<span class="sd">            &quot;cint1e_srsp&quot;               spinor     (sigma dot r \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_spsp&quot;               spinor     (sigma dot p \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_sp&quot;                 spinor     (sigma dot p \|\)</span>
+<span class="sd">            &quot;cint1e_spnucsp&quot;            spinor     (sigma dot p \| nuc \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_srnucsr&quot;            spinor     (sigma dot r \| nuc \| sigma dot r\)</span>
+<span class="sd">            &quot;cint1e_govlp&quot;              spinor     (g \|\)</span>
+<span class="sd">            &quot;cint1e_gnuc&quot;               spinor     (g \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_cg_sa10sa01&quot;        spinor     (.5 sigma cross rc \| sigma cross nabla-rinv \|\)</span>
+<span class="sd">            &quot;cint1e_cg_sa10sp&quot;          spinor     (.5 rc cross sigma \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_cg_sa10nucsp&quot;       spinor     (.5 rc cross sigma \| nuc \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_giao_sa10sa01&quot;      spinor     (.5 sigma cross r \| sigma cross nabla-rinv \|\)</span>
+<span class="sd">            &quot;cint1e_giao_sa10sp&quot;        spinor     (.5 r cross sigma \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_giao_sa10nucsp&quot;     spinor     (.5 r cross sigma \| nuc \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_sa01sp&quot;             spinor     (\| nabla-rinv cross sigma \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_spgsp&quot;              spinor     (g sigma dot p \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_spgnucsp&quot;           spinor     (g sigma dot p \| nuc \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_spgsa01&quot;            spinor     (g sigma dot p \| nabla-rinv cross sigma \|\)</span>
+<span class="sd">            &quot;cint1e_spspsp&quot;             spinor     (sigma dot p \| sigma dot p sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_spnuc&quot;              spinor     (sigma dot p \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_ovlp_cart&quot;          cartesian  ( \| \)</span>
+<span class="sd">            &quot;cint1e_nuc_cart&quot;           cartesian  ( \| nuc \| \)</span>
+<span class="sd">            &quot;cint1e_kin_cart&quot;           cartesian  (.5 \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_ia01p_cart&quot;         cartesian  (#C(0 1) \| nabla-rinv \| cross p\)</span>
+<span class="sd">            &quot;cint1e_giao_irjxp_cart&quot;    cartesian  (#C(0 1) \| r cross p\)</span>
+<span class="sd">            &quot;cint1e_cg_irxp_cart&quot;       cartesian  (#C(0 1) \| rc cross p\)</span>
+<span class="sd">            &quot;cint1e_giao_a11part_cart&quot;  cartesian  (-.5 \| nabla-rinv \| r\)</span>
+<span class="sd">            &quot;cint1e_cg_a11part_cart&quot;    cartesian  (-.5 \| nabla-rinv \| rc\)</span>
+<span class="sd">            &quot;cint1e_a01gp_cart&quot;         cartesian  (g \| nabla-rinv cross p \|\)</span>
+<span class="sd">            &quot;cint1e_igkin_cart&quot;         cartesian  (#C(0 .5) g \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_igovlp_cart&quot;        cartesian  (#C(0 1) g \|\)</span>
+<span class="sd">            &quot;cint1e_ignuc_cart&quot;         cartesian  (#C(0 1) g \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_ipovlp_sph&quot;         spheric    (nabla \|\)</span>
+<span class="sd">            &quot;cint1e_ipkin_sph&quot;          spheric    (.5 nabla \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_ipnuc_sph&quot;          spheric    (nabla \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_iprinv_sph&quot;         spheric    (nabla \| rinv \|\)</span>
+<span class="sd">            &quot;cint1e_rinv_sph&quot;           spheric    (\| rinv \|\)</span>
+<span class="sd">            &quot;cint1e_ipovlp&quot;             spinor     (nabla \|\)</span>
+<span class="sd">            &quot;cint1e_ipkin&quot;              spinor     (.5 nabla \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_ipnuc&quot;              spinor     (nabla \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_iprinv&quot;             spinor     (nabla \| rinv \|\)</span>
+<span class="sd">            &quot;cint1e_ipspnucsp&quot;          spinor     (nabla sigma dot p \| nuc \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_ipsprinvsp&quot;         spinor     (nabla sigma dot p \| rinv \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_ipovlp_cart&quot;        cartesian  (nabla \|\)</span>
+<span class="sd">            &quot;cint1e_ipkin_cart&quot;         cartesian  (.5 nabla \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_ipnuc_cart&quot;         cartesian  (nabla \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_iprinv_cart&quot;        cartesian  (nabla \| rinv \|\)</span>
+<span class="sd">            &quot;cint1e_rinv_cart&quot;          cartesian  (\| rinv \|\)</span>
+<span class="sd">            ==========================  =========  =============</span>
+
+<span class="sd">        atm : int32 ndarray</span>
+<span class="sd">            libcint integral function argument</span>
+<span class="sd">        bas : int32 ndarray</span>
+<span class="sd">            libcint integral function argument</span>
+<span class="sd">        env : float64 ndarray</span>
+<span class="sd">            libcint integral function argument</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        bras : list of int</span>
+<span class="sd">            shell ids for bra.  Default is all shells given by bas</span>
+<span class="sd">        kets : list of int</span>
+<span class="sd">            shell ids for ket.  Default is all shells given by bas</span>
+<span class="sd">        comp : int</span>
+<span class="sd">            Components of the integrals, e.g. cint1e_ipovlp has 3 components.</span>
+<span class="sd">        hermi : int</span>
+<span class="sd">            Symmetry of the integrals</span>
+<span class="sd">            | 0 : no symmetry assumed (default)</span>
+<span class="sd">            | 1 : hermitian</span>
+<span class="sd">            | 2 : anti-hermitian</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray of 1-electron integrals, can be either 2-dim or 3-dim, depending on comp</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; mol.build(atom=&#39;H 0 0 0; H 0 0 1.1&#39;, basis=&#39;sto-3g&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; gto.moleintor(&#39;cint1e_ipnuc_sph&#39;, mol._atm, mol._bas, mol._env, comp=3) # &lt;nabla i | V_nuc | j&gt;</span>
+<span class="sd">    [[[ 0.          0.        ]</span>
+<span class="sd">      [ 0.          0.        ]]</span>
+<span class="sd">     [[ 0.          0.        ]</span>
+<span class="sd">      [ 0.          0.        ]]</span>
+<span class="sd">     [[ 0.10289944  0.48176097]</span>
+<span class="sd">      [-0.48176097 -0.10289944]]]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">nbas</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bas</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bras</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">bras</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbas</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">bras</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">bas</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">kets</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">kets</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbas</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">kets</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">bas</span><span class="p">))</span>
+
+    <span class="n">c_atm</span> <span class="o">=</span> <span class="n">atm</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">c_int_p</span><span class="p">)</span>
+    <span class="n">c_bas</span> <span class="o">=</span> <span class="n">bas</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">c_int_p</span><span class="p">)</span>
+    <span class="n">c_env</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">c_double_p</span><span class="p">)</span>
+    <span class="n">c_natm</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">atm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">c_nbas</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">bas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nbra</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bras</span><span class="p">)</span>
+    <span class="n">nket</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">kets</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">&#39;_cart&#39;</span> <span class="ow">in</span> <span class="n">intor_name</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">double</span>
+        <span class="n">num_cgto_of</span> <span class="o">=</span> <span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_cart</span>
+        <span class="n">c_intor</span> <span class="o">=</span> <span class="n">_cint</span><span class="o">.</span><span class="n">GTO1eintor_cart</span>
+    <span class="k">elif</span> <span class="s">&#39;_sph&#39;</span> <span class="ow">in</span> <span class="n">intor_name</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">double</span>
+        <span class="n">num_cgto_of</span> <span class="o">=</span> <span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_spheric</span>
+        <span class="n">c_intor</span> <span class="o">=</span> <span class="n">_cint</span><span class="o">.</span><span class="n">GTO1eintor_sph</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex</span>
+        <span class="n">num_cgto_of</span> <span class="o">=</span> <span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_spinor</span>
+        <span class="n">c_intor</span> <span class="o">=</span> <span class="n">_cint</span><span class="o">.</span><span class="n">GTO1eintor_spinor</span>
+    <span class="n">naoi</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">num_cgto_of</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">c_bas</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bras</span><span class="p">])</span>
+    <span class="n">naoj</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">num_cgto_of</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">c_bas</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">kets</span><span class="p">])</span>
+
+    <span class="n">bralst</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bras</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">ketlst</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">kets</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">mat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">comp</span><span class="p">,</span><span class="n">naoi</span><span class="p">,</span><span class="n">naoj</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
+    <span class="n">fnaddr</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">_ctypes</span><span class="o">.</span><span class="n">dlsym</span><span class="p">(</span><span class="n">_cint</span><span class="o">.</span><span class="n">_handle</span><span class="p">,</span> <span class="n">intor_name</span><span class="p">))</span>
+    <span class="n">c_intor</span><span class="p">(</span><span class="n">fnaddr</span><span class="p">,</span> <span class="n">mat</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">comp</span><span class="p">),</span> \
+            <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">hermi</span><span class="p">),</span> \
+            <span class="n">bralst</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nbra</span><span class="p">),</span>
+            <span class="n">ketlst</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nket</span><span class="p">),</span>
+            <span class="n">c_atm</span><span class="p">,</span> <span class="n">c_natm</span><span class="p">,</span> <span class="n">c_bas</span><span class="p">,</span> <span class="n">c_nbas</span><span class="p">,</span> <span class="n">c_env</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">comp</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">mat</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">naoi</span><span class="p">,</span><span class="n">naoj</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hermi</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mat</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">comp</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">hermi_triu_</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="n">hermi</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">comp</span><span class="p">):</span>
+                <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">hermi_triu_</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">hermi</span><span class="o">=</span><span class="n">hermi</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mat</span>
+</div>
+<div class="viewcode-block" id="getints_by_shell"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.moleintor.getints_by_shell">[docs]</a><span class="k">def</span> <span class="nf">getints_by_shell</span><span class="p">(</span><span class="n">intor_name</span><span class="p">,</span> <span class="n">shls</span><span class="p">,</span> <span class="n">atm</span><span class="p">,</span> <span class="n">bas</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">r&#39;&#39;&#39;For given 2, 3 or 4 shells, interface for libcint to get 1e, 2e,</span>
+<span class="sd">    2-center-2e or 3-center-2e integrals</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        intor_name : str</span>
+<span class="sd">            Integral name.  In the current version of libcint (v2.5.1), it can be</span>
+
+<span class="sd">            ==========================  =========  =============</span>
+<span class="sd">            Function                    type       Expression</span>
+<span class="sd">            ==========================  =========  =============</span>
+<span class="sd">            &quot;cint1e_ovlp_sph&quot;           spheric    ( \| \)</span>
+<span class="sd">            &quot;cint1e_nuc_sph&quot;            spheric    ( \| nuc \| \)</span>
+<span class="sd">            &quot;cint1e_kin_sph&quot;            spheric    (.5 \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_ia01p_sph&quot;          spheric    (#C(0 1) \| nabla-rinv \| cross p\)</span>
+<span class="sd">            &quot;cint1e_giao_irjxp_sph&quot;     spheric    (#C(0 1) \| r cross p\)</span>
+<span class="sd">            &quot;cint1e_cg_irxp_sph&quot;        spheric    (#C(0 1) \| rc cross p\)</span>
+<span class="sd">            &quot;cint1e_giao_a11part_sph&quot;   spheric    (-.5 \| nabla-rinv \| r\)</span>
+<span class="sd">            &quot;cint1e_cg_a11part_sph&quot;     spheric    (-.5 \| nabla-rinv \| rc\)</span>
+<span class="sd">            &quot;cint1e_a01gp_sph&quot;          spheric    (g \| nabla-rinv cross p \|\)</span>
+<span class="sd">            &quot;cint1e_igkin_sph&quot;          spheric    (#C(0 .5) g \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_igovlp_sph&quot;         spheric    (#C(0 1) g \|\)</span>
+<span class="sd">            &quot;cint1e_ignuc_sph&quot;          spheric    (#C(0 1) g \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_z_sph&quot;              spheric    ( \| zc \| \)</span>
+<span class="sd">            &quot;cint1e_zz_sph&quot;             spheric    ( \| zc zc \| \)</span>
+<span class="sd">            &quot;cint1e_r_sph&quot;              spheric    ( \| rc \| \)</span>
+<span class="sd">            &quot;cint1e_r2_sph&quot;             spheric    ( \| rc dot rc \| \)</span>
+<span class="sd">            &quot;cint1e_rr_sph&quot;             spheric    ( \| rc rc \| \)</span>
+<span class="sd">            &quot;cint1e_pnucp_sph&quot;          spheric    (p* \| nuc dot p \| \)</span>
+<span class="sd">            &quot;cint1e_prinvxp_sph&quot;        spheric    (p* \| rinv cross p \| \)</span>
+<span class="sd">            &quot;cint1e_ovlp&quot;               spinor     ( \| \)</span>
+<span class="sd">            &quot;cint1e_nuc&quot;                spinor     ( \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_srsr&quot;               spinor     (sigma dot r \| sigma dot r\)</span>
+<span class="sd">            &quot;cint1e_sr&quot;                 spinor     (sigma dot r \|\)</span>
+<span class="sd">            &quot;cint1e_srsp&quot;               spinor     (sigma dot r \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_spsp&quot;               spinor     (sigma dot p \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_sp&quot;                 spinor     (sigma dot p \|\)</span>
+<span class="sd">            &quot;cint1e_spnucsp&quot;            spinor     (sigma dot p \| nuc \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_srnucsr&quot;            spinor     (sigma dot r \| nuc \| sigma dot r\)</span>
+<span class="sd">            &quot;cint1e_govlp&quot;              spinor     (g \|\)</span>
+<span class="sd">            &quot;cint1e_gnuc&quot;               spinor     (g \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_cg_sa10sa01&quot;        spinor     (.5 sigma cross rc \| sigma cross nabla-rinv \|\)</span>
+<span class="sd">            &quot;cint1e_cg_sa10sp&quot;          spinor     (.5 rc cross sigma \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_cg_sa10nucsp&quot;       spinor     (.5 rc cross sigma \| nuc \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_giao_sa10sa01&quot;      spinor     (.5 sigma cross r \| sigma cross nabla-rinv \|\)</span>
+<span class="sd">            &quot;cint1e_giao_sa10sp&quot;        spinor     (.5 r cross sigma \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_giao_sa10nucsp&quot;     spinor     (.5 r cross sigma \| nuc \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_sa01sp&quot;             spinor     (\| nabla-rinv cross sigma \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_spgsp&quot;              spinor     (g sigma dot p \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_spgnucsp&quot;           spinor     (g sigma dot p \| nuc \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_spgsa01&quot;            spinor     (g sigma dot p \| nabla-rinv cross sigma \|\)</span>
+<span class="sd">            &quot;cint1e_spspsp&quot;             spinor     (sigma dot p \| sigma dot p sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_spnuc&quot;              spinor     (sigma dot p \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_ovlp_cart&quot;          cartesian  ( \| \)</span>
+<span class="sd">            &quot;cint1e_nuc_cart&quot;           cartesian  ( \| nuc \| \)</span>
+<span class="sd">            &quot;cint1e_kin_cart&quot;           cartesian  (.5 \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_ia01p_cart&quot;         cartesian  (#C(0 1) \| nabla-rinv \| cross p\)</span>
+<span class="sd">            &quot;cint1e_giao_irjxp_cart&quot;    cartesian  (#C(0 1) \| r cross p\)</span>
+<span class="sd">            &quot;cint1e_cg_irxp_cart&quot;       cartesian  (#C(0 1) \| rc cross p\)</span>
+<span class="sd">            &quot;cint1e_giao_a11part_cart&quot;  cartesian  (-.5 \| nabla-rinv \| r\)</span>
+<span class="sd">            &quot;cint1e_cg_a11part_cart&quot;    cartesian  (-.5 \| nabla-rinv \| rc\)</span>
+<span class="sd">            &quot;cint1e_a01gp_cart&quot;         cartesian  (g \| nabla-rinv cross p \|\)</span>
+<span class="sd">            &quot;cint1e_igkin_cart&quot;         cartesian  (#C(0 .5) g \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_igovlp_cart&quot;        cartesian  (#C(0 1) g \|\)</span>
+<span class="sd">            &quot;cint1e_ignuc_cart&quot;         cartesian  (#C(0 1) g \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_ipovlp_sph&quot;         spheric    (nabla \|\)</span>
+<span class="sd">            &quot;cint1e_ipkin_sph&quot;          spheric    (.5 nabla \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_ipnuc_sph&quot;          spheric    (nabla \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_iprinv_sph&quot;         spheric    (nabla \| rinv \|\)</span>
+<span class="sd">            &quot;cint1e_rinv_sph&quot;           spheric    (\| rinv \|\)</span>
+<span class="sd">            &quot;cint1e_ipovlp&quot;             spinor     (nabla \|\)</span>
+<span class="sd">            &quot;cint1e_ipkin&quot;              spinor     (.5 nabla \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_ipnuc&quot;              spinor     (nabla \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_iprinv&quot;             spinor     (nabla \| rinv \|\)</span>
+<span class="sd">            &quot;cint1e_ipspnucsp&quot;          spinor     (nabla sigma dot p \| nuc \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_ipsprinvsp&quot;         spinor     (nabla sigma dot p \| rinv \| sigma dot p\)</span>
+<span class="sd">            &quot;cint1e_ipovlp_cart&quot;        cartesian  (nabla \|\)</span>
+<span class="sd">            &quot;cint1e_ipkin_cart&quot;         cartesian  (.5 nabla \| p dot p\)</span>
+<span class="sd">            &quot;cint1e_ipnuc_cart&quot;         cartesian  (nabla \| nuc \|\)</span>
+<span class="sd">            &quot;cint1e_iprinv_cart&quot;        cartesian  (nabla \| rinv \|\)</span>
+<span class="sd">            &quot;cint1e_rinv_cart&quot;          cartesian  (\| rinv \|\)</span>
+<span class="sd">            &quot;cint2e_p1vxp1_sph&quot;         spheric    ( p* \, cross p \| \, \) ; SSO</span>
+<span class="sd">            &quot;cint2e_sph&quot;                spheric    ( \, \| \, \)</span>
+<span class="sd">            &quot;cint2e_ig1_sph&quot;            spheric    (#C(0 1) g \, \| \, \)</span>
+<span class="sd">            &quot;cint2e&quot;                    spinor     (, \| \, \)</span>
+<span class="sd">            &quot;cint2e_spsp1&quot;              spinor     (sigma dot p \, sigma dot p \| \, \)</span>
+<span class="sd">            &quot;cint2e_spsp1spsp2&quot;         spinor     (sigma dot p \, sigma dot p \| sigma dot p \, sigma dot p \)</span>
+<span class="sd">            &quot;cint2e_srsr1&quot;              spinor     (sigma dot r \, sigma dot r \| \,\)</span>
+<span class="sd">            &quot;cint2e_srsr1srsr2&quot;         spinor     (sigma dot r \, sigma dot r \| sigma dot r \, sigma dot r\)</span>
+<span class="sd">            &quot;cint2e_cg_sa10sp1&quot;         spinor     (.5 rc cross sigma \, sigma dot p \| \,\)</span>
+<span class="sd">            &quot;cint2e_cg_sa10sp1spsp2&quot;    spinor     (.5 rc cross sigma \, sigma dot p \| sigma dot p \, sigma dot p \)</span>
+<span class="sd">            &quot;cint2e_giao_sa10sp1&quot;       spinor     (.5 r cross sigma \, sigma dot p \| \,\)</span>
+<span class="sd">            &quot;cint2e_giao_sa10sp1spsp2&quot;  spinor     (.5 r cross sigma \, sigma dot p \| sigma dot p \, sigma dot p \)</span>
+<span class="sd">            &quot;cint2e_g1&quot;                 spinor     (g \, \| \,\)</span>
+<span class="sd">            &quot;cint2e_spgsp1&quot;             spinor     (g sigma dot p \, sigma dot p \| \,\)</span>
+<span class="sd">            &quot;cint2e_g1spsp2&quot;            spinor     (g \, \| sigma dot p \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_spgsp1spsp2&quot;        spinor     (g sigma dot p \, sigma dot p \| sigma dot p \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_spv1&quot;               spinor     (sigma dot p \, \| \,\)</span>
+<span class="sd">            &quot;cint2e_vsp1&quot;               spinor     (\, sigma dot p \| \,\)</span>
+<span class="sd">            &quot;cint2e_spsp2&quot;              spinor     (\, \| sigma dot p \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_spv1spv2&quot;           spinor     (sigma dot p \, \| sigma dot p \,\)</span>
+<span class="sd">            &quot;cint2e_vsp1spv2&quot;           spinor     (\, sigma dot p \| sigma dot p \,\)</span>
+<span class="sd">            &quot;cint2e_spv1vsp2&quot;           spinor     (sigma dot p \, \| \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_vsp1vsp2&quot;           spinor     (\, sigma dot p \| \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_spv1spsp2&quot;          spinor     (sigma dot p \, \| sigma dot p \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_vsp1spsp2&quot;          spinor     (\, sigma dot p \| sigma dot p \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_ig1_cart&quot;           cartesian  (#C(0 1) g \, \| \, \)</span>
+<span class="sd">            &quot;cint2e_ip1_sph&quot;            spheric    (nabla \, \| \,\)</span>
+<span class="sd">            &quot;cint2e_ip1&quot;                spinor     (nabla \, \| \,\)</span>
+<span class="sd">            &quot;cint2e_ipspsp1&quot;            spinor     (nabla sigma dot p \, sigma dot p \| \,\)</span>
+<span class="sd">            &quot;cint2e_ip1spsp2&quot;           spinor     (nabla \, \| sigma dot p \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_ipspsp1spsp2&quot;       spinor     (nabla sigma dot p \, sigma dot p \| sigma dot p \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_ipsrsr1&quot;            spinor     (nabla sigma dot r \, sigma dot r \| \,\)</span>
+<span class="sd">            &quot;cint2e_ip1srsr2&quot;           spinor     (nabla \, \| sigma dot r \, sigma dot r\)</span>
+<span class="sd">            &quot;cint2e_ipsrsr1srsr2&quot;       spinor     (nabla sigma dot r \, sigma dot r \| sigma dot r \, sigma dot r\)</span>
+<span class="sd">            &quot;cint2e_ip1_cart&quot;           cartesian  (nabla \, \| \,\)</span>
+<span class="sd">            &quot;cint2e_ssp1ssp2&quot;           spinor     ( \, sigma dot p \| gaunt \| \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_cg_ssa10ssp2&quot;       spinor     (rc cross sigma \, \| gaunt \| \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_giao_ssa10ssp2&quot;     spinor     (r cross sigma  \, \| gaunt \| \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_gssp1ssp2&quot;          spinor     (g \, sigma dot p  \| gaunt \| \, sigma dot p\)</span>
+<span class="sd">            &quot;cint2e_ipip1_sph&quot;          spheric    ( nabla nabla \, \| \, \)</span>
+<span class="sd">            &quot;cint2e_ipvip1_sph&quot;         spheric    ( nabla \, nabla \| \, \)</span>
+<span class="sd">            &quot;cint2e_ip1ip2_sph&quot;         spheric    ( nabla \, \| nabla \, \)</span>
+<span class="sd">            &quot;cint3c2e_ip1_sph&quot;          spheric    (nabla \, \| \)</span>
+<span class="sd">            &quot;cint3c2e_ip2_sph&quot;          spheric    ( \, \| nabla\)</span>
+<span class="sd">            &quot;cint2c2e_ip1_sph&quot;          spheric    (nabla \| r12 \| \)</span>
+<span class="sd">            &quot;cint3c2e_spinor&quot;           spinor     (nabla \, \| \)</span>
+<span class="sd">            &quot;cint3c2e_spsp1_spinor&quot;     spinor     (nabla \, \| \)</span>
+<span class="sd">            &quot;cint3c2e_ip1_spinor&quot;       spinor     (nabla \, \| \)</span>
+<span class="sd">            &quot;cint3c2e_ip2_spinor&quot;       spinor     ( \, \| nabla\)</span>
+<span class="sd">            &quot;cint3c2e_ipspsp1_spinor&quot;   spinor     (nabla sigma dot p \, sigma dot p \| \)</span>
+<span class="sd">            &quot;cint3c2e_spsp1ip2_spinor&quot;  spinor     (sigma dot p \, sigma dot p \| nabla \)</span>
+<span class="sd">            ==========================  =========  =============</span>
+
+<span class="sd">        shls : list of int</span>
+<span class="sd">            The AO shell-ids of the integrals</span>
+<span class="sd">        atm : int32 ndarray</span>
+<span class="sd">            libcint integral function argument</span>
+<span class="sd">        bas : int32 ndarray</span>
+<span class="sd">            libcint integral function argument</span>
+<span class="sd">        env : float64 ndarray</span>
+<span class="sd">            libcint integral function argument</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        comp : int</span>
+<span class="sd">            Components of the integrals, e.g. cint1e_ipovlp has 3 components.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray of 2-dim to 5-dim, depending on the integral type (1e,</span>
+<span class="sd">        2e, 3c-2e, 2c2e) and the value of comp</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        The gradients of the spherical 2e integrals</span>
+
+<span class="sd">    &gt;&gt;&gt; mol.build(atom=&#39;H 0 0 0; H 0 0 1.1&#39;, basis=&#39;sto-3g&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; gto.getints_by_shell(&#39;cint2e_ip1_sph&#39;, (0,1,0,1), mol._atm, mol._bas, mol._env, comp=3)</span>
+<span class="sd">    [[[[[-0.        ]]]]</span>
+<span class="sd">      [[[[-0.        ]]]]</span>
+<span class="sd">      [[[[-0.08760462]]]]]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">c_bas</span> <span class="o">=</span> <span class="n">bas</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">)</span>
+    <span class="n">natm</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">atm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nbas</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">bas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="s">&#39;_cart&#39;</span> <span class="ow">in</span> <span class="n">intor_name</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">double</span>
+        <span class="n">num_cgto_of</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">basid</span><span class="p">:</span> <span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_cart</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">basid</span><span class="p">),</span>
+                                                        <span class="n">c_bas</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s">&#39;_sph&#39;</span> <span class="ow">in</span> <span class="n">intor_name</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">double</span>
+        <span class="n">num_cgto_of</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">basid</span><span class="p">:</span> <span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_spheric</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">basid</span><span class="p">),</span>
+                                                           <span class="n">c_bas</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex</span>
+        <span class="n">num_cgto_of</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">basid</span><span class="p">:</span> <span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_spinor</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">basid</span><span class="p">),</span>
+                                                          <span class="n">c_bas</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s">&#39;3c2e&#39;</span> <span class="ow">in</span> <span class="n">intor_name</span> <span class="ow">or</span> <span class="s">&#39;2e3c&#39;</span> <span class="ow">in</span> <span class="n">intor_name</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shls</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="c">#di, dj, dk = map(num_cgto_of, shls)</span>
+        <span class="n">di</span> <span class="o">=</span> <span class="n">num_cgto_of</span><span class="p">(</span><span class="n">shls</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">dj</span> <span class="o">=</span> <span class="n">num_cgto_of</span><span class="p">(</span><span class="n">shls</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">dk</span> <span class="o">=</span> <span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_spheric</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">shls</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">c_bas</span><span class="p">)</span> <span class="c"># spheric-GTO for aux function?</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">di</span><span class="p">,</span><span class="n">dj</span><span class="p">,</span><span class="n">dk</span><span class="p">,</span><span class="n">comp</span><span class="p">),</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">)</span>
+        <span class="n">fintor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_cint</span><span class="p">,</span> <span class="n">intor_name</span><span class="p">)</span>
+        <span class="n">nullopt</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">()</span>
+        <span class="n">fintor</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+               <span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="o">*</span><span class="mi">3</span><span class="p">)(</span><span class="o">*</span><span class="n">shls</span><span class="p">),</span>
+               <span class="n">atm</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">natm</span><span class="p">,</span>
+               <span class="n">bas</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">nbas</span><span class="p">,</span>
+               <span class="n">env</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">nullopt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">comp</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">buf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">di</span><span class="p">,</span><span class="n">dj</span><span class="p">,</span><span class="n">dk</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">buf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s">&#39;2c2e&#39;</span> <span class="ow">in</span> <span class="n">intor_name</span> <span class="ow">or</span> <span class="s">&#39;2e2c&#39;</span> <span class="ow">in</span> <span class="n">intor_name</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shls</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c">#di, dj = map(num_cgto_of, shls)</span>
+        <span class="c">#buf = numpy.empty((di,dj,comp), dtype, order=&#39;F&#39;)</span>
+        <span class="n">di</span> <span class="o">=</span> <span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_spheric</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">shls</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">c_bas</span><span class="p">)</span>
+        <span class="n">dj</span> <span class="o">=</span> <span class="n">_cint</span><span class="o">.</span><span class="n">CINTcgto_spheric</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">shls</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">c_bas</span><span class="p">)</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">di</span><span class="p">,</span><span class="n">dj</span><span class="p">,</span><span class="n">comp</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">)</span> <span class="c"># no complex?</span>
+        <span class="n">fintor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_cint</span><span class="p">,</span> <span class="n">intor_name</span><span class="p">)</span>
+        <span class="n">nullopt</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">()</span>
+        <span class="n">fintor</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+               <span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="o">*</span><span class="mi">2</span><span class="p">)(</span><span class="o">*</span><span class="n">shls</span><span class="p">),</span>
+               <span class="n">atm</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">natm</span><span class="p">,</span>
+               <span class="n">bas</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">nbas</span><span class="p">,</span>
+               <span class="n">env</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">nullopt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">comp</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">buf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">di</span><span class="p">,</span><span class="n">dj</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">buf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s">&#39;2e&#39;</span> <span class="ow">in</span> <span class="n">intor_name</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shls</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">di</span><span class="p">,</span> <span class="n">dj</span><span class="p">,</span> <span class="n">dk</span><span class="p">,</span> <span class="n">dl</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">num_cgto_of</span><span class="p">,</span> <span class="n">shls</span><span class="p">)</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">di</span><span class="p">,</span><span class="n">dj</span><span class="p">,</span><span class="n">dk</span><span class="p">,</span><span class="n">dl</span><span class="p">,</span><span class="n">comp</span><span class="p">),</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">)</span>
+        <span class="n">fintor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_cint</span><span class="p">,</span> <span class="n">intor_name</span><span class="p">)</span>
+        <span class="n">nullopt</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">()</span>
+        <span class="n">fintor</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+               <span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="o">*</span><span class="mi">4</span><span class="p">)(</span><span class="o">*</span><span class="n">shls</span><span class="p">),</span>
+               <span class="n">atm</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">natm</span><span class="p">,</span>
+               <span class="n">bas</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">nbas</span><span class="p">,</span>
+               <span class="n">env</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">nullopt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">comp</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">buf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">di</span><span class="p">,</span><span class="n">dj</span><span class="p">,</span><span class="n">dk</span><span class="p">,</span><span class="n">dl</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">buf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shls</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">di</span><span class="p">,</span> <span class="n">dj</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">num_cgto_of</span><span class="p">,</span> <span class="n">shls</span><span class="p">)</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">di</span><span class="p">,</span><span class="n">dj</span><span class="p">,</span><span class="n">comp</span><span class="p">),</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">)</span>
+        <span class="n">fintor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_cint</span><span class="p">,</span> <span class="n">intor_name</span><span class="p">)</span>
+        <span class="n">fintor</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+               <span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="o">*</span><span class="mi">2</span><span class="p">)(</span><span class="o">*</span><span class="n">shls</span><span class="p">),</span>
+               <span class="n">atm</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">natm</span><span class="p">,</span>
+               <span class="n">bas</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">nbas</span><span class="p">,</span>
+               <span class="n">env</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">comp</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">buf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">di</span><span class="p">,</span><span class="n">dj</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">buf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="n">mol</span><span class="o">.</span><span class="n">atom</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+        <span class="p">[</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>  <span class="p">)],</span>
+        <span class="p">[</span><span class="s">&quot;H&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span>  <span class="p">)],</span>
+    <span class="p">])</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;H&quot;</span><span class="p">:</span> <span class="s">&#39;cc-pvdz&#39;</span><span class="p">}</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">set_rinv_origin_</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_coord</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">):</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">getints_by_shell</span><span class="p">(</span><span class="s">&#39;cint1e_prinvxp_sph&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">),</span>
+                                         <span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_env</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

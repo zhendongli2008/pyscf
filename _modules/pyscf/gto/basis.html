@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyscf.gto.basis &mdash; PySCF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 1.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyscf.gto.basis</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">imp</span>
+<span class="kn">from</span> <span class="nn">pyscf.gto.basis</span> <span class="kn">import</span> <span class="n">parse_nwchem</span>
+
+<div class="viewcode-block" id="parse"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.basis.parse">[docs]</a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Parse the basis text which is in NWChem format, return an internal</span>
+<span class="sd">    basis format which can be assigned to :attr:`Mole.basis`</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        string : Blank linke and the lines of &quot;BASIS SET&quot; and &quot;END&quot; will be ignored</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; mol = gto.Mole()</span>
+<span class="sd">    &gt;&gt;&gt; mol.basis = {&#39;O&#39;: gto.basis.parse(&quot;&quot;&quot;</span>
+<span class="sd">    ... #BASIS SET: (6s,3p) -&gt; [2s,1p]</span>
+<span class="sd">    ... C    S</span>
+<span class="sd">    ...      71.6168370              0.15432897</span>
+<span class="sd">    ...      13.0450960              0.53532814</span>
+<span class="sd">    ...       3.5305122              0.44463454</span>
+<span class="sd">    ... C    SP</span>
+<span class="sd">    ...       2.9412494             -0.09996723             0.15591627</span>
+<span class="sd">    ...       0.6834831              0.39951283             0.60768372</span>
+<span class="sd">    ...       0.2222899              0.70011547             0.39195739</span>
+<span class="sd">    ... &quot;&quot;&quot;)}</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">parse_str</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.basis.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">basis_name</span><span class="p">,</span> <span class="n">symb</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Convert the basis of the given symbol to internal format</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        basis_name : str</span>
+<span class="sd">            Case insensitive basis set name. Special characters will be removed.</span>
+<span class="sd">        symb : str</span>
+<span class="sd">            Atomic symbol, Special characters will be removed.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        Load STO 3G basis of carbon to oxygen atom</span>
+
+<span class="sd">    &gt;&gt;&gt; mol = gto.Mole()</span>
+<span class="sd">    &gt;&gt;&gt; mol.basis = {&#39;O&#39;: load(&#39;sto-3g&#39;, &#39;C&#39;)}</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">alias</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;ano&#39;</span>        <span class="p">:</span> <span class="s">&#39;ano.dat&#39;</span>        <span class="p">,</span>
+        <span class="s">&#39;anoroosdz&#39;</span>  <span class="p">:</span> <span class="s">&#39;roos-dz.dat&#39;</span>    <span class="p">,</span>
+        <span class="s">&#39;anoroostz&#39;</span>  <span class="p">:</span> <span class="s">&#39;roos-tz.dat&#39;</span>    <span class="p">,</span>
+        <span class="s">&#39;roosdz&#39;</span>     <span class="p">:</span> <span class="s">&#39;roos-dz.dat&#39;</span>    <span class="p">,</span>
+        <span class="s">&#39;roostz&#39;</span>     <span class="p">:</span> <span class="s">&#39;roos-tz.dat&#39;</span>    <span class="p">,</span>
+        <span class="s">&#39;ccpv5z&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pv5z.dat&#39;</span>    <span class="p">,</span>
+        <span class="s">&#39;ccpvdz&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pvdz.dat&#39;</span>    <span class="p">,</span>
+        <span class="s">&#39;augccpvdz&#39;</span>  <span class="p">:</span> <span class="s">&#39;aug-cc-pvdz.dat&#39;</span><span class="p">,</span>
+        <span class="s">&#39;ccpvqz&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pvqz.dat&#39;</span>    <span class="p">,</span>
+        <span class="s">&#39;augccpvqz&#39;</span>  <span class="p">:</span> <span class="s">&#39;aug-cc-pvqz.dat&#39;</span><span class="p">,</span>
+        <span class="s">&#39;ccpvtz&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pvtz.dat&#39;</span>    <span class="p">,</span>
+        <span class="s">&#39;augccpvtz&#39;</span>  <span class="p">:</span> <span class="s">&#39;aug-cc-pvtz.dat&#39;</span><span class="p">,</span>
+        <span class="s">&#39;dyalldz&#39;</span>    <span class="p">:</span> <span class="s">&#39;dyall_dz&#39;</span>       <span class="p">,</span>
+        <span class="s">&#39;dyallqz&#39;</span>    <span class="p">:</span> <span class="s">&#39;dyall_qz&#39;</span>       <span class="p">,</span>
+        <span class="s">&#39;dyalltz&#39;</span>    <span class="p">:</span> <span class="s">&#39;dyall_tz&#39;</span>       <span class="p">,</span>
+        <span class="s">&#39;faegredz&#39;</span>   <span class="p">:</span> <span class="s">&#39;faegre_dz&#39;</span>      <span class="p">,</span>
+        <span class="s">&#39;iglo&#39;</span>       <span class="p">:</span> <span class="s">&#39;iglo3&#39;</span>          <span class="p">,</span>
+        <span class="s">&#39;iglo3&#39;</span>      <span class="p">:</span> <span class="s">&#39;iglo3&#39;</span>          <span class="p">,</span>
+        <span class="s">&#39;321g&#39;</span>       <span class="p">:</span> <span class="s">&#39;3-21g.dat&#39;</span>      <span class="p">,</span>
+        <span class="s">&#39;431g&#39;</span>       <span class="p">:</span> <span class="s">&#39;4-31g.dat&#39;</span>      <span class="p">,</span>
+        <span class="s">&#39;631g&#39;</span>       <span class="p">:</span> <span class="s">&#39;6-31g.dat&#39;</span>      <span class="p">,</span>
+        <span class="s">&#39;631gs&#39;</span>      <span class="p">:</span> <span class="s">&#39;6-31gs.dat&#39;</span>     <span class="p">,</span>
+        <span class="s">&#39;6311g&#39;</span>      <span class="p">:</span> <span class="s">&#39;6-311g.dat&#39;</span>     <span class="p">,</span>
+        <span class="s">&#39;6311gs&#39;</span>     <span class="p">:</span> <span class="s">&#39;6-311gs.dat&#39;</span>    <span class="p">,</span>
+        <span class="s">&#39;6311gsp&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
+        <span class="s">&#39;6311gps&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
+        <span class="s">&#39;631g*&#39;</span>      <span class="p">:</span> <span class="s">&#39;6-31gs.dat&#39;</span>     <span class="p">,</span>
+        <span class="s">&#39;6311g*&#39;</span>     <span class="p">:</span> <span class="s">&#39;6-311gs.dat&#39;</span>    <span class="p">,</span>
+        <span class="s">&#39;6311g*+&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
+        <span class="s">&#39;6311g+*&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
+        <span class="s">&#39;sto3g&#39;</span>      <span class="p">:</span> <span class="s">&#39;sto-3g.dat&#39;</span>     <span class="p">,</span>
+        <span class="s">&#39;sto6g&#39;</span>      <span class="p">:</span> <span class="s">&#39;sto-6g.dat&#39;</span>     <span class="p">,</span>
+        <span class="s">&#39;minao&#39;</span>      <span class="p">:</span> <span class="s">&#39;minao&#39;</span>          <span class="p">,</span>
+        <span class="s">&#39;dz&#39;</span>         <span class="p">:</span> <span class="s">&#39;dz.dat&#39;</span>         <span class="p">,</span>
+        <span class="s">&#39;dzpdunning&#39;</span> <span class="p">:</span> <span class="s">&#39;dzp_dunning&#39;</span>    <span class="p">,</span>
+        <span class="s">&#39;dzp&#39;</span>        <span class="p">:</span> <span class="s">&#39;dzp.dat&#39;</span>        <span class="p">,</span>
+        <span class="s">&#39;tzp&#39;</span>        <span class="p">:</span> <span class="s">&#39;tzp.dat&#39;</span>        <span class="p">,</span>
+        <span class="s">&#39;qzp&#39;</span>        <span class="p">:</span> <span class="s">&#39;qzp.dat&#39;</span>        <span class="p">,</span>
+        <span class="s">&#39;def2svp&#39;</span>    <span class="p">:</span> <span class="s">&#39;def2-svp.dat&#39;</span>   <span class="p">,</span>
+        <span class="s">&#39;def2svpd&#39;</span>   <span class="p">:</span> <span class="s">&#39;def2-svpd.dat&#39;</span>  <span class="p">,</span>
+        <span class="s">&#39;def2qzvpd&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-qzvpd.dat&#39;</span> <span class="p">,</span>
+        <span class="s">&#39;def2qzvppd&#39;</span> <span class="p">:</span> <span class="s">&#39;def2-qzvppd.dat&#39;</span><span class="p">,</span>
+        <span class="s">&#39;def2qzvpp&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-qzvpp.dat&#39;</span> <span class="p">,</span>
+        <span class="s">&#39;def2qzvp&#39;</span>   <span class="p">:</span> <span class="s">&#39;def2-qzvp.dat&#39;</span>  <span class="p">,</span>
+        <span class="s">&#39;def2tzvpd&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-tzvpd.dat&#39;</span> <span class="p">,</span>
+        <span class="s">&#39;def2tzvppd&#39;</span> <span class="p">:</span> <span class="s">&#39;def2-tzvppd.dat&#39;</span><span class="p">,</span>
+        <span class="s">&#39;def2tzvpp&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-tzvpp.dat&#39;</span> <span class="p">,</span>
+        <span class="s">&#39;def2tzvp&#39;</span>   <span class="p">:</span> <span class="s">&#39;def2-tzvp.dat&#39;</span>  <span class="p">,</span>
+        <span class="s">&#39;tzv&#39;</span>        <span class="p">:</span> <span class="s">&#39;tzv.dat&#39;</span>        <span class="p">,</span>
+        <span class="s">&#39;weigend&#39;</span>    <span class="p">:</span> <span class="s">&#39;weigend_cfit.dat&#39;</span><span class="p">,</span>
+        <span class="s">&#39;demon&#39;</span>      <span class="p">:</span> <span class="s">&#39;demon_cfit.dat&#39;</span> <span class="p">,</span>
+        <span class="s">&#39;ahlrichs&#39;</span>   <span class="p">:</span> <span class="s">&#39;ahlrichs_cfit.dat&#39;</span><span class="p">,</span>
+        <span class="s">&#39;ccpvtzfit&#39;</span>  <span class="p">:</span> <span class="s">&#39;cc-pvtz_fit.dat&#39;</span><span class="p">,</span>
+        <span class="s">&#39;ccpvdzfit&#39;</span>  <span class="p">:</span> <span class="s">&#39;cc-pvdz_fit.dat&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">basis_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">basmod</span> <span class="o">=</span> <span class="n">alias</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="n">symb</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">symb</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">isalpha</span><span class="p">())</span>
+    <span class="k">if</span> <span class="s">&#39;dat&#39;</span> <span class="ow">in</span> <span class="n">basmod</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="n">basmod</span><span class="p">),</span> <span class="n">symb</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fp</span><span class="p">,</span> <span class="n">pathname</span><span class="p">,</span> <span class="n">description</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">find_module</span><span class="p">(</span><span class="n">basmod</span><span class="p">,</span> <span class="n">__path__</span><span class="p">)</span>
+        <span class="n">mod</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">load_module</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">pathname</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+        <span class="c">#mod = __import__(basmod, globals={&#39;__path__&#39;: __path__, &#39;__name__&#39;: __name__})</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="n">symb</span><span class="p">)</span>
+        <span class="n">fp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">b</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

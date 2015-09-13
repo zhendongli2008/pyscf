@@ -1,0 +1,955 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyscf.dft.numint &mdash; PySCF 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 1.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyscf.dft.numint</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="kn">import</span> <span class="nn">ctypes</span>
+<span class="kn">import</span> <span class="nn">_ctypes</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span>
+<span class="kn">import</span> <span class="nn">pyscf.lib</span>
+<span class="kn">import</span> <span class="nn">pyscf.dft.vxc</span>
+
+<span class="n">libdft</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">load_library</span><span class="p">(</span><span class="s">&#39;libdft&#39;</span><span class="p">)</span>
+<span class="n">OCCDROP</span> <span class="o">=</span> <span class="mf">1e-12</span>
+<span class="n">BLKSIZE</span> <span class="o">=</span> <span class="mi">224</span>
+
+<div class="viewcode-block" id="eval_ao"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.eval_ao">[docs]</a><span class="k">def</span> <span class="nf">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bastart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bascount</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">non0tab</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Evaluate AO function value on the given grids, for LDA and GGA functional.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mol : an instance of :class:`Mole`</span>
+
+<span class="sd">        coords : 2D array, shape (N,3)</span>
+<span class="sd">            The coordinates of the grids.</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        isgga : bool</span>
+<span class="sd">            Whether to evalute the AO gradients for GGA functional.  It affects</span>
+<span class="sd">            the shape of the return array.  If isgga=False,  the returned AO</span>
+<span class="sd">            values are stored in a (N,nao) array.  Otherwise the AO values are</span>
+<span class="sd">            stored in an array of shape (4,N,nao).  Here N is the number of</span>
+<span class="sd">            grids, nao is the number of AO functions.</span>
+<span class="sd">        relativity : bool</span>
+<span class="sd">            No effects.</span>
+<span class="sd">        bastart, bascount : int</span>
+<span class="sd">            If given, only part of AOs (bastart &lt;= shell_id &lt; bastart+bascount) are evaluated.</span>
+<span class="sd">        non0tab : 2D bool array</span>
+<span class="sd">            mask array to indicate whether the AO values are zero.  The mask</span>
+<span class="sd">            array can be obtained by calling :func:`make_mask`</span>
+<span class="sd">        verbose : int or object of :class:`Logger`</span>
+<span class="sd">            No effects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        2D array of shape (N,nao) for AO values if isgga is False.</span>
+<span class="sd">        Or 3D array of shape (4,N,nao) for AO values and AO gradients if isgga is True.</span>
+<span class="sd">        In the 3D array, the first (N,nao) elements are the AO values.  The</span>
+<span class="sd">        following (3,N,nao) are the AO gradients for x,y,z compoents.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;O 0 0 0; H 0 0 1; H 0 1 0&#39;, basis=&#39;ccpvdz&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; coords = numpy.random.random((100,3))  # 100 random points</span>
+<span class="sd">    &gt;&gt;&gt; ao_value = eval_ao(mol, coords)</span>
+<span class="sd">    &gt;&gt;&gt; print(ao_value.shape)</span>
+<span class="sd">    (100, 24)</span>
+<span class="sd">    &gt;&gt;&gt; ao_value = eval_ao(mol, coords, isgga=True, bastart=1, bascount=3)</span>
+<span class="sd">    &gt;&gt;&gt; print(ao_value.shape)</span>
+<span class="sd">    (4, 100, 7)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">c_contiguous</span><span class="p">)</span>
+    <span class="n">natm</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nbas</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">)</span>
+    <span class="n">ngrids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bascount</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">bascount</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span> <span class="o">-</span> <span class="n">bastart</span>
+        <span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nao_bound</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr_range</span><span class="p">(</span><span class="n">bastart</span><span class="p">,</span> <span class="n">bastart</span><span class="o">+</span><span class="n">bascount</span><span class="p">)</span>
+        <span class="n">nao</span> <span class="o">=</span> <span class="n">nao_bound</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">nao_bound</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">isgga</span><span class="p">:</span>
+        <span class="n">ao</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span> <span class="c"># plain, dx, dy, dz</span>
+        <span class="n">feval</span> <span class="o">=</span> <span class="n">_ctypes</span><span class="o">.</span><span class="n">dlsym</span><span class="p">(</span><span class="n">libdft</span><span class="o">.</span><span class="n">_handle</span><span class="p">,</span> <span class="s">&#39;VXCeval_nr_gto_grad&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ao</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ngrids</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span>
+        <span class="n">feval</span> <span class="o">=</span> <span class="n">_ctypes</span><span class="o">.</span><span class="n">dlsym</span><span class="p">(</span><span class="n">libdft</span><span class="o">.</span><span class="n">_handle</span><span class="p">,</span> <span class="s">&#39;VXCeval_nr_gto&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">non0tab</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">non0tab</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(((</span><span class="n">ngrids</span><span class="o">+</span><span class="n">BLKSIZE</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">BLKSIZE</span><span class="p">,</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">),</span>
+                             <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+
+    <span class="n">libdft</span><span class="o">.</span><span class="n">VXCeval_ao_drv</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">feval</span><span class="p">),</span>
+                          <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nao</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">ngrids</span><span class="p">),</span>
+                          <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">bastart</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">bascount</span><span class="p">),</span>
+                          <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">BLKSIZE</span><span class="p">),</span>
+                          <span class="n">ao</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                          <span class="n">coords</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                          <span class="n">non0tab</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                          <span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">natm</span><span class="p">,</span>
+                          <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">nbas</span><span class="p">,</span>
+                          <span class="n">mol</span><span class="o">.</span><span class="n">_env</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ao</span>
+</div>
+<div class="viewcode-block" id="make_mask"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.make_mask">[docs]</a><span class="k">def</span> <span class="nf">make_mask</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bastart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bascount</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+              <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Mask to indicate whether a shell is zero on particular grid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mol : an instance of :class:`Mole`</span>
+
+<span class="sd">        coords : 2D array, shape (N,3)</span>
+<span class="sd">            The coordinates of the grids.</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        relativity : bool</span>
+<span class="sd">            No effects.</span>
+<span class="sd">        bastart, bascount : int</span>
+<span class="sd">            If given, only part of AOs (bastart &lt;= shell_id &lt; bastart+bascount) are evaluated.</span>
+<span class="sd">        non0tab : 2D bool array</span>
+<span class="sd">            mask array to indicate whether the AO values are zero.  The mask</span>
+<span class="sd">            array can be obtained by calling :func:`make_mask`</span>
+<span class="sd">        verbose : int or object of :class:`Logger`</span>
+<span class="sd">            No effects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        2D bool array of shape (N,nbas), where N is the number of grids, nbas</span>
+<span class="sd">        is the number of shells</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">c_contiguous</span><span class="p">)</span>
+    <span class="n">natm</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nbas</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">)</span>
+    <span class="n">ngrids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bascount</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">bascount</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span> <span class="o">-</span> <span class="n">bastart</span>
+
+    <span class="n">non0tab</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(((</span><span class="n">ngrids</span><span class="o">+</span><span class="n">BLKSIZE</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">BLKSIZE</span><span class="p">,</span><span class="n">bascount</span><span class="p">),</span>
+                          <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+    <span class="n">libdft</span><span class="o">.</span><span class="n">VXCnr_ao_screen</span><span class="p">(</span><span class="n">non0tab</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                           <span class="n">coords</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                           <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">ngrids</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">BLKSIZE</span><span class="p">),</span>
+                           <span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">natm</span><span class="p">,</span>
+                           <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">nbas</span><span class="p">,</span>
+                           <span class="n">mol</span><span class="o">.</span><span class="n">_env</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">non0tab</span>
+</div>
+<div class="viewcode-block" id="eval_rho"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.eval_rho">[docs]</a><span class="k">def</span> <span class="nf">eval_rho</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">non0tab</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Calculate the electron density for LDA functional, and the density</span>
+<span class="sd">    derivatives for GGA functional.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mol : an instance of :class:`Mole`</span>
+
+<span class="sd">        ao : 2D array of shape (N,nao) for LDA or 3D array of shape (4,N,nao) for GGA</span>
+<span class="sd">            N is the number of grids, nao is the number of AO functions.</span>
+<span class="sd">            AO values on a set of grids.  If isgga is True, the AO values</span>
+<span class="sd">            need to be 3D array in which ao[0] is the AO values and ao[1:3]</span>
+<span class="sd">            are the AO gradients.</span>
+<span class="sd">        dm : 2D array</span>
+<span class="sd">            Density matrix</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        isgga : bool</span>
+<span class="sd">            Whether to evalute the AO gradients for GGA functional.  It affects</span>
+<span class="sd">            the shape of the argument `ao` and the returned density.</span>
+<span class="sd">        non0tab : 2D bool array</span>
+<span class="sd">            mask array to indicate whether the AO values are zero.  The mask</span>
+<span class="sd">            array can be obtained by calling :func:`make_mask`</span>
+<span class="sd">        verbose : int or object of :class:`Logger`</span>
+<span class="sd">            No effects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        1D array of size N to store electron density if isgga is False.  2D</span>
+<span class="sd">        array of (4,N) to store density and &quot;density derivatives&quot; for x,y,z</span>
+<span class="sd">        components if isgga is True.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;O 0 0 0; H 0 0 1; H 0 1 0&#39;, basis=&#39;ccpvdz&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; coords = numpy.random.random((100,3))  # 100 random points</span>
+<span class="sd">    &gt;&gt;&gt; ao_value = eval_ao(mol, coords, isgga=True)</span>
+<span class="sd">    &gt;&gt;&gt; dm = numpy.random.random((mol.nao_nr(),mol.nao_nr()))</span>
+<span class="sd">    &gt;&gt;&gt; dm = dm + dm.T</span>
+<span class="sd">    &gt;&gt;&gt; rho, dx_rho, dy_rho, dz_rho = eval_rho(mol, ao, dm, isgga=True)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">isgga</span><span class="p">:</span>
+        <span class="n">ngrids</span><span class="p">,</span> <span class="n">nao</span> <span class="o">=</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ngrids</span><span class="p">,</span> <span class="n">nao</span> <span class="o">=</span> <span class="n">ao</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">if</span> <span class="n">non0tab</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">non0tab</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(((</span><span class="n">ngrids</span><span class="o">+</span><span class="n">BLKSIZE</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">BLKSIZE</span><span class="p">,</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">),</span>
+                             <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">isgga</span><span class="p">:</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span><span class="n">ngrids</span><span class="p">))</span>
+        <span class="n">c0</span> <span class="o">=</span> <span class="n">_dot_ao_dm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dm</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">)</span>
+        <span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,pi-&gt;p&#39;</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+            <span class="n">c1</span> <span class="o">=</span> <span class="n">_dot_ao_dm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">dm</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">)</span>
+            <span class="n">rho</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,pi-&gt;p&#39;</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="c"># *2 for +c.c.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">c0</span> <span class="o">=</span> <span class="n">_dot_ao_dm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">)</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,pi-&gt;p&#39;</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">c0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rho</span>
+</div>
+<div class="viewcode-block" id="eval_rho2"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.eval_rho2">[docs]</a><span class="k">def</span> <span class="nf">eval_rho2</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">,</span> <span class="n">non0tab</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+              <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Calculate the electron density for LDA functional, and the density</span>
+<span class="sd">    derivatives for GGA functional.  This function has the same functionality</span>
+<span class="sd">    as :func:`eval_rho` except that the density are evaluated based on orbital</span>
+<span class="sd">    coefficients and orbital occupancy.  It is more efficient than</span>
+<span class="sd">    :func:`eval_rho` in most scenario.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mol : an instance of :class:`Mole`</span>
+
+<span class="sd">        ao : 2D array of shape (N,nao) for LDA or 3D array of shape (4,N,nao) for GGA</span>
+<span class="sd">            N is the number of grids, nao is the number of AO functions.</span>
+<span class="sd">            AO values on a set of grids.  If isgga is True, the AO values</span>
+<span class="sd">            need to be 3D array in which ao[0] is the AO values and ao[1:3]</span>
+<span class="sd">            are the AO gradients.</span>
+<span class="sd">        mo_coeff : 2D array</span>
+<span class="sd">            Orbital coefficients</span>
+<span class="sd">        mo_occ : 2D array</span>
+<span class="sd">            Orbital occupancy</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        isgga : bool</span>
+<span class="sd">            Whether to evalute the AO gradients for GGA functional.  It affects</span>
+<span class="sd">            the shape of the argument `ao` and the returned density.</span>
+<span class="sd">        non0tab : 2D bool array</span>
+<span class="sd">            mask array to indicate whether the AO values are zero.  The mask</span>
+<span class="sd">            array can be obtained by calling :func:`make_mask`</span>
+<span class="sd">        verbose : int or object of :class:`Logger`</span>
+<span class="sd">            No effects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        1D array of size N to store electron density if isgga is False.  2D</span>
+<span class="sd">        array of (4,N) to store density and &quot;density derivatives&quot; for x,y,z</span>
+<span class="sd">        components if isgga is True.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">isgga</span><span class="p">:</span>
+        <span class="n">ngrids</span><span class="p">,</span> <span class="n">nao</span> <span class="o">=</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ngrids</span><span class="p">,</span> <span class="n">nao</span> <span class="o">=</span> <span class="n">ao</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">if</span> <span class="n">non0tab</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">non0tab</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(((</span><span class="n">ngrids</span><span class="o">+</span><span class="n">BLKSIZE</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">BLKSIZE</span><span class="p">,</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">),</span>
+                             <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">mo_occ</span> <span class="o">&gt;</span> <span class="n">OCCDROP</span>
+    <span class="n">cpos</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ij,j-&gt;ij&#39;</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">pos</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mo_occ</span><span class="p">[</span><span class="n">pos</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="n">isgga</span><span class="p">:</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span><span class="n">ngrids</span><span class="p">))</span>
+        <span class="n">c0</span> <span class="o">=</span> <span class="n">_dot_ao_dm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cpos</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">)</span>
+        <span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,pi-&gt;p&#39;</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">c0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+            <span class="n">c1</span> <span class="o">=</span> <span class="n">_dot_ao_dm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">cpos</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">)</span>
+            <span class="n">rho</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,pi-&gt;p&#39;</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">c1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="c"># *2 for +c.c.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">c0</span> <span class="o">=</span> <span class="n">_dot_ao_dm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">cpos</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">)</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,pi-&gt;p&#39;</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">c0</span><span class="p">)</span>
+
+    <span class="n">neg</span> <span class="o">=</span> <span class="n">mo_occ</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">OCCDROP</span>
+    <span class="k">if</span> <span class="n">neg</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">cneg</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ij,j-&gt;ij&#39;</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">neg</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">mo_occ</span><span class="p">[</span><span class="n">neg</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">isgga</span><span class="p">:</span>
+            <span class="n">c0</span> <span class="o">=</span> <span class="n">_dot_ao_dm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cneg</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">)</span>
+            <span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,pi-&gt;p&#39;</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">c0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+                <span class="n">c1</span> <span class="o">=</span> <span class="n">_dot_ao_dm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">cneg</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">)</span>
+                <span class="n">rho</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,pi-&gt;p&#39;</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">c1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="c"># *2 for +c.c.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c0</span> <span class="o">=</span> <span class="n">_dot_ao_dm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">cneg</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">)</span>
+            <span class="n">rho</span> <span class="o">-=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,pi-&gt;p&#39;</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">c0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rho</span>
+</div>
+<div class="viewcode-block" id="eval_mat"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.eval_mat">[docs]</a><span class="k">def</span> <span class="nf">eval_mat</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">vrho</span><span class="p">,</span> <span class="n">vsigma</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">non0tab</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">isgga</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Calculate XC potential matrix.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mol : an instance of :class:`Mole`</span>
+
+<span class="sd">        ao : 2D array of shape (N,nao) for LDA or 3D array of shape (4,N,nao) for GGA</span>
+<span class="sd">            N is the number of grids, nao is the number of AO functions.</span>
+<span class="sd">            AO values on a set of grids.  If isgga is True, the AO values</span>
+<span class="sd">            need to be 3D array in which ao[0] is the AO values and ao[1:3]</span>
+<span class="sd">            are the AO gradients.</span>
+<span class="sd">        weight : 1D array</span>
+<span class="sd">            Integral weights on grids.</span>
+<span class="sd">        rho : 1D array of size N for LDA or 2D array of shape (4,N) for GGA</span>
+<span class="sd">            electron density on each grid.  If isgga is True, it also stores</span>
+<span class="sd">            the density derivatives.</span>
+<span class="sd">        vrho : 1D array of size N</span>
+<span class="sd">            XC potential value on each grid.</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        vsigma : 2D array of shape (3,N)</span>
+<span class="sd">            GGA potential value on each grid</span>
+<span class="sd">        isgga : bool</span>
+<span class="sd">            Whether to evalute the AO gradients for GGA functional.  It affects</span>
+<span class="sd">            the shape of the argument `ao` and `rho`.</span>
+<span class="sd">        non0tab : 2D bool array</span>
+<span class="sd">            mask array to indicate whether the AO values are zero.  The mask</span>
+<span class="sd">            array can be obtained by calling :func:`make_mask`</span>
+<span class="sd">        verbose : int or object of :class:`Logger`</span>
+<span class="sd">            No effects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        XC potential matrix in 2D array of shape (nao,nao) where nao is the</span>
+<span class="sd">        number of AO functions.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">isgga</span><span class="p">:</span>
+        <span class="n">ngrids</span><span class="p">,</span> <span class="n">nao</span> <span class="o">=</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ngrids</span><span class="p">,</span> <span class="n">nao</span> <span class="o">=</span> <span class="n">ao</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">if</span> <span class="n">non0tab</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">non0tab</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(((</span><span class="n">ngrids</span><span class="o">+</span><span class="n">BLKSIZE</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">BLKSIZE</span><span class="p">,</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">),</span>
+                             <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">isgga</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">vsigma</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">rho</span><span class="o">.</span><span class="n">ndim</span><span class="o">==</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c">#wv = weight * vsigma * 2</span>
+        <span class="c">#aow  = numpy.einsum(&#39;pi,p-&gt;pi&#39;, ao[1], rho[1]*wv)</span>
+        <span class="c">#aow += numpy.einsum(&#39;pi,p-&gt;pi&#39;, ao[2], rho[2]*wv)</span>
+        <span class="c">#aow += numpy.einsum(&#39;pi,p-&gt;pi&#39;, ao[3], rho[3]*wv)</span>
+        <span class="c">#aow += numpy.einsum(&#39;pi,p-&gt;pi&#39;, ao[0], .5*weight*vrho)</span>
+        <span class="n">wv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
+        <span class="n">wv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">vrho</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+        <span class="n">wv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">rho</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="p">(</span><span class="n">weight</span> <span class="o">*</span> <span class="n">vsigma</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">aow</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;npi,np-&gt;pi&#39;</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">wv</span><span class="p">)</span>
+        <span class="c">#mat = pyscf.lib.dot(ao[0].T, aow)</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">_dot_ao_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">aow</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># *.5 because return mat + mat.T</span>
+        <span class="c">#:aow = numpy.einsum(&#39;pi,p-&gt;pi&#39;, ao, .5*weight*vrho)</span>
+        <span class="n">aow</span> <span class="o">=</span> <span class="n">ao</span> <span class="o">*</span> <span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="o">*</span><span class="n">weight</span><span class="o">*</span><span class="n">vrho</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c">#mat = pyscf.lib.dot(ao.T, aow)</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">_dot_ao_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">aow</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mat</span> <span class="o">+</span> <span class="n">mat</span><span class="o">.</span><span class="n">T</span>
+</div>
+<div class="viewcode-block" id="eval_x"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.eval_x">[docs]</a><span class="k">def</span> <span class="nf">eval_x</span><span class="p">(</span><span class="n">x_id</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Interface to call libxc library to evaluate exchange functional and potential.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x_id : int</span>
+<span class="sd">            Exchange functional ID used by libxc library.  See pyscf/dft/vxc.py for more details.</span>
+<span class="sd">        rho : 1D array or 2D array</span>
+<span class="sd">            Shape of (N) for electron density if spin = 0;</span>
+<span class="sd">            Shape of (N,2) for alpha electron density and beta density if spin = 1</span>
+<span class="sd">            where N is number of grids</span>
+<span class="sd">        sigma : 1D array or 2D array</span>
+<span class="sd">            (Density derivatives)^2.</span>
+<span class="sd">            Shape of (N) if spin = 0;</span>
+<span class="sd">            Shape of (N,3) for alpha*alpha, alpha*beta, beta*beta components if spin = 1</span>
+<span class="sd">            where N is the number of grids</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        spin : int</span>
+<span class="sd">            spin polarized if spin = 1</span>
+<span class="sd">        relativity : int</span>
+<span class="sd">            No effects.</span>
+<span class="sd">        verbose : int or object of :class:`Logger`</span>
+<span class="sd">            No effects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        3 1D arrays ex, vrho, vsigma  where exc is the exchange functional</span>
+<span class="sd">        value on each grid, vrho is exchange potential on each grid, vsigma is</span>
+<span class="sd">        the derivative potential for GGA</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+    <span class="n">ngrids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spin</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">exc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">vrho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">vsigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">nspin</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">exc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">vrho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ngrids</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">vsigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ngrids</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">nspin</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">libdft</span><span class="o">.</span><span class="n">VXCnr_eval_x</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">x_id</span><span class="p">),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nspin</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">relativity</span><span class="p">),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">ngrids</span><span class="p">),</span>
+                        <span class="n">rho</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">sigma</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">exc</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">vrho</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">vsigma</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vrho</span><span class="p">,</span> <span class="n">vsigma</span>
+</div>
+<div class="viewcode-block" id="eval_c"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.eval_c">[docs]</a><span class="k">def</span> <span class="nf">eval_c</span><span class="p">(</span><span class="n">c_id</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Interface to call libxc library to evaluate correlation functional and potential.</span>
+<span class="sd">    For hybrid functional, the returned ec, vcrho, vcsigma are all zero.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        c_id : int</span>
+<span class="sd">            Correlation functional ID used by libxc library.  See pyscf/dft/vxc.py for more details.</span>
+<span class="sd">        rho : 1D array or 2D array</span>
+<span class="sd">            Shape of (N) for electron density if spin = 0;</span>
+<span class="sd">            Shape of (N,2) for alpha electron density and beta density if spin = 1</span>
+<span class="sd">            where N is number of grids</span>
+<span class="sd">        sigma : 1D array or 2D array</span>
+<span class="sd">            (Density derivatives)^2.</span>
+<span class="sd">            Shape of (N) if spin = 0;</span>
+<span class="sd">            Shape of (N,3) for alpha*alpha, alpha*beta, beta*beta components if spin = 1</span>
+<span class="sd">            where N is the number of grids</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        spin : int</span>
+<span class="sd">            spin polarized if spin = 1</span>
+<span class="sd">        relativity : int</span>
+<span class="sd">            No effects.</span>
+<span class="sd">        verbose : int or object of :class:`Logger`</span>
+<span class="sd">            No effects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        3 1D arrays ec, vrho, vsigma  where ec is the correlation functional</span>
+<span class="sd">        value on each grid, vrho is correlation potential on each grid, vsigma</span>
+<span class="sd">        is the derivative potential for GGA</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+    <span class="n">ngrids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spin</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">exc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">vrho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">vsigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">nspin</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">exc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">vrho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ngrids</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">vsigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ngrids</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">nspin</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">libdft</span><span class="o">.</span><span class="n">VXCnr_eval_c</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">c_id</span><span class="p">),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nspin</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">relativity</span><span class="p">),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">ngrids</span><span class="p">),</span>
+                        <span class="n">rho</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">sigma</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">exc</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">vrho</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">vsigma</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vrho</span><span class="p">,</span> <span class="n">vsigma</span>
+</div>
+<div class="viewcode-block" id="eval_xc"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.eval_xc">[docs]</a><span class="k">def</span> <span class="nf">eval_xc</span><span class="p">(</span><span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Interface to call libxc library to evaluate XC functional and potential.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x_id, c_id : int</span>
+<span class="sd">            Exchange/Correlation functional ID used by libxc library.</span>
+<span class="sd">            See pyscf/dft/vxc.py for more details.</span>
+<span class="sd">        rho : 1D array or 2D array</span>
+<span class="sd">            Shape of (N) for electron density if spin = 0;</span>
+<span class="sd">            Shape of (N,2) for alpha electron density and beta density if spin = 1</span>
+<span class="sd">            where N is number of grids</span>
+<span class="sd">        sigma : 1D array or 2D array</span>
+<span class="sd">            (Density derivatives)^2.</span>
+<span class="sd">            Shape of (N) if spin = 0;</span>
+<span class="sd">            Shape of (N,3) for alpha*alpha, alpha*beta, beta*beta components if spin = 1</span>
+<span class="sd">            where N is the number of grids</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        spin : int</span>
+<span class="sd">            spin polarized if spin = 1</span>
+<span class="sd">        relativity : int</span>
+<span class="sd">            No effects.</span>
+<span class="sd">        verbose : int or object of :class:`Logger`</span>
+<span class="sd">            No effects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        3 1D arrays ec, vrho, vsigma  where ec is the correlation functional</span>
+<span class="sd">        value on each grid, vrho is correlation potential on each grid, vsigma</span>
+<span class="sd">        is the derivative potential for GGA</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+    <span class="n">ngrids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spin</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">exc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">vrho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">vsigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">nspin</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">exc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">ngrids</span><span class="p">)</span>
+        <span class="n">vrho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ngrids</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">vsigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ngrids</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">nspin</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">libdft</span><span class="o">.</span><span class="n">VXCnr_eval_xc</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">x_id</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">c_id</span><span class="p">),</span>
+                         <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nspin</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">relativity</span><span class="p">),</span>
+                         <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">ngrids</span><span class="p">),</span>
+                         <span class="n">rho</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                         <span class="n">sigma</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                         <span class="n">exc</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                         <span class="n">vrho</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                         <span class="n">vsigma</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vrho</span><span class="p">,</span> <span class="n">vsigma</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_dot_ao_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao1</span><span class="p">,</span> <span class="n">ao2</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;return pyscf.lib.dot(ao1.T, ao2)&#39;&#39;&#39;</span>
+    <span class="n">natm</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nbas</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">)</span>
+    <span class="n">vv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span>
+    <span class="n">libdft</span><span class="o">.</span><span class="n">VXCdot_ao_ao</span><span class="p">(</span><span class="n">vv</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">ao1</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">ao2</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nao</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">ngrids</span><span class="p">),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">BLKSIZE</span><span class="p">),</span>
+                        <span class="n">non0tab</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">natm</span><span class="p">,</span>
+                        <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">nbas</span><span class="p">,</span>
+                        <span class="n">mol</span><span class="o">.</span><span class="n">_env</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">vv</span>
+
+<span class="k">def</span> <span class="nf">_dot_ao_dm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;return pyscf.lib.dot(ao, dm)&#39;&#39;&#39;</span>
+    <span class="n">natm</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nbas</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">)</span>
+    <span class="n">vm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ngrids</span><span class="p">,</span><span class="n">dm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">libdft</span><span class="o">.</span><span class="n">VXCdot_ao_dm</span><span class="p">(</span><span class="n">vm</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">ao</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">dm</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nao</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">dm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">ngrids</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">BLKSIZE</span><span class="p">),</span>
+                        <span class="n">non0tab</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+                        <span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">natm</span><span class="p">,</span>
+                        <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span> <span class="n">nbas</span><span class="p">,</span>
+                        <span class="n">mol</span><span class="o">.</span><span class="n">_env</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">vm</span>
+
+<div class="viewcode-block" id="nr_vxc"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.nr_vxc">[docs]</a><span class="k">def</span> <span class="nf">nr_vxc</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+           <span class="n">max_memory</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Calculate RKS XC functional and potential matrix for given meshgrids and density matrix</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mol : an instance of :class:`Mole`</span>
+
+<span class="sd">        grids : an instance of :class:`Grids`</span>
+<span class="sd">            grids.coords and grids.weights are needed for coordinates and weights of meshgrids.</span>
+<span class="sd">        x_id, c_id : int</span>
+<span class="sd">            Exchange/Correlation functional ID used by libxc library.</span>
+<span class="sd">            See pyscf/dft/vxc.py for more details.</span>
+<span class="sd">        dm : 2D array</span>
+<span class="sd">            Density matrix</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        spin : int</span>
+<span class="sd">            spin polarized if spin = 1</span>
+<span class="sd">        relativity : int</span>
+<span class="sd">            No effects.</span>
+<span class="sd">        hermi : int</span>
+<span class="sd">            No effects</span>
+<span class="sd">        max_memory : int or float</span>
+<span class="sd">            The maximum size of cache to use (in MB).</span>
+<span class="sd">        verbose : int or object of :class:`Logger`</span>
+<span class="sd">            No effects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        nelec, excsum, vmat.</span>
+<span class="sd">        nelec is the number of electrons generated by numerical integration.</span>
+<span class="sd">        excsum is the XC functional value.  vmat is the XC potential matrix in</span>
+<span class="sd">        2D array of shape (nao,nao) where nao is the number of AO functions.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyscf import gto, dft</span>
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;H 0 0 0; H 0 0 1.1&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; grids = dft.gen_grid.Grids(mol)</span>
+<span class="sd">    &gt;&gt;&gt; grids.coords = numpy.random.random((100,3))  # 100 random points</span>
+<span class="sd">    &gt;&gt;&gt; grids.weights = numpy.random.random(100)</span>
+<span class="sd">    &gt;&gt;&gt; x_id, c_id = dft.vxc.parse_xc_name(&#39;lda,vwn&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; dm = numpy.random.random((mol.nao_nr(),mol.nao_nr()))</span>
+<span class="sd">    &gt;&gt;&gt; nelec, exc, vxc = dft.numint.nr_vxc(mol, grids, x_id, c_id, dm)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">nao</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ngrids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span>
+    <span class="n">blksize</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_memory</span><span class="o">/</span><span class="mi">6</span><span class="o">*</span><span class="mf">1e6</span><span class="o">/</span><span class="mi">8</span><span class="o">/</span><span class="n">nao</span><span class="p">),</span> <span class="n">ngrids</span><span class="p">)</span>
+    <span class="n">nelec</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">excsum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">vmat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ip0</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">blksize</span><span class="p">):</span>
+        <span class="n">ip1</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ngrids</span><span class="p">,</span> <span class="n">ip0</span><span class="o">+</span><span class="n">blksize</span><span class="p">)</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">ip0</span><span class="p">:</span><span class="n">ip1</span><span class="p">]</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="n">ip0</span><span class="p">:</span><span class="n">ip1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">dft</span><span class="o">.</span><span class="n">vxc</span><span class="o">.</span><span class="n">_is_lda</span><span class="p">(</span><span class="n">x_id</span><span class="p">)</span> <span class="ow">and</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">dft</span><span class="o">.</span><span class="n">vxc</span><span class="o">.</span><span class="n">_is_lda</span><span class="p">(</span><span class="n">c_id</span><span class="p">):</span>
+            <span class="n">isgga</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">ao</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="n">isgga</span><span class="p">)</span>
+            <span class="n">rho</span> <span class="o">=</span> <span class="n">eval_rho</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="n">isgga</span><span class="p">)</span>
+            <span class="n">exc</span><span class="p">,</span> <span class="n">vrho</span><span class="p">,</span> <span class="n">vsigma</span> <span class="o">=</span> <span class="n">eval_xc</span><span class="p">(</span><span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span>
+                                        <span class="n">spin</span><span class="p">,</span> <span class="n">relativity</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+            <span class="n">den</span> <span class="o">=</span> <span class="n">rho</span><span class="o">*</span><span class="n">weight</span>
+            <span class="n">nelec</span> <span class="o">+=</span> <span class="n">den</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">excsum</span> <span class="o">+=</span> <span class="p">(</span><span class="n">den</span><span class="o">*</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">isgga</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">ao</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="n">isgga</span><span class="p">)</span>
+            <span class="n">rho</span> <span class="o">=</span> <span class="n">eval_rho</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="n">isgga</span><span class="p">)</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ip,ip-&gt;p&#39;</span><span class="p">,</span> <span class="n">rho</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">rho</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">exc</span><span class="p">,</span> <span class="n">vrho</span><span class="p">,</span> <span class="n">vsigma</span> <span class="o">=</span> <span class="n">eval_xc</span><span class="p">(</span><span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigma</span><span class="p">,</span>
+                                        <span class="n">spin</span><span class="p">,</span> <span class="n">relativity</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+            <span class="n">den</span> <span class="o">=</span> <span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">weight</span>
+            <span class="n">nelec</span> <span class="o">+=</span> <span class="n">den</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">excsum</span> <span class="o">+=</span> <span class="p">(</span><span class="n">den</span><span class="o">*</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">vmat</span> <span class="o">+=</span> <span class="n">eval_mat</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">vrho</span><span class="p">,</span> <span class="n">vsigma</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="n">isgga</span><span class="p">,</span>
+                         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">excsum</span><span class="p">,</span> <span class="n">vmat</span>
+
+</div>
+<span class="k">class</span> <span class="nc">_NumInt</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">non0tab</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">nr_vxc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+               <span class="n">max_memory</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Evaluate RKS/UKS XC functional and potential matrix matrix for given meshgrids</span>
+<span class="sd">        and a set of density matrices.  See :func:`nr_rks` and :func:`nr_uks`</span>
+<span class="sd">        for more details.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">spin</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nr_rks</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="n">hermi</span><span class="p">,</span>
+                               <span class="n">max_memory</span><span class="o">=</span><span class="n">max_memory</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nr_uks</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="n">hermi</span><span class="p">,</span>
+                               <span class="n">max_memory</span><span class="o">=</span><span class="n">max_memory</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">nr_rks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">dms</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+               <span class="n">max_memory</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Calculate RKS XC functional and potential matrix matrix for given meshgrids</span>
+<span class="sd">        and a set of density matrices</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mol : an instance of :class:`Mole`</span>
+
+<span class="sd">            grids : an instance of :class:`Grids`</span>
+<span class="sd">                grids.coords and grids.weights are needed for coordinates and weights of meshgrids.</span>
+<span class="sd">            x_id, c_id : int</span>
+<span class="sd">                Exchange/Correlation functional ID used by libxc library.</span>
+<span class="sd">                See pyscf/dft/vxc.py for more details.</span>
+<span class="sd">            dm : 2D array a list of 2D arrays</span>
+<span class="sd">                Density matrix or multiple density matrices</span>
+
+<span class="sd">        Kwargs:</span>
+<span class="sd">            hermi : int</span>
+<span class="sd">                No effects</span>
+<span class="sd">            max_memory : int or float</span>
+<span class="sd">                The maximum size of cache to use (in MB).</span>
+<span class="sd">            verbose : int or object of :class:`Logger`</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            nelec, excsum, vmat.</span>
+<span class="sd">            nelec is the number of electrons generated by numerical integration.</span>
+<span class="sd">            excsum is the XC functional value.  vmat is the XC potential matrix in</span>
+<span class="sd">            2D array of shape (nao,nao) where nao is the number of AO functions.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">non0tab</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">non0tab</span> <span class="o">=</span> <span class="n">make_mask</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+        <span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
+        <span class="n">ngrids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span>
+<span class="c"># NOTE to index self.non0tab, the blksize needs to be the integer multiplier of BLKSIZE</span>
+        <span class="n">blksize</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_memory</span><span class="o">/</span><span class="mi">6</span><span class="o">*</span><span class="mf">1e6</span><span class="o">/</span><span class="mi">8</span><span class="o">/</span><span class="n">nao</span><span class="o">/</span><span class="n">BLKSIZE</span><span class="p">)</span><span class="o">*</span><span class="n">BLKSIZE</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">dft</span><span class="o">.</span><span class="n">vxc</span><span class="o">.</span><span class="n">_is_lda</span><span class="p">(</span><span class="n">x_id</span><span class="p">)</span> <span class="ow">and</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">dft</span><span class="o">.</span><span class="n">vxc</span><span class="o">.</span><span class="n">_is_lda</span><span class="p">(</span><span class="n">c_id</span><span class="p">):</span>
+            <span class="n">isgga</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">isgga</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="n">natocc</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">natorb</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dms</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dms</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dms</span><span class="p">)</span>
+            <span class="n">natocc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">natorb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">dm</span> <span class="ow">in</span> <span class="n">dms</span><span class="p">:</span>
+                <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span>
+                <span class="n">natocc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">natorb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="n">nset</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">natocc</span><span class="p">)</span>
+        <span class="n">nelec</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nset</span><span class="p">)</span>
+        <span class="n">excsum</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nset</span><span class="p">)</span>
+        <span class="n">vmat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nset</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">ip0</span><span class="p">,</span> <span class="n">ip1</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">blksize</span><span class="p">):</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">ip0</span><span class="p">:</span><span class="n">ip1</span><span class="p">]</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="n">ip0</span><span class="p">:</span><span class="n">ip1</span><span class="p">]</span>
+            <span class="n">non0tab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">non0tab</span><span class="p">[</span><span class="n">ip0</span><span class="o">//</span><span class="n">BLKSIZE</span><span class="p">:]</span>
+            <span class="n">ao</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="n">isgga</span><span class="p">,</span> <span class="n">non0tab</span><span class="o">=</span><span class="n">non0tab</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">idm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nset</span><span class="p">):</span>
+                <span class="n">rho</span> <span class="o">=</span> <span class="n">eval_rho2</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">natorb</span><span class="p">[</span><span class="n">idm</span><span class="p">],</span> <span class="n">natocc</span><span class="p">[</span><span class="n">idm</span><span class="p">],</span>
+                                <span class="n">non0tab</span><span class="o">=</span><span class="n">non0tab</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="n">isgga</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">isgga</span><span class="p">:</span>
+                    <span class="n">sigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ip,ip-&gt;p&#39;</span><span class="p">,</span> <span class="n">rho</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">rho</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                    <span class="n">exc</span><span class="p">,</span> <span class="n">vrho</span><span class="p">,</span> <span class="n">vsigma</span> <span class="o">=</span> <span class="n">eval_xc</span><span class="p">(</span><span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigma</span><span class="p">,</span>
+                                                <span class="n">spin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+                    <span class="n">den</span> <span class="o">=</span> <span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">weight</span>
+                    <span class="n">nelec</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">den</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                    <span class="n">excsum</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">den</span><span class="o">*</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="c"># ref eval_mat function</span>
+                    <span class="n">wv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
+                    <span class="n">wv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">vrho</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+                    <span class="n">wv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">rho</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="p">(</span><span class="n">weight</span> <span class="o">*</span> <span class="n">vsigma</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="n">aow</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;npi,np-&gt;pi&#39;</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">wv</span><span class="p">)</span>
+                    <span class="n">vmat</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">_dot_ao_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">aow</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ip1</span><span class="o">-</span><span class="n">ip0</span><span class="p">,</span>
+                                            <span class="n">non0tab</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">exc</span><span class="p">,</span> <span class="n">vrho</span><span class="p">,</span> <span class="n">vsigma</span> <span class="o">=</span> <span class="n">eval_xc</span><span class="p">(</span><span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span>
+                                                <span class="n">spin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+                    <span class="n">den</span> <span class="o">=</span> <span class="n">rho</span><span class="o">*</span><span class="n">weight</span>
+                    <span class="n">nelec</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">den</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                    <span class="n">excsum</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">den</span><span class="o">*</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                    <span class="n">aow</span> <span class="o">=</span> <span class="n">ao</span> <span class="o">*</span> <span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="o">*</span><span class="n">weight</span><span class="o">*</span><span class="n">vrho</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">vmat</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">_dot_ao_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">aow</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ip1</span><span class="o">-</span><span class="n">ip0</span><span class="p">,</span>
+                                            <span class="n">non0tab</span><span class="p">)</span>
+            <span class="n">wv</span> <span class="o">=</span> <span class="n">aow</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nset</span><span class="p">):</span>
+            <span class="n">vmat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vmat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">vmat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">if</span> <span class="n">nset</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">nelec</span> <span class="o">=</span> <span class="n">nelec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">excsum</span> <span class="o">=</span> <span class="n">excsum</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">vmat</span> <span class="o">=</span> <span class="n">vmat</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">excsum</span><span class="p">,</span> <span class="n">vmat</span>
+
+    <span class="k">def</span> <span class="nf">nr_uks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">dms</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+               <span class="n">max_memory</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Calculate UKS XC functional and potential matrix matrix for given meshgrids</span>
+<span class="sd">        and a set of density matrices</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mol : an instance of :class:`Mole`</span>
+
+<span class="sd">            grids : an instance of :class:`Grids`</span>
+<span class="sd">                grids.coords and grids.weights are needed for coordinates and weights of meshgrids.</span>
+<span class="sd">            x_id, c_id : int</span>
+<span class="sd">                Exchange/Correlation functional ID used by libxc library.</span>
+<span class="sd">                See pyscf/dft/vxc.py for more details.</span>
+<span class="sd">            dm : 2D array a list of 2D arrays</span>
+<span class="sd">                Density matrix or multiple density matrices</span>
+
+<span class="sd">        Kwargs:</span>
+<span class="sd">            hermi : int</span>
+<span class="sd">                No effects</span>
+<span class="sd">            max_memory : int or float</span>
+<span class="sd">                The maximum size of cache to use (in MB).</span>
+<span class="sd">            verbose : int or object of :class:`Logger`</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            nelec, excsum, vmat.</span>
+<span class="sd">            nelec is the number of (alpha,beta) electrons generated by numerical integration.</span>
+<span class="sd">            excsum is the XC functional value.</span>
+<span class="sd">            vmat is the XC potential matrix for (alpha,beta) spin.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">non0tab</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">non0tab</span> <span class="o">=</span> <span class="n">make_mask</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+        <span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
+        <span class="n">ngrids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span>
+<span class="c"># NOTE to index self.non0tab, the blksize needs to be the integer multiplier of BLKSIZE</span>
+        <span class="n">blksize</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_memory</span><span class="o">/</span><span class="mi">6</span><span class="o">*</span><span class="mf">1e6</span><span class="o">/</span><span class="mi">8</span><span class="o">/</span><span class="n">nao</span><span class="o">/</span><span class="n">BLKSIZE</span><span class="p">)</span><span class="o">*</span><span class="n">BLKSIZE</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">dft</span><span class="o">.</span><span class="n">vxc</span><span class="o">.</span><span class="n">_is_lda</span><span class="p">(</span><span class="n">x_id</span><span class="p">)</span> <span class="ow">and</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">dft</span><span class="o">.</span><span class="n">vxc</span><span class="o">.</span><span class="n">_is_lda</span><span class="p">(</span><span class="n">c_id</span><span class="p">):</span>
+            <span class="n">isgga</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">isgga</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="n">natocc</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">natorb</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dms</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dms</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dms</span><span class="p">)</span>
+            <span class="n">natocc</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">e</span><span class="o">*.</span><span class="mi">5</span><span class="p">,</span><span class="n">e</span><span class="o">*.</span><span class="mi">5</span><span class="p">))</span>
+            <span class="n">natorb</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">c</span><span class="p">,</span><span class="n">c</span><span class="p">))</span>
+            <span class="n">nset</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nset</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dms</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="k">for</span> <span class="n">idm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nset</span><span class="p">):</span>
+                <span class="n">e_a</span><span class="p">,</span> <span class="n">c_a</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dms</span><span class="p">[</span><span class="n">idm</span><span class="p">])</span>
+                <span class="n">e_b</span><span class="p">,</span> <span class="n">c_b</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dms</span><span class="p">[</span><span class="n">nset</span><span class="o">+</span><span class="n">idm</span><span class="p">])</span>
+                <span class="n">natocc</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">e_a</span><span class="p">,</span><span class="n">e_b</span><span class="p">))</span>
+                <span class="n">natorb</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">c_a</span><span class="p">,</span><span class="n">c_b</span><span class="p">))</span>
+        <span class="n">nelec</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="n">nset</span><span class="p">))</span>
+        <span class="n">excsum</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nset</span><span class="p">)</span>
+        <span class="n">vmat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="n">nset</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">ip0</span><span class="p">,</span> <span class="n">ip1</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">blksize</span><span class="p">):</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">ip0</span><span class="p">:</span><span class="n">ip1</span><span class="p">]</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="n">ip0</span><span class="p">:</span><span class="n">ip1</span><span class="p">]</span>
+            <span class="n">non0tab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">non0tab</span><span class="p">[</span><span class="n">ip0</span><span class="o">//</span><span class="n">BLKSIZE</span><span class="p">:]</span>
+            <span class="n">ao</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="n">isgga</span><span class="p">,</span> <span class="n">non0tab</span><span class="o">=</span><span class="n">non0tab</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">idm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nset</span><span class="p">):</span>
+                <span class="n">c_a</span><span class="p">,</span> <span class="n">c_b</span> <span class="o">=</span> <span class="n">natorb</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span>
+                <span class="n">e_a</span><span class="p">,</span> <span class="n">e_b</span> <span class="o">=</span> <span class="n">natocc</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span>
+                <span class="n">rho_a</span> <span class="o">=</span> <span class="n">eval_rho2</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">c_a</span><span class="p">,</span> <span class="n">e_a</span><span class="p">,</span> <span class="n">non0tab</span><span class="o">=</span><span class="n">non0tab</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="n">isgga</span><span class="p">)</span>
+                <span class="n">rho_b</span> <span class="o">=</span> <span class="n">eval_rho2</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">c_b</span><span class="p">,</span> <span class="n">e_b</span><span class="p">,</span> <span class="n">non0tab</span><span class="o">=</span><span class="n">non0tab</span><span class="p">,</span> <span class="n">isgga</span><span class="o">=</span><span class="n">isgga</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">isgga</span><span class="p">:</span>
+                    <span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">rho_a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+                                        <span class="n">rho_b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span>
+                    <span class="n">sigma</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ip1</span><span class="o">-</span><span class="n">ip0</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+                    <span class="n">sigma</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ip,ip-&gt;p&#39;</span><span class="p">,</span> <span class="n">rho_a</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">rho_a</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                    <span class="n">sigma</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ip,ip-&gt;p&#39;</span><span class="p">,</span> <span class="n">rho_a</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">rho_b</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                    <span class="n">sigma</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ip,ip-&gt;p&#39;</span><span class="p">,</span> <span class="n">rho_b</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">rho_b</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                    <span class="n">exc</span><span class="p">,</span> <span class="n">vrho</span><span class="p">,</span> <span class="n">vsigma</span> <span class="o">=</span> <span class="n">eval_xc</span><span class="p">(</span><span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span>
+                                                <span class="n">spin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+                    <span class="n">den</span> <span class="o">=</span> <span class="n">rho</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">weight</span>
+                    <span class="n">nelec</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">den</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                    <span class="n">excsum</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">den</span><span class="o">*</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                    <span class="n">den</span> <span class="o">=</span> <span class="n">rho</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">weight</span>
+                    <span class="n">nelec</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">den</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                    <span class="n">excsum</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">den</span><span class="o">*</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+                    <span class="n">wv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">rho_a</span><span class="p">)</span>
+                    <span class="n">wv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">vrho</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+                    <span class="n">wv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">rho_a</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="p">(</span><span class="n">weight</span> <span class="o">*</span> <span class="n">vsigma</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>  <span class="c"># sigma_uu</span>
+                    <span class="n">wv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">+=</span> <span class="n">rho_b</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="p">(</span><span class="n">weight</span> <span class="o">*</span> <span class="n">vsigma</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span>      <span class="c"># sigma_ud</span>
+                    <span class="n">aow</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;npi,np-&gt;pi&#39;</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">wv</span><span class="p">)</span>
+                    <span class="n">vmat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">_dot_ao_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">aow</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ip1</span><span class="o">-</span><span class="n">ip0</span><span class="p">,</span>
+                                              <span class="n">non0tab</span><span class="p">)</span>
+                    <span class="n">wv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">vrho</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+                    <span class="n">wv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">rho_b</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="p">(</span><span class="n">weight</span> <span class="o">*</span> <span class="n">vsigma</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>  <span class="c"># sigma_dd</span>
+                    <span class="n">wv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">+=</span> <span class="n">rho_a</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="p">(</span><span class="n">weight</span> <span class="o">*</span> <span class="n">vsigma</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span>      <span class="c"># sigma_ud</span>
+                    <span class="n">aow</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;npi,np-&gt;pi&#39;</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">wv</span><span class="p">)</span>
+                    <span class="n">vmat</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">_dot_ao_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">aow</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ip1</span><span class="o">-</span><span class="n">ip0</span><span class="p">,</span>
+                                              <span class="n">non0tab</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">rho_a</span><span class="p">[:,</span><span class="bp">None</span><span class="p">],</span><span class="n">rho_b</span><span class="p">[:,</span><span class="bp">None</span><span class="p">]))</span>
+                    <span class="n">exc</span><span class="p">,</span> <span class="n">vrho</span><span class="p">,</span> <span class="n">vsigma</span> <span class="o">=</span> <span class="n">eval_xc</span><span class="p">(</span><span class="n">x_id</span><span class="p">,</span> <span class="n">c_id</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span>
+                                                <span class="n">spin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+                    <span class="n">den</span> <span class="o">=</span> <span class="n">rho</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">weight</span>
+                    <span class="n">nelec</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">den</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                    <span class="n">excsum</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">den</span><span class="o">*</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                    <span class="n">den</span> <span class="o">=</span> <span class="n">rho</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">weight</span>
+                    <span class="n">nelec</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">den</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                    <span class="n">excsum</span><span class="p">[</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">den</span><span class="o">*</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+                    <span class="n">aow</span> <span class="o">=</span> <span class="n">ao</span> <span class="o">*</span> <span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="o">*</span><span class="n">weight</span><span class="o">*</span><span class="n">vrho</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">vmat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">_dot_ao_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">aow</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ip1</span><span class="o">-</span><span class="n">ip0</span><span class="p">,</span>
+                                              <span class="n">non0tab</span><span class="p">)</span>
+                    <span class="n">aow</span> <span class="o">=</span> <span class="n">ao</span> <span class="o">*</span> <span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="o">*</span><span class="n">weight</span><span class="o">*</span><span class="n">vrho</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">vmat</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">idm</span><span class="p">]</span> <span class="o">+=</span> <span class="n">_dot_ao_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">aow</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="n">ip1</span><span class="o">-</span><span class="n">ip0</span><span class="p">,</span>
+                                              <span class="n">non0tab</span><span class="p">)</span>
+            <span class="n">wv</span> <span class="o">=</span> <span class="n">aow</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nset</span><span class="p">):</span>
+            <span class="n">vmat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vmat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">vmat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">vmat</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vmat</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">vmat</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">if</span> <span class="n">nset</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">nelec</span> <span class="o">=</span> <span class="n">nelec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">excsum</span> <span class="o">=</span> <span class="n">excsum</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">vmat</span> <span class="o">=</span> <span class="n">vmat</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">excsum</span><span class="p">,</span> <span class="n">vmat</span>
+
+<span class="k">def</span> <span class="nf">prange</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">step</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">dft</span>
+
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
+        <span class="n">atom</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">[</span><span class="s">&quot;O&quot;</span> <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span>     <span class="p">,</span> <span class="mf">0.</span><span class="p">)],</span>
+        <span class="p">[</span><span class="mi">1</span>   <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="o">-</span><span class="mf">0.757</span> <span class="p">,</span> <span class="mf">0.587</span><span class="p">)],</span>
+        <span class="p">[</span><span class="mi">1</span>   <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.757</span>  <span class="p">,</span> <span class="mf">0.587</span><span class="p">)]</span> <span class="p">],</span>
+        <span class="n">grids</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;H&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">194</span><span class="p">),</span>
+                 <span class="s">&quot;O&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">194</span><span class="p">),},</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;6311g*&#39;</span><span class="p">,)</span>
+    <span class="n">mf</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">RKS</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">setup_grids</span><span class="p">()</span>
+    <span class="n">dm</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">get_init_guess</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s">&#39;minao&#39;</span><span class="p">)</span>
+
+    <span class="n">x_code</span><span class="p">,</span> <span class="n">c_code</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">dft</span><span class="o">.</span><span class="n">vxc</span><span class="o">.</span><span class="n">parse_xc_name</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">xc</span><span class="p">)</span>
+<span class="c">#res = vxc.nr_vxc(mol, mf.grids, x_code, c_code, dm, spin=1, relativity=0)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">())</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">nr_vxc</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">grids</span><span class="p">,</span> <span class="n">x_code</span><span class="p">,</span> <span class="n">c_code</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="n">mol</span><span class="o">.</span><span class="n">spin</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">())</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
