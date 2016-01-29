@@ -36,9 +36,6 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="advanced.html" title="Advanced topics"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -718,12 +715,13 @@ center integrals:</p>
 <p>Yes, we are ready to implement our own density fitting Hartree-Fock now!</p>
 <div class="code python highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">get_vhf</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="n">naux</span> <span class="o">=</span> <span class="n">eri2c</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
     <span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ijp,ij-&gt;p&#39;</span><span class="p">,</span> <span class="n">eri3c</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
     <span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">eri2c</span><span class="p">,</span> <span class="n">rho</span><span class="p">)</span>
     <span class="n">jmat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;p,ijp-&gt;ij&#39;</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">eri3c</span><span class="p">)</span>
     <span class="n">kpj</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ijp,jk-&gt;ikp&#39;</span><span class="p">,</span> <span class="n">eri3c</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
     <span class="n">pik</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">eri2c</span><span class="p">,</span> <span class="n">kpj</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">naux</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-    <span class="n">kmat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pik,kjp-&gt;ij&#39;</span><span class="p">,</span> <span class="n">pik</span><span class="p">,</span> <span class="n">eri3c</span><span class="p">)</span>
+    <span class="n">kmat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pik,kjp-&gt;ij&#39;</span><span class="p">,</span> <span class="n">pik</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">naux</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">),</span> <span class="n">eri3c</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">jmat</span> <span class="o">-</span> <span class="n">kmat</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
 
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
@@ -971,9 +969,6 @@ method is to call <tt class="xref py py-func docutils literal"><span class="pre"
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="advanced.html" title="Advanced topics"
              >next</a> |</li>
         <li class="right" >
@@ -983,7 +978,7 @@ method is to call <tt class="xref py py-func docutils literal"><span class="pre"
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>

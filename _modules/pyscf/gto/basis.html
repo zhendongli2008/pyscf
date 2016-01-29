@@ -56,9 +56,103 @@
 <span class="kn">import</span> <span class="nn">imp</span>
 <span class="kn">from</span> <span class="nn">pyscf.gto.basis</span> <span class="kn">import</span> <span class="n">parse_nwchem</span>
 
+<span class="n">ALIAS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;ano&#39;</span>        <span class="p">:</span> <span class="s">&#39;ano.dat&#39;</span>        <span class="p">,</span>
+    <span class="s">&#39;anoroosdz&#39;</span>  <span class="p">:</span> <span class="s">&#39;roos-dz.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;anoroostz&#39;</span>  <span class="p">:</span> <span class="s">&#39;roos-tz.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;roosdz&#39;</span>     <span class="p">:</span> <span class="s">&#39;roos-dz.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;roostz&#39;</span>     <span class="p">:</span> <span class="s">&#39;roos-tz.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;ccpvdz&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pvdz.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;ccpvtz&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pvtz.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;ccpvqz&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pvqz.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;ccpv5z&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pv5z.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;augccpvdz&#39;</span>  <span class="p">:</span> <span class="s">&#39;aug-cc-pvdz.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;augccpvtz&#39;</span>  <span class="p">:</span> <span class="s">&#39;aug-cc-pvtz.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;augccpvqz&#39;</span>  <span class="p">:</span> <span class="s">&#39;aug-cc-pvqz.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;ccpvdzdk&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pvdz-dk.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;ccpvtzdk&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pvtz-dk.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;ccpvqzdk&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pvqz-dk.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;ccpv5zdk&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pv5z-dk.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;augccpvdzdk&#39;</span><span class="p">:</span> <span class="s">&#39;aug-cc-pvdz-dk.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;augccpvtzdk&#39;</span><span class="p">:</span> <span class="s">&#39;aug-cc-pvtz-dk.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;augccpvqzdk&#39;</span><span class="p">:</span> <span class="s">&#39;aug-cc-pvqz-dk.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;ccpvdzdkh&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pvdz-dk.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;ccpvtzdkh&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pvtz-dk.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;ccpvqzdkh&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pvqz-dk.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;ccpv5zdkh&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pv5z-dk.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;augccpvdzdkh&#39;</span><span class="p">:</span> <span class="s">&#39;aug-cc-pvdz-dk.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;augccpvtzdkh&#39;</span><span class="p">:</span> <span class="s">&#39;aug-cc-pvtz-dk.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;augccpvqzdkh&#39;</span><span class="p">:</span> <span class="s">&#39;aug-cc-pvqz-dk.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;dyalldz&#39;</span>    <span class="p">:</span> <span class="s">&#39;dyall_dz&#39;</span>       <span class="p">,</span>
+    <span class="s">&#39;dyallqz&#39;</span>    <span class="p">:</span> <span class="s">&#39;dyall_qz&#39;</span>       <span class="p">,</span>
+    <span class="s">&#39;dyalltz&#39;</span>    <span class="p">:</span> <span class="s">&#39;dyall_tz&#39;</span>       <span class="p">,</span>
+    <span class="s">&#39;faegredz&#39;</span>   <span class="p">:</span> <span class="s">&#39;faegre_dz&#39;</span>      <span class="p">,</span>
+    <span class="s">&#39;iglo&#39;</span>       <span class="p">:</span> <span class="s">&#39;iglo3&#39;</span>          <span class="p">,</span>
+    <span class="s">&#39;iglo3&#39;</span>      <span class="p">:</span> <span class="s">&#39;iglo3&#39;</span>          <span class="p">,</span>
+    <span class="s">&#39;321g&#39;</span>       <span class="p">:</span> <span class="s">&#39;3-21g.dat&#39;</span>      <span class="p">,</span>
+    <span class="s">&#39;431g&#39;</span>       <span class="p">:</span> <span class="s">&#39;4-31g.dat&#39;</span>      <span class="p">,</span>
+    <span class="s">&#39;631g&#39;</span>       <span class="p">:</span> <span class="s">&#39;6-31g.dat&#39;</span>      <span class="p">,</span>
+    <span class="s">&#39;631gs&#39;</span>      <span class="p">:</span> <span class="s">&#39;6-31gs.dat&#39;</span>     <span class="p">,</span>
+    <span class="s">&#39;6311g&#39;</span>      <span class="p">:</span> <span class="s">&#39;6-311g.dat&#39;</span>     <span class="p">,</span>
+    <span class="s">&#39;6311gs&#39;</span>     <span class="p">:</span> <span class="s">&#39;6-311gs.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;6311gsp&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
+    <span class="s">&#39;6311gps&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
+    <span class="s">&#39;631g*&#39;</span>      <span class="p">:</span> <span class="s">&#39;6-31gs.dat&#39;</span>     <span class="p">,</span>
+    <span class="s">&#39;6311g*&#39;</span>     <span class="p">:</span> <span class="s">&#39;6-311gs.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;6311g*+&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
+    <span class="s">&#39;6311g+*&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
+    <span class="s">&#39;sto3g&#39;</span>      <span class="p">:</span> <span class="s">&#39;sto-3g.dat&#39;</span>     <span class="p">,</span>
+    <span class="s">&#39;sto6g&#39;</span>      <span class="p">:</span> <span class="s">&#39;sto-6g.dat&#39;</span>     <span class="p">,</span>
+    <span class="s">&#39;minao&#39;</span>      <span class="p">:</span> <span class="s">&#39;minao&#39;</span>          <span class="p">,</span>
+    <span class="s">&#39;dz&#39;</span>         <span class="p">:</span> <span class="s">&#39;dz.dat&#39;</span>         <span class="p">,</span>
+    <span class="s">&#39;dzpdunning&#39;</span> <span class="p">:</span> <span class="s">&#39;dzp_dunning&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;dzp&#39;</span>        <span class="p">:</span> <span class="s">&#39;dzp.dat&#39;</span>        <span class="p">,</span>
+    <span class="s">&#39;tzp&#39;</span>        <span class="p">:</span> <span class="s">&#39;tzp.dat&#39;</span>        <span class="p">,</span>
+    <span class="s">&#39;qzp&#39;</span>        <span class="p">:</span> <span class="s">&#39;qzp.dat&#39;</span>        <span class="p">,</span>
+    <span class="s">&#39;dzpdk&#39;</span>      <span class="p">:</span> <span class="s">&#39;dzp-dkh.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;tzpdk&#39;</span>      <span class="p">:</span> <span class="s">&#39;tzp-dkh.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;qzpdk&#39;</span>      <span class="p">:</span> <span class="s">&#39;qzp-dkh.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;dzpdkh&#39;</span>     <span class="p">:</span> <span class="s">&#39;dzp-dkh.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;tzpdkh&#39;</span>     <span class="p">:</span> <span class="s">&#39;tzp-dkh.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;qzpdkh&#39;</span>     <span class="p">:</span> <span class="s">&#39;qzp-dkh.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;def2svp&#39;</span>    <span class="p">:</span> <span class="s">&#39;def2-svp.dat&#39;</span>   <span class="p">,</span>
+    <span class="s">&#39;def2svpd&#39;</span>   <span class="p">:</span> <span class="s">&#39;def2-svpd.dat&#39;</span>  <span class="p">,</span>
+    <span class="s">&#39;def2qzvpd&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-qzvpd.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;def2qzvppd&#39;</span> <span class="p">:</span> <span class="s">&#39;def2-qzvppd.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;def2qzvpp&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-qzvpp.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;def2qzvp&#39;</span>   <span class="p">:</span> <span class="s">&#39;def2-qzvp.dat&#39;</span>  <span class="p">,</span>
+    <span class="s">&#39;def2tzvpd&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-tzvpd.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;def2tzvppd&#39;</span> <span class="p">:</span> <span class="s">&#39;def2-tzvppd.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;def2tzvpp&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-tzvpp.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;def2tzvp&#39;</span>   <span class="p">:</span> <span class="s">&#39;def2-tzvp.dat&#39;</span>  <span class="p">,</span>
+    <span class="s">&#39;tzv&#39;</span>        <span class="p">:</span> <span class="s">&#39;tzv.dat&#39;</span>        <span class="p">,</span>
+    <span class="s">&#39;weigend&#39;</span>    <span class="p">:</span> <span class="s">&#39;weigend_cfit.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;demon&#39;</span>      <span class="p">:</span> <span class="s">&#39;demon_cfit.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;ahlrichs&#39;</span>   <span class="p">:</span> <span class="s">&#39;ahlrichs_cfit.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;ccpvtzfit&#39;</span>  <span class="p">:</span> <span class="s">&#39;cc-pvtz_fit.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;ccpvdzfit&#39;</span>  <span class="p">:</span> <span class="s">&#39;cc-pvdz_fit.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;dgaussa1cfit&#39;</span><span class="p">:</span> <span class="s">&#39;DgaussA1_dft_cfit.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;dgaussa1xfit&#39;</span><span class="p">:</span> <span class="s">&#39;DgaussA1_dft_xfit.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;dgaussa2cfit&#39;</span><span class="p">:</span> <span class="s">&#39;DgaussA2_dft_cfit.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;dgaussa2xfit&#39;</span><span class="p">:</span> <span class="s">&#39;DgaussA2_dft_xfit.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;ccpvdzpp&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pvdz-pp.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;ccpvtzpp&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pvtz-pp.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;ccpvqzpp&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pvqz-pp.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;ccpv5zpp&#39;</span>   <span class="p">:</span> <span class="s">&#39;cc-pv5z-pp.dat&#39;</span> <span class="p">,</span>
+    <span class="s">&#39;crenbl&#39;</span>     <span class="p">:</span> <span class="s">&#39;crenbl.dat&#39;</span>     <span class="p">,</span>
+    <span class="s">&#39;crenbs&#39;</span>     <span class="p">:</span> <span class="s">&#39;crenbs.dat&#39;</span>     <span class="p">,</span>
+    <span class="s">&#39;lanl2dz&#39;</span>    <span class="p">:</span> <span class="s">&#39;lanl2dz.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;lanl2tz&#39;</span>    <span class="p">:</span> <span class="s">&#39;lanl2tz.dat&#39;</span>    <span class="p">,</span>
+    <span class="s">&#39;lanl08&#39;</span>     <span class="p">:</span> <span class="s">&#39;lanl08.dat&#39;</span>     <span class="p">,</span>
+    <span class="s">&#39;sbkjc&#39;</span>      <span class="p">:</span> <span class="s">&#39;sbkjc.dat&#39;</span>      <span class="p">,</span>
+    <span class="s">&#39;stuttgart&#39;</span>  <span class="p">:</span> <span class="s">&#39;stuttgart_dz.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;stuttgartdz&#39;</span><span class="p">:</span> <span class="s">&#39;stuttgart_dz.dat&#39;</span><span class="p">,</span>
+    <span class="s">&#39;stuttgartrsc&#39;</span><span class="p">:</span> <span class="s">&#39;stuttgart_rsc.dat&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
 <div class="viewcode-block" id="parse"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.basis.parse">[docs]</a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Parse the basis text which is in NWChem format, return an internal</span>
-<span class="sd">    basis format which can be assigned to :attr:`Mole.basis`</span>
+    <span class="sd">&#39;&#39;&#39;Parse the NWChem format basis or ECP text, return an internal basis (ECP)</span>
+<span class="sd">    format which can be assigned to :attr:`Mole.basis` or :attr:`Mole.ecp`</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        string : Blank linke and the lines of &quot;BASIS SET&quot; and &quot;END&quot; will be ignored</span>
@@ -78,14 +172,21 @@
 <span class="sd">    ...       0.2222899              0.70011547             0.39195739</span>
 <span class="sd">    ... &quot;&quot;&quot;)}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">return</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">parse_str</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s">&#39;ECP&#39;</span> <span class="ow">in</span> <span class="n">string</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">parse_ecp</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.basis.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">basis_name</span><span class="p">,</span> <span class="n">symb</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">parse_ecp</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">parse_ecp</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+
+<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.basis.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">filename_or_basisname</span><span class="p">,</span> <span class="n">symb</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Convert the basis of the given symbol to internal format</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        basis_name : str</span>
+<span class="sd">        filename_or_basisname : str</span>
 <span class="sd">            Case insensitive basis set name. Special characters will be removed.</span>
+<span class="sd">            or a string of &quot;path/to/file&quot; which stores the basis functions</span>
 <span class="sd">        symb : str</span>
 <span class="sd">            Atomic symbol, Special characters will be removed.</span>
 
@@ -95,67 +196,20 @@
 <span class="sd">    &gt;&gt;&gt; mol = gto.Mole()</span>
 <span class="sd">    &gt;&gt;&gt; mol.basis = {&#39;O&#39;: load(&#39;sto-3g&#39;, &#39;C&#39;)}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">alias</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s">&#39;ano&#39;</span>        <span class="p">:</span> <span class="s">&#39;ano.dat&#39;</span>        <span class="p">,</span>
-        <span class="s">&#39;anoroosdz&#39;</span>  <span class="p">:</span> <span class="s">&#39;roos-dz.dat&#39;</span>    <span class="p">,</span>
-        <span class="s">&#39;anoroostz&#39;</span>  <span class="p">:</span> <span class="s">&#39;roos-tz.dat&#39;</span>    <span class="p">,</span>
-        <span class="s">&#39;roosdz&#39;</span>     <span class="p">:</span> <span class="s">&#39;roos-dz.dat&#39;</span>    <span class="p">,</span>
-        <span class="s">&#39;roostz&#39;</span>     <span class="p">:</span> <span class="s">&#39;roos-tz.dat&#39;</span>    <span class="p">,</span>
-        <span class="s">&#39;ccpv5z&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pv5z.dat&#39;</span>    <span class="p">,</span>
-        <span class="s">&#39;ccpvdz&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pvdz.dat&#39;</span>    <span class="p">,</span>
-        <span class="s">&#39;augccpvdz&#39;</span>  <span class="p">:</span> <span class="s">&#39;aug-cc-pvdz.dat&#39;</span><span class="p">,</span>
-        <span class="s">&#39;ccpvqz&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pvqz.dat&#39;</span>    <span class="p">,</span>
-        <span class="s">&#39;augccpvqz&#39;</span>  <span class="p">:</span> <span class="s">&#39;aug-cc-pvqz.dat&#39;</span><span class="p">,</span>
-        <span class="s">&#39;ccpvtz&#39;</span>     <span class="p">:</span> <span class="s">&#39;cc-pvtz.dat&#39;</span>    <span class="p">,</span>
-        <span class="s">&#39;augccpvtz&#39;</span>  <span class="p">:</span> <span class="s">&#39;aug-cc-pvtz.dat&#39;</span><span class="p">,</span>
-        <span class="s">&#39;dyalldz&#39;</span>    <span class="p">:</span> <span class="s">&#39;dyall_dz&#39;</span>       <span class="p">,</span>
-        <span class="s">&#39;dyallqz&#39;</span>    <span class="p">:</span> <span class="s">&#39;dyall_qz&#39;</span>       <span class="p">,</span>
-        <span class="s">&#39;dyalltz&#39;</span>    <span class="p">:</span> <span class="s">&#39;dyall_tz&#39;</span>       <span class="p">,</span>
-        <span class="s">&#39;faegredz&#39;</span>   <span class="p">:</span> <span class="s">&#39;faegre_dz&#39;</span>      <span class="p">,</span>
-        <span class="s">&#39;iglo&#39;</span>       <span class="p">:</span> <span class="s">&#39;iglo3&#39;</span>          <span class="p">,</span>
-        <span class="s">&#39;iglo3&#39;</span>      <span class="p">:</span> <span class="s">&#39;iglo3&#39;</span>          <span class="p">,</span>
-        <span class="s">&#39;321g&#39;</span>       <span class="p">:</span> <span class="s">&#39;3-21g.dat&#39;</span>      <span class="p">,</span>
-        <span class="s">&#39;431g&#39;</span>       <span class="p">:</span> <span class="s">&#39;4-31g.dat&#39;</span>      <span class="p">,</span>
-        <span class="s">&#39;631g&#39;</span>       <span class="p">:</span> <span class="s">&#39;6-31g.dat&#39;</span>      <span class="p">,</span>
-        <span class="s">&#39;631gs&#39;</span>      <span class="p">:</span> <span class="s">&#39;6-31gs.dat&#39;</span>     <span class="p">,</span>
-        <span class="s">&#39;6311g&#39;</span>      <span class="p">:</span> <span class="s">&#39;6-311g.dat&#39;</span>     <span class="p">,</span>
-        <span class="s">&#39;6311gs&#39;</span>     <span class="p">:</span> <span class="s">&#39;6-311gs.dat&#39;</span>    <span class="p">,</span>
-        <span class="s">&#39;6311gsp&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
-        <span class="s">&#39;6311gps&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
-        <span class="s">&#39;631g*&#39;</span>      <span class="p">:</span> <span class="s">&#39;6-31gs.dat&#39;</span>     <span class="p">,</span>
-        <span class="s">&#39;6311g*&#39;</span>     <span class="p">:</span> <span class="s">&#39;6-311gs.dat&#39;</span>    <span class="p">,</span>
-        <span class="s">&#39;6311g*+&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
-        <span class="s">&#39;6311g+*&#39;</span>    <span class="p">:</span> <span class="s">&#39;6-311gsp.dat&#39;</span>   <span class="p">,</span>
-        <span class="s">&#39;sto3g&#39;</span>      <span class="p">:</span> <span class="s">&#39;sto-3g.dat&#39;</span>     <span class="p">,</span>
-        <span class="s">&#39;sto6g&#39;</span>      <span class="p">:</span> <span class="s">&#39;sto-6g.dat&#39;</span>     <span class="p">,</span>
-        <span class="s">&#39;minao&#39;</span>      <span class="p">:</span> <span class="s">&#39;minao&#39;</span>          <span class="p">,</span>
-        <span class="s">&#39;dz&#39;</span>         <span class="p">:</span> <span class="s">&#39;dz.dat&#39;</span>         <span class="p">,</span>
-        <span class="s">&#39;dzpdunning&#39;</span> <span class="p">:</span> <span class="s">&#39;dzp_dunning&#39;</span>    <span class="p">,</span>
-        <span class="s">&#39;dzp&#39;</span>        <span class="p">:</span> <span class="s">&#39;dzp.dat&#39;</span>        <span class="p">,</span>
-        <span class="s">&#39;tzp&#39;</span>        <span class="p">:</span> <span class="s">&#39;tzp.dat&#39;</span>        <span class="p">,</span>
-        <span class="s">&#39;qzp&#39;</span>        <span class="p">:</span> <span class="s">&#39;qzp.dat&#39;</span>        <span class="p">,</span>
-        <span class="s">&#39;def2svp&#39;</span>    <span class="p">:</span> <span class="s">&#39;def2-svp.dat&#39;</span>   <span class="p">,</span>
-        <span class="s">&#39;def2svpd&#39;</span>   <span class="p">:</span> <span class="s">&#39;def2-svpd.dat&#39;</span>  <span class="p">,</span>
-        <span class="s">&#39;def2qzvpd&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-qzvpd.dat&#39;</span> <span class="p">,</span>
-        <span class="s">&#39;def2qzvppd&#39;</span> <span class="p">:</span> <span class="s">&#39;def2-qzvppd.dat&#39;</span><span class="p">,</span>
-        <span class="s">&#39;def2qzvpp&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-qzvpp.dat&#39;</span> <span class="p">,</span>
-        <span class="s">&#39;def2qzvp&#39;</span>   <span class="p">:</span> <span class="s">&#39;def2-qzvp.dat&#39;</span>  <span class="p">,</span>
-        <span class="s">&#39;def2tzvpd&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-tzvpd.dat&#39;</span> <span class="p">,</span>
-        <span class="s">&#39;def2tzvppd&#39;</span> <span class="p">:</span> <span class="s">&#39;def2-tzvppd.dat&#39;</span><span class="p">,</span>
-        <span class="s">&#39;def2tzvpp&#39;</span>  <span class="p">:</span> <span class="s">&#39;def2-tzvpp.dat&#39;</span> <span class="p">,</span>
-        <span class="s">&#39;def2tzvp&#39;</span>   <span class="p">:</span> <span class="s">&#39;def2-tzvp.dat&#39;</span>  <span class="p">,</span>
-        <span class="s">&#39;tzv&#39;</span>        <span class="p">:</span> <span class="s">&#39;tzv.dat&#39;</span>        <span class="p">,</span>
-        <span class="s">&#39;weigend&#39;</span>    <span class="p">:</span> <span class="s">&#39;weigend_cfit.dat&#39;</span><span class="p">,</span>
-        <span class="s">&#39;demon&#39;</span>      <span class="p">:</span> <span class="s">&#39;demon_cfit.dat&#39;</span> <span class="p">,</span>
-        <span class="s">&#39;ahlrichs&#39;</span>   <span class="p">:</span> <span class="s">&#39;ahlrichs_cfit.dat&#39;</span><span class="p">,</span>
-        <span class="s">&#39;ccpvtzfit&#39;</span>  <span class="p">:</span> <span class="s">&#39;cc-pvtz_fit.dat&#39;</span><span class="p">,</span>
-        <span class="s">&#39;ccpvdzfit&#39;</span>  <span class="p">:</span> <span class="s">&#39;cc-pvdz_fit.dat&#39;</span><span class="p">,</span>
-    <span class="p">}</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">basis_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
-    <span class="n">basmod</span> <span class="o">=</span> <span class="n">alias</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-    <span class="n">symb</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">symb</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">isalpha</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename_or_basisname</span><span class="p">):</span>
+        <span class="c"># read basis from given file</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename_or_basisname</span><span class="p">,</span> <span class="n">symb</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename_or_basisname</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fin</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">fin</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">filename_or_basisname</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">basmod</span> <span class="o">=</span> <span class="n">ALIAS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="n">symb</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">symb</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">isalpha</span><span class="p">()])</span>
     <span class="k">if</span> <span class="s">&#39;dat&#39;</span> <span class="ow">in</span> <span class="n">basmod</span><span class="p">:</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="n">basmod</span><span class="p">),</span> <span class="n">symb</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="n">basmod</span><span class="p">),</span> <span class="n">symb</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">fp</span><span class="p">,</span> <span class="n">pathname</span><span class="p">,</span> <span class="n">description</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">find_module</span><span class="p">(</span><span class="n">basmod</span><span class="p">,</span> <span class="n">__path__</span><span class="p">)</span>
         <span class="n">mod</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">load_module</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">pathname</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
@@ -163,6 +217,23 @@
         <span class="n">b</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="n">symb</span><span class="p">)</span>
         <span class="n">fp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">b</span>
+</div>
+<div class="viewcode-block" id="load_ecp"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.basis.load_ecp">[docs]</a><span class="k">def</span> <span class="nf">load_ecp</span><span class="p">(</span><span class="n">filename_or_basisname</span><span class="p">,</span> <span class="n">symb</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Convert the basis of the given symbol to internal format</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename_or_basisname</span><span class="p">):</span>
+        <span class="c"># read basis from given file</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">load_ecp</span><span class="p">(</span><span class="n">filename_or_basisname</span><span class="p">,</span> <span class="n">symb</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename_or_basisname</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fin</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">parse_ecp</span><span class="p">(</span><span class="n">fin</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">filename_or_basisname</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">basmod</span> <span class="o">=</span> <span class="n">ALIAS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="n">symb</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">symb</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">isalpha</span><span class="p">()])</span>
+    <span class="k">return</span> <span class="n">parse_nwchem</span><span class="o">.</span><span class="n">load_ecp</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="n">basmod</span><span class="p">),</span> <span class="n">symb</span><span class="p">)</span>
 </pre></div></div>
 
           </div>
@@ -201,7 +272,7 @@
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>

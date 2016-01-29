@@ -36,9 +36,6 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="install.html" title="Installation"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -828,15 +825,19 @@ Hamiltonian.  For example</p>
 <span class="sd">Density fitting for orbital optimzation.</span>
 
 <span class="sd">NOTE mcscf.density_fit function decorates the mcscf.CASSCF object to</span>
-<span class="sd">approximate the second order optimization solver.  There is no approximation</span>
-<span class="sd">for the 2e integrals.  They are evaluated by the regular 4-center integration.</span>
-<span class="sd">To approximate every 2e integrals using density fitting method,  we need</span>
-<span class="sd">decorate the SCF object with density_fit function.  (The &quot;overall&quot; density</span>
-<span class="sd">fitting is new in PySCF-1.1).</span>
+<span class="sd">approximate the orbital hessian.  The 2e integrals are evaluated by the</span>
+<span class="sd">regular 4-center integration (exactly) when computing the total energy.</span>
+<span class="sd">The CASSCF answer should not be affected by this approximation.</span>
 
-<span class="sd">This rule basically follows the same convention used in the SCF decoration.</span>
-<span class="sd">See pyscf/mcscf/df.py for more details and</span>
-<span class="sd">pyscf/example/scf/23-decorate_scf.py as an exmple</span>
+<span class="sd">The overall density fitting for CASCI/CASSCF (which affects total energy)</span>
+<span class="sd">needs mcscf.DFCASSCF or mcscf.DFCASCI class.  The overall density fitting also</span>
+<span class="sd">requires the underlying SCF object to be DF-SCF, which can be obtained by</span>
+<span class="sd">decoration function scf.density_fit.  See also the example</span>
+<span class="sd">pyscf/examples/scf/20-density_fitting.py.</span>
+
+<span class="sd">Note mcscf.density_fit function follows the same convention of decoration</span>
+<span class="sd">ordering which is applied in the SCF decoration.  See pyscf/mcscf/df.py for</span>
+<span class="sd">more details and pyscf/example/scf/23-decorate_scf.py as an exmple.</span>
 <span class="sd">&#39;&#39;&#39;</span>
 
 <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
@@ -865,6 +866,27 @@ Hamiltonian.  For example</p>
 <span class="n">mo</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sort_mo</span><span class="p">([</span><span class="mi">17</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
 <span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;E(CAS) = </span><span class="si">%.12f</span><span class="s">, ref = -230.848493421389&#39;</span> <span class="o">%</span> <span class="n">mc</span><span class="o">.</span><span class="n">e_tot</span><span class="p">)</span>
+
+<span class="c">#</span>
+<span class="c"># DFCASSCF + conventional SCF will only affect the orbital hessian.  You&#39;ll</span>
+<span class="c"># probably see the warning msg for this combination</span>
+<span class="c"># Warn: DFCASSCF: the first argument needs to be density-fitting SCF object.  &lt;class &#39;pyscf.scf.hf.RHF&#39;&gt; is not density-fitting SCF object.</span>
+<span class="c">#</span>
+<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">DFCASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">mo</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sort_mo</span><span class="p">([</span><span class="mi">17</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;E(CAS) = </span><span class="si">%.12f</span><span class="s">, ref = -230.848493421389&#39;</span> <span class="o">%</span> <span class="n">mc</span><span class="o">.</span><span class="n">e_tot</span><span class="p">)</span>
+
+<span class="c">#</span>
+<span class="c"># To carry out the overall density-fitting CASSCF calculation,  you need start</span>
+<span class="c"># from DF-SCF calculation</span>
+<span class="c">#</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">),</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;ccpvtzfit&#39;</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">DFCASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;ccpvtzfit&#39;</span><span class="p">)</span>
+<span class="n">mo</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sort_mo</span><span class="p">([</span><span class="mi">17</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;E(CAS) = </span><span class="si">%.12f</span><span class="s">, ref = -230.845892901370&#39;</span> <span class="o">%</span> <span class="n">mc</span><span class="o">.</span><span class="n">e_tot</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -997,7 +1019,7 @@ Hamiltonian for Hartree-Fock</p>
 </div>
 <div class="section" id="others">
 <h2>Others<a class="headerlink" href="#others" title="Permalink to this headline">¶</a></h2>
-<p>Be careful to the warning messages on the screen!</p>
+<p>Be careful with the warning messages on the screen!</p>
 </div>
 </div>
 
@@ -1072,9 +1094,6 @@ Hamiltonian for Hartree-Fock</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="install.html" title="Installation"
              >next</a> |</li>
         <li class="right" >
@@ -1084,7 +1103,7 @@ Hamiltonian for Hartree-Fock</p>
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>

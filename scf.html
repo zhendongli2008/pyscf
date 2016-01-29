@@ -126,7 +126,7 @@ It is effective when the SCF class is decoreated by <tt class="xref py py-func d
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy <span class="classifier-delimiter">:</span> <span class="classifier"></span></dt>
 <dd>Orbital energies</dd>
@@ -170,7 +170,7 @@ Default is &#8216;minao&#8217;</dd>
 <dd>The step to start DIIS.  Default is 1.</dd>
 <dt>diis_file: &#8216;str&#8217;</dt>
 <dd>File to store DIIS vectors and error vectors.</dd>
-<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dt>level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
 <dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
 <dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>Direct SCF is used by default.</dd>
@@ -189,7 +189,7 @@ envrionment.</dd>
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy :</dt>
 <dd>Orbital energies</dd>
@@ -203,7 +203,7 @@ envrionment.</dd>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 <span class="go">-1.0811707843775884</span>
 </pre></div>
@@ -245,8 +245,9 @@ See <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.get_jk
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; F 0 0 1.1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">get_occ</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()))</span>
-<span class="go">array([2, 2, 2, 2, 2, 0])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">energy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">10.</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">get_occ</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
+<span class="go">array([2, 2, 0, 2, 2, 2])</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -318,7 +319,7 @@ Default is &#8216;minao&#8217;</dd>
 <dd>The step to start DIIS.  Default is 1.</dd>
 <dt>diis_file: &#8216;str&#8217;</dt>
 <dd>File to store DIIS vectors and error vectors.</dd>
-<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dt>level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
 <dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
 <dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>Direct SCF is used by default.</dd>
@@ -337,7 +338,7 @@ envrionment.</dd>
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy :</dt>
 <dd>Orbital energies</dd>
@@ -351,7 +352,7 @@ envrionment.</dd>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 <span class="go">-1.0811707843775884</span>
 </pre></div>
@@ -405,7 +406,7 @@ Default is &#8216;minao&#8217;</dd>
 <dd>The step to start DIIS.  Default is 1.</dd>
 <dt>diis_file: &#8216;str&#8217;</dt>
 <dd>File to store DIIS vectors and error vectors.</dd>
-<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dt>level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
 <dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
 <dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>Direct SCF is used by default.</dd>
@@ -424,7 +425,7 @@ envrionment.</dd>
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy :</dt>
 <dd>Orbital energies</dd>
@@ -438,7 +439,7 @@ envrionment.</dd>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 <span class="go">-1.0811707843775884</span>
 </pre></div>
@@ -460,6 +461,22 @@ and virtual orbitals are the expection value of alpha-Fock matrix.</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.scf.rohf.ROHF.get_occ">
+<tt class="descname">get_occ</tt><big>(</big><em>mo_energy=None</em>, <em>mo_coeff=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/scf/rohf.html#ROHF.get_occ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.rohf.ROHF.get_occ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Label the occupancies for each orbital.
+NOTE the occupancies are not assigned based on the orbital energy ordering.
+The first N orbitals are assigned to be occupied orbitals.</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; O 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">energy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">10.</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">get_occ</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
+<span class="go">array([2, 2, 2, 2, 1, 0])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -503,7 +520,7 @@ Default is &#8216;minao&#8217;</dd>
 <dd>The step to start DIIS.  Default is 1.</dd>
 <dt>diis_file: &#8216;str&#8217;</dt>
 <dd>File to store DIIS vectors and error vectors.</dd>
-<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dt>level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
 <dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
 <dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>Direct SCF is used by default.</dd>
@@ -522,7 +539,7 @@ envrionment.</dd>
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy :</dt>
 <dd>Orbital energies</dd>
@@ -536,7 +553,7 @@ envrionment.</dd>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 <span class="go">-1.0811707843775884</span>
 </pre></div>
@@ -615,7 +632,7 @@ Default is &#8216;minao&#8217;</dd>
 <dd>The step to start DIIS.  Default is 1.</dd>
 <dt>diis_file: &#8216;str&#8217;</dt>
 <dd>File to store DIIS vectors and error vectors.</dd>
-<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dt>level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
 <dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
 <dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>Direct SCF is used by default.</dd>
@@ -634,7 +651,7 @@ envrionment.</dd>
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy :</dt>
 <dd>Orbital energies</dd>
@@ -648,7 +665,7 @@ envrionment.</dd>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 <span class="go">-1.0811707843775884</span>
 </pre></div>
@@ -702,7 +719,7 @@ Default is &#8216;minao&#8217;</dd>
 <dd>The step to start DIIS.  Default is 1.</dd>
 <dt>diis_file: &#8216;str&#8217;</dt>
 <dd>File to store DIIS vectors and error vectors.</dd>
-<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dt>level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
 <dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
 <dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>Direct SCF is used by default.</dd>
@@ -721,7 +738,7 @@ envrionment.</dd>
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy :</dt>
 <dd>Orbital energies</dd>
@@ -735,7 +752,7 @@ envrionment.</dd>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 <span class="go">-1.0811707843775884</span>
 </pre></div>
@@ -777,8 +794,9 @@ See <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.get_jk
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; F 0 0 1.1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">get_occ</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()))</span>
-<span class="go">array([2, 2, 2, 2, 2, 0])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">energy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">10.</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">get_occ</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
+<span class="go">array([2, 2, 0, 2, 2, 2])</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -904,7 +922,7 @@ HF potential</p>
 </dl>
 </dd>
 <dt>Returns:</dt>
-<dd>Hartree-Fock electronic energy and the 2-electron part contribution</dd>
+<dd>Hartree-Fock electronic energy and the Coulomb energy</dd>
 </dl>
 <p>Examples:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
@@ -1057,7 +1075,7 @@ input density matrices.</dd>
 
 <dl class="function">
 <dt id="pyscf.scf.hf.get_veff">
-<tt class="descclassname">pyscf.scf.hf.</tt><tt class="descname">get_veff</tt><big>(</big><em>mol</em>, <em>dm</em>, <em>dm_last=0</em>, <em>vhf_last=0</em>, <em>hermi=1</em>, <em>vhfopt=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/scf/hf.html#get_veff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.hf.get_veff" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.scf.hf.</tt><tt class="descname">get_veff</tt><big>(</big><em>mol</em>, <em>dm</em>, <em>dm_last=None</em>, <em>vhf_last=None</em>, <em>hermi=1</em>, <em>vhfopt=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/scf/hf.html#get_veff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.hf.get_veff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hartree-Fock potential matrix for the given density matrix</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -1203,11 +1221,11 @@ envrionment.</dd>
 </dl>
 </dd>
 <dt>Returns:</dt>
-<dd><p class="first">A list :   scf_conv, hf_energy, mo_energy, mo_coeff, mo_occ</p>
+<dd><p class="first">A list :   scf_conv, e_tot, mo_energy, mo_coeff, mo_occ</p>
 <dl class="last docutils">
 <dt>scf_conv <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>True means SCF converged</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Hartree-Fock energy of last iteration</dd>
 <dt>mo_energy <span class="classifier-delimiter">:</span> <span class="classifier">1D float array</span></dt>
 <dd>Orbital energies.  Depending the eig function provided by mf
@@ -1340,7 +1358,7 @@ Default is &#8216;minao&#8217;</dd>
 <dd>The step to start DIIS.  Default is 1.</dd>
 <dt>diis_file: &#8216;str&#8217;</dt>
 <dd>File to store DIIS vectors and error vectors.</dd>
-<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dt>level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
 <dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
 <dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>Direct SCF is used by default.</dd>
@@ -1359,7 +1377,7 @@ envrionment.</dd>
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy :</dt>
 <dd>Orbital energies</dd>
@@ -1373,7 +1391,7 @@ envrionment.</dd>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 <span class="go">-1.0811707843775884</span>
 </pre></div>
@@ -1679,7 +1697,7 @@ Default is &#8216;minao&#8217;</dd>
 <dd>The step to start DIIS.  Default is 1.</dd>
 <dt>diis_file: &#8216;str&#8217;</dt>
 <dd>File to store DIIS vectors and error vectors.</dd>
-<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dt>level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
 <dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
 <dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>Direct SCF is used by default.</dd>
@@ -1698,7 +1716,7 @@ envrionment.</dd>
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy :</dt>
 <dd>Orbital energies</dd>
@@ -1712,7 +1730,7 @@ envrionment.</dd>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 <span class="go">-1.0811707843775884</span>
 </pre></div>
@@ -1783,7 +1801,7 @@ Default is &#8216;minao&#8217;</dd>
 <dd>The step to start DIIS.  Default is 1.</dd>
 <dt>diis_file: &#8216;str&#8217;</dt>
 <dd>File to store DIIS vectors and error vectors.</dd>
-<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dt>level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
 <dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
 <dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>Direct SCF is used by default.</dd>
@@ -1802,7 +1820,7 @@ envrionment.</dd>
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy :</dt>
 <dd>Orbital energies</dd>
@@ -1816,7 +1834,7 @@ envrionment.</dd>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 <span class="go">-1.0811707843775884</span>
 </pre></div>
@@ -1926,7 +1944,7 @@ Default is &#8216;minao&#8217;</dd>
 <dd>The step to start DIIS.  Default is 1.</dd>
 <dt>diis_file: &#8216;str&#8217;</dt>
 <dd>File to store DIIS vectors and error vectors.</dd>
-<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dt>level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
 <dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
 <dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>Direct SCF is used by default.</dd>
@@ -1945,7 +1963,7 @@ envrionment.</dd>
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy :</dt>
 <dd>Orbital energies</dd>
@@ -1959,7 +1977,7 @@ envrionment.</dd>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 <span class="go">-1.0811707843775884</span>
 </pre></div>
@@ -2145,7 +2163,7 @@ Default is &#8216;minao&#8217;</dd>
 <dd>The step to start DIIS.  Default is 1.</dd>
 <dt>diis_file: &#8216;str&#8217;</dt>
 <dd>File to store DIIS vectors and error vectors.</dd>
-<dt>level_shift_factor <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
+<dt>level_shift <span class="classifier-delimiter">:</span> <span class="classifier">float or int</span></dt>
 <dd>Level shift (in AU) for virtual space.  Default is 0.</dd>
 <dt>direct_scf <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>Direct SCF is used by default.</dd>
@@ -2164,7 +2182,7 @@ envrionment.</dd>
 <div><dl class="docutils">
 <dt>converged <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>SCF converged or not</dd>
-<dt>hf_energy <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dt>e_tot <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>Total HF energy (electronic energy plus nuclear repulsion)</dd>
 <dt>mo_energy :</dt>
 <dd>Orbital energies</dd>
@@ -2178,7 +2196,7 @@ envrionment.</dd>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift_factor</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="o">.</span><span class="mi">4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 <span class="go">-1.0811707843775884</span>
 </pre></div>
@@ -2251,6 +2269,12 @@ interaction between large and small components are added; Finally,
 converge the SCF with the small component contributions (SS|SS)</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="pyscf.scf.dhf.time_reversal_matrix">
+<tt class="descclassname">pyscf.scf.dhf.</tt><tt class="descname">time_reversal_matrix</tt><big>(</big><em>mol</em>, <em>mat</em><big>)</big><a class="reference internal" href="_modules/pyscf/scf/dhf.html#time_reversal_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.dhf.time_reversal_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>T(A_ij) = A[T(i),T(j)]^*</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-pyscf.scf.addons">
 <span id="addons"></span><h2>addons<a class="headerlink" href="#module-pyscf.scf.addons" title="Permalink to this headline">¶</a></h2>
@@ -2277,7 +2301,7 @@ break symmetry as the occupied orbitals</p>
 
 <span class="target" id="module-pyscf.scf.chkfile"></span><dl class="function">
 <dt id="pyscf.scf.chkfile.dump_scf">
-<tt class="descclassname">pyscf.scf.chkfile.</tt><tt class="descname">dump_scf</tt><big>(</big><em>mol</em>, <em>chkfile</em>, <em>hf_energy</em>, <em>mo_energy</em>, <em>mo_coeff</em>, <em>mo_occ</em><big>)</big><a class="reference internal" href="_modules/pyscf/scf/chkfile.html#dump_scf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.chkfile.dump_scf" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.scf.chkfile.</tt><tt class="descname">dump_scf</tt><big>(</big><em>mol</em>, <em>chkfile</em>, <em>e_tot</em>, <em>mo_energy</em>, <em>mo_coeff</em>, <em>mo_occ</em><big>)</big><a class="reference internal" href="_modules/pyscf/scf/chkfile.html#dump_scf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.chkfile.dump_scf" title="Permalink to this definition">¶</a></dt>
 <dd><p>save temporary results</p>
 </dd></dl>
 
@@ -2351,7 +2375,7 @@ break symmetry as the occupied orbitals</p>
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>

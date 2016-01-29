@@ -62,7 +62,7 @@
 <span class="k">def</span> <span class="nf">load_scf</span><span class="p">(</span><span class="n">chkfile</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">load_mol</span><span class="p">(</span><span class="n">chkfile</span><span class="p">),</span> <span class="n">load</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;scf&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="dump_scf"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.chkfile.dump_scf">[docs]</a><span class="k">def</span> <span class="nf">dump_scf</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">,</span> <span class="n">hf_energy</span><span class="p">,</span> <span class="n">mo_energy</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">):</span>
+<div class="viewcode-block" id="dump_scf"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.chkfile.dump_scf">[docs]</a><span class="k">def</span> <span class="nf">dump_scf</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">,</span> <span class="n">e_tot</span><span class="p">,</span> <span class="n">mo_energy</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;save temporary results&#39;&#39;&#39;</span>
     <span class="k">if</span> <span class="n">h5py</span><span class="o">.</span><span class="n">is_hdf5</span><span class="p">(</span><span class="n">chkfile</span><span class="p">):</span>
         <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
@@ -70,14 +70,14 @@
                 <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">format</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">pack</span><span class="p">())</span>
             <span class="k">if</span> <span class="s">&#39;scf&#39;</span> <span class="ow">in</span> <span class="n">fh5</span><span class="p">:</span>
                 <span class="k">del</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf&#39;</span><span class="p">])</span>
-            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/hf_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hf_energy</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/e_tot&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">e_tot</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mo_energy</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_occ&#39;</span>   <span class="p">]</span> <span class="o">=</span> <span class="n">mo_occ</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_coeff&#39;</span> <span class="p">]</span> <span class="o">=</span> <span class="n">mo_coeff</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">format</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">pack</span><span class="p">())</span>
-            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/hf_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hf_energy</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/e_tot&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">e_tot</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mo_energy</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_occ&#39;</span>   <span class="p">]</span> <span class="o">=</span> <span class="n">mo_occ</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_coeff&#39;</span> <span class="p">]</span> <span class="o">=</span> <span class="n">mo_coeff</span>
@@ -119,7 +119,7 @@
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>

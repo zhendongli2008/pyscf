@@ -55,7 +55,7 @@
 <span class="kn">from</span> <span class="nn">pyscf.gto</span> <span class="kn">import</span> <span class="n">mole</span>
 <span class="kn">from</span> <span class="nn">pyscf.gto</span> <span class="kn">import</span> <span class="n">moleintor</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span>
-<span class="kn">import</span> <span class="nn">pyscf.symm</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">symm</span>
 <span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="kn">import</span> <span class="n">hf</span>
 
 
@@ -71,7 +71,7 @@
             <span class="n">nsocc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lst</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
             <span class="n">ndocc</span> <span class="o">=</span> <span class="n">nocc</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">lst</span><span class="p">[:</span><span class="n">nocc</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
             <span class="n">frac</span> <span class="o">=</span> <span class="mf">2.</span><span class="o">*</span><span class="p">(</span><span class="n">nocc</span><span class="o">-</span><span class="n">ndocc</span><span class="p">)</span><span class="o">/</span><span class="n">nsocc</span>
-            <span class="n">mo_occ</span><span class="p">[</span><span class="n">nsocc</span><span class="p">:</span><span class="n">ndocc</span><span class="p">]</span> <span class="o">=</span> <span class="n">frac</span>
+            <span class="n">mo_occ</span><span class="p">[</span><span class="n">ndocc</span><span class="p">:</span><span class="n">nsocc</span><span class="o">+</span><span class="n">ndocc</span><span class="p">]</span> <span class="o">=</span> <span class="n">frac</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s">&#39;fraction occ = </span><span class="si">%6g</span><span class="s">  [</span><span class="si">%d</span><span class="s">:</span><span class="si">%d</span><span class="s">]&#39;</span><span class="p">,</span>
                         <span class="n">frac</span><span class="p">,</span> <span class="n">ndocc</span><span class="p">,</span> <span class="n">ndocc</span><span class="o">+</span><span class="n">nsocc</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">nocc</span> <span class="o">&lt;</span> <span class="n">mo_occ</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
@@ -208,7 +208,7 @@
     <span class="n">s22</span> <span class="o">=</span> <span class="n">mol2</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp&#39;</span><span class="p">)</span>
     <span class="n">s21</span> <span class="o">=</span> <span class="n">mole</span><span class="o">.</span><span class="n">intor_cross</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">,</span> <span class="n">mol2</span><span class="p">,</span> <span class="n">mol1</span><span class="p">)</span>
 
-    <span class="n">ua</span><span class="p">,</span> <span class="n">ub</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">symm</span><span class="o">.</span><span class="n">cg</span><span class="o">.</span><span class="n">real2spinor_whole</span><span class="p">(</span><span class="n">mol2</span><span class="p">)</span>
+    <span class="n">ua</span><span class="p">,</span> <span class="n">ub</span> <span class="o">=</span> <span class="n">symm</span><span class="o">.</span><span class="n">cg</span><span class="o">.</span><span class="n">real2spinor_whole</span><span class="p">(</span><span class="n">mol2</span><span class="p">)</span>
     <span class="n">s21</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ua</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">s21</span><span class="p">)</span> <span class="o">+</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ub</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">s21</span><span class="p">)</span> <span class="c"># (*)</span>
     <span class="c"># mo2: alpha, beta have been summed in Eq. (*)</span>
     <span class="c"># so DM = mo2[:,:nocc] * 1 * mo2[:,:nocc].H</span>
@@ -236,6 +236,60 @@
     <span class="n">ps</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">t22</span><span class="p">,</span> <span class="n">t21</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pl</span><span class="p">,</span> <span class="n">mo1</span><span class="p">[:</span><span class="n">n2c</span><span class="p">]),</span>
                          <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ps</span><span class="p">,</span> <span class="n">mo1</span><span class="p">[</span><span class="n">n2c</span><span class="p">:])))</span>
+
+
+<span class="k">def</span> <span class="nf">remove_linear_dep</span><span class="p">(</span><span class="n">mf</span><span class="p">):</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mol</span>
+    <span class="k">def</span> <span class="nf">eig_nosym</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">d</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">t</span><span class="p">[:,</span><span class="n">d</span><span class="o">&gt;</span><span class="mf">1e-8</span><span class="p">]</span> <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">d</span><span class="o">&gt;</span><span class="mf">1e-8</span><span class="p">])</span>
+        <span class="n">xhx</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+        <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">xhx</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span>
+
+    <span class="k">def</span> <span class="nf">eig_symm</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">nirrep</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="o">.</span><span class="n">__len__</span><span class="p">()</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">symm</span><span class="o">.</span><span class="n">symmetrize_matrix</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">symm</span><span class="o">.</span><span class="n">symmetrize_matrix</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">)</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">es</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ir</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nirrep</span><span class="p">):</span>
+            <span class="n">d</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">ir</span><span class="p">])</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">t</span><span class="p">[:,</span><span class="n">d</span><span class="o">&gt;</span><span class="mf">1e-8</span><span class="p">]</span> <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">d</span><span class="o">&gt;</span><span class="mf">1e-8</span><span class="p">])</span>
+            <span class="n">xhx</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">h</span><span class="p">[</span><span class="n">ir</span><span class="p">],</span> <span class="n">x</span><span class="p">))</span>
+            <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">xhx</span><span class="p">)</span>
+            <span class="n">cs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">[</span><span class="n">ir</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">)))</span>
+            <span class="n">es</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">es</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span>
+
+    <span class="kn">import</span> <span class="nn">pyscf.scf</span>
+    <span class="k">if</span> <span class="n">mol</span><span class="o">.</span><span class="n">symmetry</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">scf</span><span class="o">.</span><span class="n">uhf</span><span class="o">.</span><span class="n">UHF</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">eig</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+                <span class="n">e_a</span><span class="p">,</span> <span class="n">c_a</span> <span class="o">=</span> <span class="n">eig_symm</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="p">)</span>
+                <span class="n">e_b</span><span class="p">,</span> <span class="n">c_b</span> <span class="o">=</span> <span class="n">eig_symm</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">e_a</span><span class="p">,</span><span class="n">e_b</span><span class="p">)),</span> <span class="p">(</span><span class="n">c_a</span><span class="p">,</span><span class="n">c_b</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">scf</span><span class="o">.</span><span class="n">rohf</span><span class="o">.</span><span class="n">ROHF</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">eig</span> <span class="o">=</span> <span class="n">eig_symm</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">scf</span><span class="o">.</span><span class="n">uhf</span><span class="o">.</span><span class="n">UHF</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">eig</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+                <span class="n">e_a</span><span class="p">,</span> <span class="n">c_a</span> <span class="o">=</span> <span class="n">eig_nosym</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="p">)</span>
+                <span class="n">e_b</span><span class="p">,</span> <span class="n">c_b</span> <span class="o">=</span> <span class="n">eig_nosym</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">e_a</span><span class="p">,</span><span class="n">e_b</span><span class="p">)),</span> <span class="p">(</span><span class="n">c_a</span><span class="p">,</span><span class="n">c_b</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">scf</span><span class="o">.</span><span class="n">rohf</span><span class="o">.</span><span class="n">ROHF</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">eig</span> <span class="o">=</span> <span class="n">eig_nosym</span>
+    <span class="k">return</span> <span class="n">eig</span>
+<span class="k">def</span> <span class="nf">remove_linear_dep_</span><span class="p">(</span><span class="n">mf</span><span class="p">):</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">eig</span> <span class="o">=</span> <span class="n">remove_linear_dep</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mf</span><span class="o">.</span><span class="n">eig</span>
 </pre></div>
 
           </div>
@@ -274,7 +328,7 @@
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>

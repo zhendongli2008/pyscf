@@ -86,9 +86,12 @@
     <span class="n">im</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;i,ij,ik-&gt;jk&#39;</span><span class="p">,</span> <span class="n">charge</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span><span class="o">/</span><span class="n">charge</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">im</span>
 
-<span class="k">def</span> <span class="nf">parallel_vectors</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">):</span>
-    <span class="n">v3</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">v1</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v1</span><span class="p">),</span> <span class="n">v2</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v2</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v3</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">GEOM_THRESHOLD</span>
+<span class="k">def</span> <span class="nf">parallel_vectors</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">GEOM_THRESHOLD</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span> <span class="ow">or</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">v2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">v3</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">v1</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v1</span><span class="p">),</span> <span class="n">v2</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v3</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">GEOM_THRESHOLD</span>
 
 <span class="k">def</span> <span class="nf">argsort_coords</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
     <span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="n">PLACE</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
@@ -208,10 +211,7 @@
                 <span class="n">gpname</span> <span class="o">=</span> <span class="s">&#39;Cs&#39;</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">gpname</span> <span class="o">=</span> <span class="s">&#39;C1&#39;</span>
-    <span class="n">charge_center</span> <span class="o">=</span> <span class="n">get_charge_center</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">charge_center</span><span class="p">,</span> <span class="n">rawsys</span><span class="o">.</span><span class="n">charge_center</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">):</span>
-        <span class="k">assert</span><span class="p">(</span><span class="n">parallel_vectors</span><span class="p">(</span><span class="n">charge_center</span><span class="o">-</span><span class="n">rawsys</span><span class="o">.</span><span class="n">charge_center</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
-    <span class="k">return</span> <span class="n">gpname</span><span class="p">,</span> <span class="n">charge_center</span><span class="p">,</span> <span class="n">_pesudo_vectors</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gpname</span><span class="p">,</span> <span class="n">rawsys</span><span class="o">.</span><span class="n">charge_center</span><span class="p">,</span> <span class="n">_pesudo_vectors</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
 
 
 <span class="c"># reduce to D2h and its subgroups</span>
@@ -724,7 +724,7 @@
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2015, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
