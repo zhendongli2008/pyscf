@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyscf.mcscf.addons &mdash; PySCF 1.0 documentation</title>
+    <title>pyscf.mcscf.addons &mdash; PySCF 1.1 alpha documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.0',
+        VERSION:     '1.1 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.0 documentation" href="../../../index.html" />
+    <link rel="top" title="PySCF 1.1 alpha documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -195,6 +195,7 @@
             <span class="n">irrep_ncore</span><span class="p">[</span><span class="n">irid</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cas_irrep_nocc</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="c"># list =&gt; dict</span>
         <span class="n">cas_irrep_nocc</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">ir</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">ir</span><span class="p">,</span><span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cas_irrep_nocc</span><span class="p">)</span>
                                <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
     <span class="n">irrep_ncas</span> <span class="o">=</span> <span class="p">{}</span>
@@ -368,53 +369,6 @@
         <span class="n">mo</span> <span class="o">=</span> <span class="p">(</span><span class="n">project</span><span class="p">(</span><span class="n">mfmo</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">init_mo</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ncore</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="p">),</span>
               <span class="n">project</span><span class="p">(</span><span class="n">mfmo</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">init_mo</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ncore</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">mo</span>
-</div>
-<div class="viewcode-block" id="project_cas_space"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.project_cas_space">[docs]</a><span class="k">def</span> <span class="nf">project_cas_space</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">casorb</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Given active space, sort the rest of orbitals for the casscf initial</span>
-<span class="sd">    guess&#39;&#39;&#39;</span>
-    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lo</span>
-    <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">mo_coeff</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">mo_coeff</span>
-    <span class="n">nmo</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">ncore</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">ncore</span>
-    <span class="n">ncas</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">ncas</span>
-    <span class="k">assert</span><span class="p">(</span><span class="n">ncas</span> <span class="o">==</span> <span class="n">casorb</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-    <span class="n">nelecas</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">nelecas</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">()</span>
-    <span class="n">s1</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">casorb</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">casorb</span><span class="p">))</span>
-    <span class="n">prj</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">casorb</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
-    <span class="n">prj</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">casorb</span><span class="p">,</span> <span class="n">prj</span><span class="p">))</span>
-
-    <span class="n">nocc</span> <span class="o">=</span> <span class="n">ncore</span> <span class="o">+</span> <span class="n">nelecas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">mocc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">prj</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">[:,:</span><span class="n">nocc</span><span class="p">])</span>
-    <span class="n">sdiag</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,pq,qi-&gt;i&#39;</span><span class="p">,</span> <span class="n">mocc</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">mocc</span><span class="p">)</span>
-    <span class="n">coreidx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">sdiag</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="s">&#39;coreidx </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">coreidx</span><span class="p">))</span>
-    <span class="n">movir</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">prj</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">nocc</span><span class="p">:])</span>
-    <span class="n">sdiag</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,pq,qi-&gt;i&#39;</span><span class="p">,</span> <span class="n">movir</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">movir</span><span class="p">)</span>
-    <span class="n">virtidx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">sdiag</span><span class="p">)</span>
-    <span class="k">if</span> <span class="mi">0</span><span class="p">:</span> <span class="c"># reserve entire casorb, rotate core and external</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="s">&#39;virtidx </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">virtidx</span><span class="o">+</span><span class="n">nocc</span><span class="p">))</span>
-        <span class="n">mocore</span> <span class="o">=</span> <span class="n">mocc</span><span class="p">[:,</span><span class="n">coreidx</span><span class="p">[:</span><span class="n">ncore</span><span class="p">]]</span>
-        <span class="n">mou</span> <span class="o">=</span> <span class="n">movir</span><span class="p">[:,</span><span class="n">virtidx</span><span class="p">[</span><span class="n">ncas</span><span class="o">-</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">0</span><span class="p">]:]]</span>
-        <span class="n">mo</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">mocore</span><span class="p">,</span> <span class="n">casorb</span><span class="p">,</span> <span class="n">mou</span><span class="p">))</span>
-        <span class="n">mo</span> <span class="o">=</span> <span class="n">lo</span><span class="o">.</span><span class="n">orth</span><span class="o">.</span><span class="n">vec_lowdin</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="mi">0</span><span class="p">:</span> <span class="c"># reserve MO space, pick MOs which are close to casorb</span>
-        <span class="n">virtidx</span> <span class="o">=</span> <span class="n">virtidx</span> <span class="o">+</span> <span class="n">nocc</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="s">&#39;virtidx </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">coreidx</span><span class="p">))</span>
-        <span class="n">mo</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">coreidx</span><span class="p">[:</span><span class="n">ncore</span><span class="p">]],</span>
-                           <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">coreidx</span><span class="p">[</span><span class="n">ncore</span><span class="p">:]],</span>
-                           <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">virtidx</span><span class="p">[:</span><span class="n">ncas</span><span class="o">-</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">0</span><span class="p">]]],</span>
-                           <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">virtidx</span><span class="p">[</span><span class="n">ncas</span><span class="o">-</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">0</span><span class="p">]:]]))</span>
-    <span class="k">else</span><span class="p">:</span> <span class="c"># reserve core space, project core out of casorb, rotate external</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="s">&#39;virtidx </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">virtidx</span><span class="o">+</span><span class="n">nocc</span><span class="p">))</span>
-        <span class="n">mocore</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">coreidx</span><span class="p">[:</span><span class="n">ncore</span><span class="p">]]</span>
-        <span class="n">casorb</span> <span class="o">=</span> <span class="n">casorb</span> <span class="o">-</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mocore</span><span class="p">,</span> <span class="n">mocore</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">casorb</span><span class="p">))</span>
-        <span class="n">mocc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">mocore</span><span class="p">,</span> <span class="n">lo</span><span class="o">.</span><span class="n">orth</span><span class="o">.</span><span class="n">vec_lowdin</span><span class="p">(</span><span class="n">casorb</span><span class="p">,</span> <span class="n">s</span><span class="p">)))</span>
-        <span class="n">mou</span> <span class="o">=</span> <span class="n">movir</span><span class="p">[:,</span><span class="n">virtidx</span><span class="p">[</span><span class="n">ncas</span><span class="o">-</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">0</span><span class="p">]:]]</span>
-        <span class="n">mou</span> <span class="o">=</span> <span class="n">mou</span> <span class="o">-</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mocc</span><span class="p">,</span> <span class="n">mocc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">mou</span><span class="p">))</span>
-        <span class="n">mo</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">mocc</span><span class="p">,</span> <span class="n">lo</span><span class="o">.</span><span class="n">orth</span><span class="o">.</span><span class="n">vec_lowdin</span><span class="p">(</span><span class="n">mou</span><span class="p">,</span> <span class="n">s</span><span class="p">)))</span>
-    <span class="k">return</span> <span class="n">mo</span>
 
 <span class="c"># on AO representation</span></div>
 <div class="viewcode-block" id="make_rdm1"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.make_rdm1">[docs]</a><span class="k">def</span> <span class="nf">make_rdm1</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ci</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -558,51 +512,9 @@
         <span class="n">ss</span> <span class="o">=</span> <span class="n">sscas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">sscore</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ss</span><span class="o">+.</span><span class="mi">25</span><span class="p">)</span> <span class="o">-</span> <span class="o">.</span><span class="mi">5</span>
         <span class="k">return</span> <span class="n">ss</span><span class="p">,</span> <span class="n">s</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span>
+
 </div>
-<div class="viewcode-block" id="state_average_wfn_"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.state_average_wfn_">[docs]</a><span class="k">def</span> <span class="nf">state_average_wfn_</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.70710678118654757</span><span class="p">,</span><span class="mf">0.70710678118654757</span><span class="p">)):</span>
-    <span class="sd">&#39;&#39;&#39; State average over the wave function.  The energy funcitonal is</span>
-<span class="sd">    E = &lt;w1*psi1+w2*psi2+...| H | w1*psi1+w2*psi2+...&gt;</span>
-
-<span class="sd">    Note we may need change the FCI solver to</span>
-
-<span class="sd">    mc.fcisolver = pyscf.fci.solver(mol, False)</span>
-
-<span class="sd">    before calling state_average_(mc), because the mixed singlet and triplet</span>
-<span class="sd">    might cause the results unstable</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">assert</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">weight_ci</span><span class="p">(</span><span class="n">ci0</span><span class="p">):</span>
-        <span class="n">wci</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ci0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">wi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">weights</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
-            <span class="n">wci</span> <span class="o">+=</span> <span class="n">wi</span> <span class="o">*</span> <span class="n">ci0</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">wci</span>
-    <span class="n">fcibase</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">fcisolver</span>
-    <span class="n">fcibase</span><span class="o">.</span><span class="n">nroots</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
-    <span class="n">weight2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
-    <span class="k">class</span> <span class="nc">FakeCISolver</span><span class="p">(</span><span class="n">casscf</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">__class__</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fcibase</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">fcibase</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span>
-                                  <span class="n">nroots</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nroots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;i,i-&gt;&#39;</span><span class="p">,</span><span class="n">e</span><span class="p">,</span> <span class="n">weight2</span><span class="p">),</span> <span class="n">c</span> <span class="c"># c is a set of states</span>
-        <span class="k">def</span> <span class="nf">approx_kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">fcibase</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span>
-                                  <span class="n">max_cycle</span><span class="o">=</span><span class="n">casscf</span><span class="o">.</span><span class="n">ci_response_space</span><span class="p">,</span>
-                                  <span class="n">nroots</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nroots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;i,i-&gt;&#39;</span><span class="p">,</span><span class="n">e</span><span class="p">,</span> <span class="n">weight2</span><span class="p">),</span> <span class="n">c</span>
-        <span class="k">def</span> <span class="nf">make_rdm1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">fcibase</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="n">weight_ci</span><span class="p">(</span><span class="n">ci0</span><span class="p">),</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">make_rdm12</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">fcibase</span><span class="o">.</span><span class="n">make_rdm12</span><span class="p">(</span><span class="n">weight_ci</span><span class="p">(</span><span class="n">ci0</span><span class="p">),</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">spin_square</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
-            <span class="n">ss</span> <span class="o">=</span> <span class="n">fcibase</span><span class="o">.</span><span class="n">spin_square</span><span class="p">(</span><span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">ss</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;i,i-&gt;&#39;</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">ss</span><span class="p">)</span>
-            <span class="n">multip</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ss</span><span class="o">+.</span><span class="mi">25</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span>
-            <span class="k">return</span> <span class="n">ss</span><span class="p">,</span> <span class="n">multip</span>
-    <span class="k">return</span> <span class="n">FakeCISolver</span><span class="p">()</span>
-</div>
-<div class="viewcode-block" id="state_average_e_"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.state_average_e_">[docs]</a><span class="k">def</span> <span class="nf">state_average_e_</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)):</span>
+<div class="viewcode-block" id="state_average"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.state_average">[docs]</a><span class="k">def</span> <span class="nf">state_average</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)):</span>
     <span class="sd">&#39;&#39;&#39; State average over the energy.  The energy funcitonal is</span>
 <span class="sd">    E = w1&lt;psi1|H|psi1&gt; + w2&lt;psi2|H|psi2&gt; + ...</span>
 
@@ -658,7 +570,6 @@
 
     <span class="k">return</span> <span class="n">FakeCISolver</span><span class="p">()</span>
 </div>
-<span class="n">state_average</span> <span class="o">=</span> <span class="n">state_average_e_</span>
 <span class="k">def</span> <span class="nf">state_average_</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)):</span>
     <span class="n">casscf</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">state_average</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">casscf</span>
@@ -679,16 +590,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">nroots</span> <span class="o">=</span> <span class="n">state</span><span class="o">+</span><span class="mi">1</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_civec</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="c"># pass self to fcibase_class.kernel function because orbsym argument is stored in self </span>
-<span class="c"># but undefined in fcibase object</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_civec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">ci0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_civec</span>
             <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">fcibase_class</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span>
                                         <span class="n">nroots</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nroots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-<span class="c"># Save solution to self._civec because we need compute state+1 roots for FCI</span>
-<span class="c"># excited states.  Without self._civec, it happens that Davidson solver quits</span>
-<span class="c"># right after one iteration when ci0 being on the excited state (because</span>
-<span class="c"># residual = (H-E)c ~ 0) and we don&#39;t have enough states for &quot;e[state]&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_civec</span> <span class="o">=</span> <span class="n">c</span>
             <span class="k">if</span> <span class="n">casscf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
                 <span class="n">ss</span> <span class="o">=</span> <span class="n">fcibase_class</span><span class="o">.</span><span class="n">spin_square</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="n">state</span><span class="p">],</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
@@ -760,23 +665,12 @@
     <span class="n">m</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
     <span class="n">ehf</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 
-<span class="c">#    mc = mcscf.CASSCF(m, 4, 4)</span>
-<span class="c">#    mc.verbose = 4</span>
-<span class="c">#    mc.fcisolver = pyscf.fci.solver(mol, False)</span>
-<span class="c">#    mc = state_average_wfn_(mc, (.8,.6))</span>
-<span class="c">#    emc, e_ci, fcivec, mo = mc.mc1step()</span>
-<span class="c">#</span>
-<span class="c">#    mc = mcscf.CASCI(m, 4, 4)</span>
-<span class="c">#    emc = mc.casci(mo)[0]</span>
-<span class="c">#    print(ehf, emc, emc-ehf)</span>
-<span class="c">#    print(emc - -76.003352190262532)</span>
-<span class="c">#</span>
 
     <span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
     <span class="n">mc</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">4</span>
     <span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">fci</span><span class="o">.</span><span class="n">solver</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="c"># to mix the singlet and triplet</span>
-    <span class="n">mc</span> <span class="o">=</span> <span class="n">state_average_e_</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="p">(</span><span class="o">.</span><span class="mi">64</span><span class="p">,</span><span class="o">.</span><span class="mi">36</span><span class="p">))</span>
-    <span class="n">emc</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">mo</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">mc1step</span><span class="p">()</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">state_average_</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="p">(</span><span class="o">.</span><span class="mi">64</span><span class="p">,</span><span class="o">.</span><span class="mi">36</span><span class="p">))</span>
+    <span class="n">emc</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">mo</span><span class="p">,</span> <span class="n">mo_energy</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">mc1step</span><span class="p">()</span>
     <span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
     <span class="n">emc</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">casci</span><span class="p">(</span><span class="n">mo</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">print</span><span class="p">(</span><span class="n">ehf</span><span class="p">,</span> <span class="n">emc</span><span class="p">,</span> <span class="n">emc</span><span class="o">-</span><span class="n">ehf</span><span class="p">)</span>
@@ -785,8 +679,8 @@
 
     <span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
     <span class="n">mc</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">4</span>
-    <span class="n">mc</span> <span class="o">=</span> <span class="n">state_average_e_</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="p">(</span><span class="o">.</span><span class="mi">64</span><span class="p">,</span><span class="o">.</span><span class="mi">36</span><span class="p">))</span>
-    <span class="n">emc</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">mo</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">mc1step</span><span class="p">()</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">state_average_</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="p">(</span><span class="o">.</span><span class="mi">64</span><span class="p">,</span><span class="o">.</span><span class="mi">36</span><span class="p">))</span>
+    <span class="n">emc</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">mo</span><span class="p">,</span> <span class="n">mo_energy</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">mc1step</span><span class="p">()</span>
     <span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
     <span class="n">emc</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">casci</span><span class="p">(</span><span class="n">mo</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">print</span><span class="p">(</span><span class="n">ehf</span><span class="p">,</span> <span class="n">emc</span><span class="p">,</span> <span class="n">emc</span><span class="o">-</span><span class="n">ehf</span><span class="p">)</span>
@@ -830,13 +724,13 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

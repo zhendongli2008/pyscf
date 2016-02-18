@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyscf.df.incore &mdash; PySCF 1.0 documentation</title>
+    <title>pyscf.df.incore &mdash; PySCF 1.1 alpha documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.0',
+        VERSION:     '1.1 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.0 documentation" href="../../../index.html" />
+    <link rel="top" title="PySCF 1.1 alpha documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -68,29 +68,11 @@
 <span class="k">def</span> <span class="nf">_fpointer</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">_ctypes</span><span class="o">.</span><span class="n">dlsym</span><span class="p">(</span><span class="n">libri</span><span class="o">.</span><span class="n">_handle</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
 
-<span class="c">#FIXME: what is the normalization convention for contracted fitting basis?</span>
-<span class="c"># I currently assume the contraction coefficients are associated to</span>
-<span class="c"># square-normalized primitives and square-normalized contracted functions.</span>
-<span class="c">#</span>
-<span class="c"># Switch square_norm to False assumes the square-normalized primitives, and the</span>
-<span class="c"># contracted functions corresponds to a density distribution which can be</span>
-<span class="c"># integrated to one particle.</span>
-<div class="viewcode-block" id="format_aux_basis"><a class="viewcode-back" href="../../../df.html#pyscf.df.incore.format_aux_basis">[docs]</a><span class="k">def</span> <span class="nf">format_aux_basis</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;weigend&#39;</span><span class="p">,</span> <span class="n">square_norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<div class="viewcode-block" id="format_aux_basis"><a class="viewcode-back" href="../../../df.html#pyscf.df.incore.format_aux_basis">[docs]</a><span class="k">def</span> <span class="nf">format_aux_basis</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;weigend&#39;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Generate a fake Mole object which uses the density fitting auxbasis as</span>
 <span class="sd">    the basis sets</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="c">#pmol = mol.copy()</span>
-    <span class="c">#pmol.verbose = 0</span>
-    <span class="c">#pmol.atom = mol._atom</span>
-    <span class="c">#pmol.unit = &#39;Bohr&#39;</span>
-    <span class="c">#pmol.basis = auxbasis</span>
-    <span class="c">#pmol.spin = mol.spin</span>
-    <span class="c">#pmol.charge = mol.charge</span>
-    <span class="c">#pmol.symmetry = False # avoid system rotating again</span>
-    <span class="c">#pmol.build(False, False)</span>
-
     <span class="n">pmol</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>  <span class="c"># just need shallow copy</span>
-
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">auxbasis</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">uniq_atoms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">mol</span><span class="o">.</span><span class="n">_atom</span><span class="p">])</span>
         <span class="n">pmol</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="n">pmol</span><span class="o">.</span><span class="n">format_basis</span><span class="p">(</span><span class="nb">dict</span><span class="p">([(</span><span class="n">a</span><span class="p">,</span> <span class="n">auxbasis</span><span class="p">)</span>
@@ -99,18 +81,6 @@
         <span class="n">pmol</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="n">pmol</span><span class="o">.</span><span class="n">format_basis</span><span class="p">(</span><span class="n">auxbasis</span><span class="p">)</span>
     <span class="n">pmol</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="n">pmol</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="n">pmol</span><span class="o">.</span><span class="n">_env</span> <span class="o">=</span> \
             <span class="n">pmol</span><span class="o">.</span><span class="n">make_env</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_atom</span><span class="p">,</span> <span class="n">pmol</span><span class="o">.</span><span class="n">_basis</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_env</span><span class="p">[:</span><span class="n">gto</span><span class="o">.</span><span class="n">PTR_ENV_START</span><span class="p">])</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">square_norm</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">ib</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pmol</span><span class="o">.</span><span class="n">_bas</span><span class="p">)):</span>
-            <span class="n">np</span> <span class="o">=</span> <span class="n">pmol</span><span class="o">.</span><span class="n">bas_nprim</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
-            <span class="n">nc</span> <span class="o">=</span> <span class="n">pmol</span><span class="o">.</span><span class="n">bas_nctr</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
-            <span class="n">l</span> <span class="o">=</span> <span class="n">pmol</span><span class="o">.</span><span class="n">bas_angular</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
-            <span class="n">es</span> <span class="o">=</span> <span class="n">pmol</span><span class="o">.</span><span class="n">bas_exp</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
-            <span class="n">ptr</span> <span class="o">=</span> <span class="n">pmol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[</span><span class="n">ib</span><span class="p">,</span><span class="n">gto</span><span class="o">.</span><span class="n">PTR_COEFF</span><span class="p">]</span>
-            <span class="n">cs</span> <span class="o">=</span> <span class="n">pmol</span><span class="o">.</span><span class="n">_env</span><span class="p">[</span><span class="n">ptr</span><span class="p">:</span><span class="n">ptr</span><span class="o">+</span><span class="n">np</span><span class="o">*</span><span class="n">nc</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nc</span><span class="p">,</span><span class="n">np</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-            <span class="n">int1</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">mole</span><span class="o">.</span><span class="n">_gaussian_int</span><span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">es</span><span class="p">)</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,p-&gt;i&#39;</span><span class="p">,</span> <span class="n">cs</span><span class="p">,</span> <span class="n">int1</span><span class="p">)</span>
-            <span class="n">cs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pi,i-&gt;pi&#39;</span><span class="p">,</span> <span class="n">cs</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">s</span><span class="p">)</span>
-            <span class="n">pmol</span><span class="o">.</span><span class="n">_env</span><span class="p">[</span><span class="n">ptr</span><span class="p">:</span><span class="n">ptr</span><span class="o">+</span><span class="n">np</span><span class="o">*</span><span class="n">nc</span><span class="p">]</span> <span class="o">=</span> <span class="n">cs</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">pmol</span><span class="o">.</span><span class="n">natm</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pmol</span><span class="o">.</span><span class="n">_atm</span><span class="p">)</span>
     <span class="n">pmol</span><span class="o">.</span><span class="n">nbas</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pmol</span><span class="o">.</span><span class="n">_bas</span><span class="p">)</span>
     <span class="n">pmol</span><span class="o">.</span><span class="n">_built</span> <span class="o">=</span> <span class="bp">True</span>
@@ -171,9 +141,7 @@
                             <span class="n">c_env</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">eri</span>
 
-
-<span class="c"># Note the temporary memory usage is about twice as large as the return cderi</span>
-<span class="c"># array</span></div>
+</div>
 <div class="viewcode-block" id="cholesky_eri"><a class="viewcode-back" href="../../../df.html#pyscf.df.incore.cholesky_eri">[docs]</a><span class="k">def</span> <span class="nf">cholesky_eri</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;weigend&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns:</span>
@@ -189,14 +157,12 @@
     <span class="n">j2c</span> <span class="o">=</span> <span class="n">fill_2c2e</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxmol</span><span class="p">,</span> <span class="n">intor</span><span class="o">=</span><span class="s">&#39;cint2c2e_sph&#39;</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;size of aux basis </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">j2c</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;2c2e&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
-    <span class="c">#low = scipy.linalg.cho_factor(j2c, lower=True, overwrite_a=True)</span>
     <span class="n">low</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">j2c</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">j2c</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;Cholesky 2c2e&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t1</span><span class="p">)</span>
 
     <span class="n">j3c</span> <span class="o">=</span> <span class="n">aux_e2</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxmol</span><span class="p">,</span> <span class="n">intor</span><span class="o">=</span><span class="s">&#39;cint3c2e_sph&#39;</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="s">&#39;s2ij&#39;</span><span class="p">)</span>
     <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;3c2e&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t1</span><span class="p">)</span>
-    <span class="c">#BUG?cderi = scipy.linalg.cho_solve(low, j3c.T, overwrite_b=True)</span>
     <span class="n">cderi</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">j3c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                                           <span class="n">overwrite_b</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">j3c</span> <span class="o">=</span> <span class="bp">None</span>
@@ -268,21 +234,21 @@
     <span class="n">eri1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ik,kl-&gt;il&#39;</span><span class="p">,</span> <span class="n">j3c</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">j2c</span><span class="p">))</span>
     <span class="n">eri1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ip,kp-&gt;ik&#39;</span><span class="p">,</span> <span class="n">eri1</span><span class="p">,</span> <span class="n">j3c</span><span class="p">)</span>
     <span class="k">print</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">eri1</span><span class="p">,</span> <span class="n">eri0</span><span class="p">))</span>
-    <span class="c">#eri0 = pyscf.ao2mo.restore(1, eri0, nao)</span>
+    <span class="n">eri0</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">ao2mo</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">eri0</span><span class="p">,</span> <span class="n">nao</span><span class="p">)</span>
 
-    <span class="c">#mf = scf.RHF(mol)</span>
-    <span class="c">#ehf0 = mf.scf()</span>
+    <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">ehf0</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 
-    <span class="c">#nao = mf.mo_energy.size</span>
-    <span class="c">#eri1 = ao2mo.restore(1, mf._eri, nao)</span>
-    <span class="c">#print(numpy.linalg.norm(eri1-eri0))</span>
+    <span class="n">nao</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_energy</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">eri1</span> <span class="o">=</span> <span class="n">ao2mo</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">_eri</span><span class="p">,</span> <span class="n">nao</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">eri1</span><span class="o">-</span><span class="n">eri0</span><span class="p">))</span>
 
-    <span class="c">#mf._eri = ao2mo.restore(8, eri0, nao)</span>
-    <span class="c">#ehf1 = mf.scf()</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">_eri</span> <span class="o">=</span> <span class="n">ao2mo</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">eri0</span><span class="p">,</span> <span class="n">nao</span><span class="p">)</span>
+    <span class="n">ehf1</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
 
-    <span class="c">#mf = scf.density_fit(scf.RHF(mol))</span>
-    <span class="c">#ehf2 = mf.scf()</span>
-    <span class="c">#print(ehf0, ehf1, ehf2)</span>
+    <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span>
+    <span class="n">ehf2</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">ehf0</span><span class="p">,</span> <span class="n">ehf1</span><span class="p">,</span> <span class="n">ehf2</span><span class="p">)</span>
 </pre></div>
 
           </div>
@@ -316,13 +282,13 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

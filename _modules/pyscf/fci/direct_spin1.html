@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyscf.fci.direct_spin1 &mdash; PySCF 1.0 documentation</title>
+    <title>pyscf.fci.direct_spin1 &mdash; PySCF 1.1 alpha documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.0',
+        VERSION:     '1.1 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.0 documentation" href="../../../index.html" />
+    <link rel="top" title="PySCF 1.1 alpha documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -113,15 +113,7 @@
                             <span class="n">link_indexa</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
                             <span class="n">link_indexb</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">ci1</span>
-
-<span class="c"># Note eri is NOT the 2e hamiltonian matrix, the 2e hamiltonian is</span>
-<span class="c"># h2e = eri_{pq,rs} p^+ q r^+ s</span>
-<span class="c">#     = (pq|rs) p^+ r^+ s q - (pq|rs) \delta_{qr} p^+ s</span>
-<span class="c"># so eri is defined as</span>
-<span class="c">#       eri_{pq,rs} = (pq|rs) - (1/Nelec) \sum_q (pq|qs)</span>
-<span class="c"># to restore the symmetry between pq and rs,</span>
-<span class="c">#       eri_{pq,rs} = (pq|rs) - (.5/Nelec) [\sum_q (pq|qs) + \sum_p (pq|rp)]</span>
-<span class="c"># Please refer to the treatment in direct_spin1.absorb_h1e</span></div>
+</div>
 <div class="viewcode-block" id="contract_2e"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.direct_spin1.contract_2e">[docs]</a><span class="k">def</span> <span class="nf">contract_2e</span><span class="p">(</span><span class="n">eri</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">r&#39;&#39;&#39;Contract the 2-electron Hamiltonian with a FCI vector to get a new FCI</span>
 <span class="sd">    vector.</span>
@@ -223,9 +215,7 @@
         <span class="n">h2e</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">,:,:]</span> <span class="o">+=</span> <span class="n">f1e</span>
         <span class="n">h2e</span><span class="p">[:,:,</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">f1e</span>
     <span class="k">return</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">ao2mo</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">h2e</span><span class="p">,</span> <span class="n">norb</span><span class="p">)</span> <span class="o">*</span> <span class="n">fac</span>
-
-<span class="c"># pspace Hamiltonian matrix, CPL, 169, 463</span>
-<span class="c"># close to PSPACE card in Molpro https://www.molpro.net/info/2015.1/doc/manual/node243.html</span></div>
+</div>
 <div class="viewcode-block" id="pspace"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.direct_spin1.pspace">[docs]</a><span class="k">def</span> <span class="nf">pspace</span><span class="p">(</span><span class="n">h1e</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">hdiag</span><span class="p">,</span> <span class="n">np</span><span class="o">=</span><span class="mi">400</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;pspace Hamiltonian to improve Davidson preconditioner. See, CPL, 169, 463</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -296,8 +286,7 @@
     <span class="n">ci1</span> <span class="o">=</span> <span class="n">contract_2e</span><span class="p">(</span><span class="n">h2e</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">fcivec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">ci1</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
 
-
-<span class="c"># dm_pq = &lt;|p^+ q|&gt;</span></div>
+</div>
 <div class="viewcode-block" id="make_rdm1s"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.direct_spin1.make_rdm1s">[docs]</a><span class="k">def</span> <span class="nf">make_rdm1s</span><span class="p">(</span><span class="n">fcivec</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Spin searated 1-particle density matrices, (alpha,beta)</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -315,8 +304,7 @@
     <span class="n">rdm1b</span> <span class="o">=</span> <span class="n">rdm</span><span class="o">.</span><span class="n">make_rdm1_spin1</span><span class="p">(</span><span class="s">&#39;FCImake_rdm1b&#39;</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span>
                                 <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">rdm1a</span><span class="p">,</span> <span class="n">rdm1b</span>
-
-<span class="c"># spacial part of DM, dm_pq = &lt;|p^+ q|&gt;</span></div>
+</div>
 <div class="viewcode-block" id="make_rdm1"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.direct_spin1.make_rdm1">[docs]</a><span class="k">def</span> <span class="nf">make_rdm1</span><span class="p">(</span><span class="n">fcivec</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">link_index</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;spin-traced 1-particle density matrix</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -568,7 +556,6 @@
         <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">verbose</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span>
         <span class="n">log</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;******** </span><span class="si">%s</span><span class="s"> flags ********&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span>
-        <span class="c">#log.info(&#39;fci module = %s&#39;, self.__module__)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;max. cycles = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_cycle</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;conv_tol = </span><span class="si">%g</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_tol</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;linear dependence = </span><span class="si">%g</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lindep</span><span class="p">)</span>
@@ -701,22 +688,8 @@
     <span class="n">neb</span> <span class="o">=</span> <span class="n">nelec</span><span class="o">//</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="n">nelec</span> <span class="o">=</span> <span class="p">(</span><span class="n">nea</span><span class="p">,</span> <span class="n">neb</span><span class="p">)</span>
 
-    <span class="kn">import</span> <span class="nn">direct_spin1_o0</span>
-    <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
-    <span class="n">na</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">num_strings</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">nea</span><span class="p">)</span>
-    <span class="n">nb</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">num_strings</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">neb</span><span class="p">)</span>
-    <span class="n">fcivec</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">na</span><span class="p">,</span><span class="n">nb</span><span class="p">))</span>
-    <span class="n">ci1ref</span> <span class="o">=</span> <span class="n">direct_spin1_o0</span><span class="o">.</span><span class="n">contract_2e</span><span class="p">(</span><span class="n">eri</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
-    <span class="n">ci1</span> <span class="o">=</span> <span class="n">cis</span><span class="o">.</span><span class="n">contract_2e</span><span class="p">(</span><span class="n">eri</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">ci1ref</span><span class="p">,</span> <span class="n">ci1</span><span class="p">))</span>
-
-    <span class="n">ci1ref</span> <span class="o">=</span> <span class="n">direct_spin1_o0</span><span class="o">.</span><span class="n">contract_1e</span><span class="p">(</span><span class="n">h1e</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
-    <span class="n">ci1</span> <span class="o">=</span> <span class="n">cis</span><span class="o">.</span><span class="n">contract_1e</span><span class="p">(</span><span class="n">h1e</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">ci1ref</span><span class="p">,</span> <span class="n">ci1</span><span class="p">))</span>
-
-    <span class="n">eref</span> <span class="o">=</span> <span class="n">direct_spin1_o0</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">h1e</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">e1</span> <span class="o">=</span> <span class="n">cis</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">h1e</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">eref</span><span class="p">,</span> <span class="n">eref</span> <span class="o">-</span> <span class="n">e1</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e1</span> <span class="o">-</span> <span class="o">-</span><span class="mf">7.7466756526056004</span><span class="p">)</span>
 </pre></div>
 
           </div>
@@ -750,13 +723,13 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.0 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>
