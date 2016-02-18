@@ -65,7 +65,7 @@
 <dd><ul class="first last simple">
 <li>Hartree-Fock</li>
 <li>DFT</li>
-<li>CASSCF and FCI</li>
+<li>CASCI and CASSCF</li>
 <li>Full CI</li>
 <li>MP2</li>
 <li>SC-NEVPT2</li>
@@ -77,6 +77,7 @@
 <li>General integral transformation</li>
 <li>Gradient</li>
 <li>NMR</li>
+<li>TDDFT</li>
 </ul>
 </dd>
 </dl>
@@ -100,10 +101,8 @@ the code, and an online program reference, available from
 and the web-based Python IDE <a class="reference external" href="http://ipython.org/notebook.html">Ipython notebook</a>
 to try out the package:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.2&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1.2&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="go">converged SCF energy = -1.06111199785749</span>
 <span class="go">-1.06111199786</span>
 </pre></div>
@@ -111,7 +110,7 @@ to try out the package:</p>
 </div>
 <div class="section" id="submodules">
 <h3>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h3>
-<p>In pyscf, submodules require explict import:</p>
+<p>In pyscf, most submodules requires explict import:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
 </pre></div>
 </div>
@@ -154,8 +153,8 @@ to try out the package:</p>
 </div>
 <div class="section" id="pure-function-and-class">
 <h3>Pure function and Class<a class="headerlink" href="#pure-function-and-class" title="Permalink to this headline">¶</a></h3>
-<p>The class are designed to hold only the final results and the control
-parameters such as maximum number of iterations, convergence threshold, etc.
+<p>Class are designed to hold only the final results and the control parameters
+such as maximum number of iterations, convergence threshold, etc.
 The intermediate status are not saved in the class.  If the .kernel() function
 is finished without any errors,  the solution will be saved in the class (see
 documentation).</p>
@@ -166,6 +165,24 @@ functions and class are <strong>pure</strong>, i.e. no status are saved, and the
 are not changed inplace.  Exceptions (destructive functions and methods) are
 suffixed with underscore in the function name,  eg  <tt class="docutils literal"><span class="pre">scf.hf.get_fock_</span></tt>
 function may change the status of the argument <tt class="docutils literal"><span class="pre">adiis</span></tt></p>
+</div>
+<div class="section" id="stream-functions">
+<h3>Stream functions<a class="headerlink" href="#stream-functions" title="Permalink to this headline">¶</a></h3>
+<p>For most methods, there are three stream functions to pipe computing stream:</p>
+<p>1 <tt class="docutils literal"><span class="pre">.set</span></tt> function to update object attributes, eg
+<tt class="docutils literal"><span class="pre">mf</span> <span class="pre">=</span> <span class="pre">scf.RHF(mol).set(conv_tol=1e-5)</span></tt> is identical to proceed in two steps
+<tt class="docutils literal"><span class="pre">mf</span> <span class="pre">=</span> <span class="pre">scf.RHF(mol);</span> <span class="pre">mf.conv_tol=1e-5</span></tt></p>
+<p>2 <tt class="docutils literal"><span class="pre">.run</span></tt> function to execute the kenerl function (the function arguments
+are passed to kernel function).  If keyword arguments is given, it will first
+call <tt class="docutils literal"><span class="pre">.set</span></tt> function to update object attributes then execute the kernel
+function.  Eg
+<tt class="docutils literal"><span class="pre">mf</span> <span class="pre">=</span> <span class="pre">scf.RHF(mol).run(dm_init,</span> <span class="pre">conv_tol=1e-5)</span></tt> is identical to three steps
+<tt class="docutils literal"><span class="pre">mf</span> <span class="pre">=</span> <span class="pre">scf.RHF(mol);</span> <span class="pre">mf.conv_tol=1e-5;</span> <span class="pre">mf.kernel(dm_init)</span></tt></p>
+<p>3 <tt class="docutils literal"><span class="pre">.apply</span></tt> function to apply the given function/class to the current object
+(function arguments and keyword arguments are passed to the given function).
+Eg
+<tt class="docutils literal"><span class="pre">mol.apply(scf.RHF).run().apply(mcscf.CASSCF,</span> <span class="pre">6,</span> <span class="pre">4,</span> <span class="pre">frozen=4)</span></tt> is identical to
+<tt class="docutils literal"><span class="pre">mf</span> <span class="pre">=</span> <span class="pre">scf.RHF(mol);</span> <span class="pre">mf.kernel();</span> <span class="pre">mcscf.CASSCF(mf,</span> <span class="pre">6,</span> <span class="pre">4,</span> <span class="pre">frozen=4)</span></tt></p>
 </div>
 </div>
 </div>
@@ -184,6 +201,7 @@ function may change the status of the argument <tt class="docutils literal"><spa
 <li><a class="reference internal" href="#how-to-use">How to use</a></li>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#pure-function-and-class">Pure function and Class</a></li>
+<li><a class="reference internal" href="#stream-functions">Stream functions</a></li>
 </ul>
 </li>
 </ul>
@@ -238,7 +256,7 @@ function may change the status of the argument <tt class="docutils literal"><spa
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

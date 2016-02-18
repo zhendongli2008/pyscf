@@ -70,18 +70,42 @@
                 <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">format</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">pack</span><span class="p">())</span>
             <span class="k">if</span> <span class="s">&#39;scf&#39;</span> <span class="ow">in</span> <span class="n">fh5</span><span class="p">:</span>
                 <span class="k">del</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf&#39;</span><span class="p">])</span>
-            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/e_tot&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">e_tot</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/e_tot&#39;</span>    <span class="p">]</span> <span class="o">=</span> <span class="n">e_tot</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mo_energy</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_occ&#39;</span>   <span class="p">]</span> <span class="o">=</span> <span class="n">mo_occ</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_coeff&#39;</span> <span class="p">]</span> <span class="o">=</span> <span class="n">mo_coeff</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">format</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">pack</span><span class="p">())</span>
-            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/e_tot&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">e_tot</span>
+            <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/e_tot&#39;</span>    <span class="p">]</span> <span class="o">=</span> <span class="n">e_tot</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mo_energy</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_occ&#39;</span>   <span class="p">]</span> <span class="o">=</span> <span class="n">mo_occ</span>
             <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;scf/mo_coeff&#39;</span> <span class="p">]</span> <span class="o">=</span> <span class="n">mo_coeff</span>
-</pre></div></div>
+
+
+<span class="c">#################################</span></div>
+<span class="k">def</span> <span class="nf">_pickle2hdf5</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="s">&#39;.h5&#39;</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">pickle</span>
+    <span class="n">rec</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">))</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s">&#39;/dev/null&#39;</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">atom</span>     <span class="o">=</span> <span class="n">rec</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">][</span><span class="s">&#39;atom&#39;</span><span class="p">]</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">basis</span>    <span class="o">=</span> <span class="n">rec</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">][</span><span class="s">&#39;basis&#39;</span><span class="p">]</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">etb</span>      <span class="o">=</span> <span class="n">rec</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">][</span><span class="s">&#39;etb&#39;</span><span class="p">]</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="bp">False</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+    <span class="n">fh5</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="o">+</span><span class="n">ext</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">format</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">pack</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">k1</span><span class="p">,</span> <span class="n">v1</span> <span class="ow">in</span> <span class="n">rec</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">k1</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">k2</span><span class="p">,</span> <span class="n">v2</span> <span class="ow">in</span> <span class="n">v1</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">fh5</span><span class="p">[</span><span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">k1</span><span class="p">,</span><span class="n">k2</span><span class="p">))]</span> <span class="o">=</span> <span class="n">v2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fh5</span><span class="p">[</span><span class="n">k1</span><span class="p">]</span> <span class="o">=</span> <span class="n">v1</span>
+    <span class="n">fh5</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
 
           </div>
         </div>
@@ -120,7 +144,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

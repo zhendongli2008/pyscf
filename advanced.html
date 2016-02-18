@@ -36,6 +36,9 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="install.html" title="Installation"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -771,30 +774,57 @@ effects.  For example</p>
     <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span>
 <span class="p">)</span>
 
+<span class="c">#</span>
+<span class="c"># 1. spin-free X2C-HF with density fitting approximation on 2E integrals</span>
+<span class="c">#</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">sfx2c</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)))</span>
 <span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.12f</span><span class="s">, ref = -76.075115837941&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
 
+<span class="c">#</span>
+<span class="c"># 2. spin-free X2C correction for density-fitting HF.  Since X2C correction is</span>
+<span class="c"># commutable with density fitting operation, it is fully equivalent to case 1.</span>
+<span class="c">#</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">sfx2c</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)))</span>
 <span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.12f</span><span class="s">, ref = -76.075115837941&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
 
+<span class="c">#</span>
+<span class="c"># 3. Newton method for non-relativistic HF</span>
+<span class="c">#</span>
 <span class="n">mo_init</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">get_hcore</span><span class="p">(),</span> <span class="n">mf</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">())[</span><span class="mi">1</span><span class="p">]</span>
 <span class="n">mocc_init</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">mo_init</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="n">mocc_init</span><span class="p">[:</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
-
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">newton</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span>
 <span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo_init</span><span class="p">,</span> <span class="n">mocc_init</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.12f</span><span class="s">, ref = -76.026765673091&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
 
+<span class="c">#</span>
+<span class="c"># 4. Newton method for non-relativistic HF with density fitting for orbital</span>
+<span class="c"># hessian of newton solver.  Note the anwser is equivalent to case 3, but the</span>
+<span class="c"># solver &quot;mf&quot; is different.</span>
+<span class="c">#</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">newton</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)))</span>
 <span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo_init</span><span class="p">,</span> <span class="n">mocc_init</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.12f</span><span class="s">, ref = -76.026765673091&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
 
+<span class="c">#</span>
+<span class="c"># 5. Newton method to solve the density-fitting approximated HF object.  There</span>
+<span class="c"># is no approximation for newton method (orbital hessian).  Note the density</span>
+<span class="c"># fitting is applied on HF object only.  It does not affect the Newton solver.</span>
+<span class="c">#</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">newton</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)))</span>
 <span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo_init</span><span class="p">,</span> <span class="n">mocc_init</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.12f</span><span class="s">, ref = -76.025936299674&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
 
+<span class="c">#</span>
+<span class="c"># 6. Newton method for density-fitting HF, and the hessian of Newton solver is</span>
+<span class="c"># also approximated with density fitting.  Note the anwser is equivalent to</span>
+<span class="c"># case 5, but the solver &quot;mf&quot; is different.  Here the fitting basis for HF and</span>
+<span class="c"># Newton solver are different.  HF is approximated with the default density</span>
+<span class="c"># fitting basis (Weigend cfit basis).  Newton solver is approximated with</span>
+<span class="c"># Ahlrichs cfit basis.</span>
+<span class="c">#</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">newton</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))),</span> <span class="s">&#39;ahlrichs&#39;</span><span class="p">)</span>
 <span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo_init</span><span class="p">,</span> <span class="n">mocc_init</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.12f</span><span class="s">, ref = -76.025936299674&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
@@ -1094,6 +1124,9 @@ Hamiltonian for Hartree-Fock</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="install.html" title="Installation"
              >next</a> |</li>
         <li class="right" >
@@ -1104,7 +1137,7 @@ Hamiltonian for Hartree-Fock</p>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

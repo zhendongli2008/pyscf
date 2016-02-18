@@ -61,9 +61,9 @@
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">pyscf.gto</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span>
-<span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="kn">import</span> <span class="n">chkfile</span>
 <span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="kn">import</span> <span class="n">hf</span>
 <span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="kn">import</span> <span class="n">uhf</span>
+<span class="kn">import</span> <span class="nn">pyscf.scf.chkfile</span>
 
 
 <span class="k">def</span> <span class="nf">init_guess_by_minao</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
@@ -74,13 +74,13 @@
     <span class="n">dm</span> <span class="o">=</span> <span class="n">hf</span><span class="o">.</span><span class="n">init_guess_by_atom</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">dm</span><span class="o">*.</span><span class="mi">5</span><span class="p">,</span> <span class="n">dm</span><span class="o">*.</span><span class="mi">5</span><span class="p">))</span>
 
-<span class="k">def</span> <span class="nf">init_guess_by_chkfile</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">chk</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">init_guess_by_chkfile</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="kn">import</span> <span class="n">addons</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chk</span><span class="p">,</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
 <span class="s">You see this error message because of the API updates.</span>
-<span class="s">The first argument is chk file name.&#39;&#39;&#39;</span><span class="p">)</span>
-    <span class="n">chk_mol</span><span class="p">,</span> <span class="n">scf_rec</span> <span class="o">=</span> <span class="n">chkfile</span><span class="o">.</span><span class="n">load_scf</span><span class="p">(</span><span class="n">chk</span><span class="p">)</span>
+<span class="s">The first argument is chkfile file name.&#39;&#39;&#39;</span><span class="p">)</span>
+    <span class="n">chk_mol</span><span class="p">,</span> <span class="n">scf_rec</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">scf</span><span class="o">.</span><span class="n">chkfile</span><span class="o">.</span><span class="n">load_scf</span><span class="p">(</span><span class="n">chkfile</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">fproj</span><span class="p">(</span><span class="n">mo</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">project</span><span class="p">:</span>
@@ -236,9 +236,9 @@
         <span class="n">mo_occ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_occ</span><span class="p">(</span><span class="n">mo_energy</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">init_guess_by_chkfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chk</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">chk</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">chk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chkfile</span>
-        <span class="k">return</span> <span class="n">init_guess_by_chkfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">chk</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">init_guess_by_chkfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chkfile</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">chkfile</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">chkfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chkfile</span>
+        <span class="k">return</span> <span class="n">init_guess_by_chkfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ROHF.eig"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.rohf.ROHF.eig">[docs]</a>    <span class="k">def</span> <span class="nf">eig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Solve the generalized eigenvalue problem for Roothan effective Fock</span>
@@ -385,7 +385,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>
