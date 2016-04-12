@@ -54,6 +54,8 @@
 
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="nb">reduce</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span>
+<span class="kn">import</span> <span class="nn">pyscf.lib</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">pyscf.symm</span> <span class="kn">import</span> <span class="n">basis</span>
 <span class="kn">from</span> <span class="nn">pyscf.symm</span> <span class="kn">import</span> <span class="n">param</span>
@@ -122,7 +124,38 @@
     <span class="k">return</span> <span class="n">orbsym</span>
 </div>
 <div class="viewcode-block" id="symmetrize_orb"><a class="viewcode-back" href="../../../symm.html#pyscf.symm.addons.symmetrize_orb">[docs]</a><span class="k">def</span> <span class="nf">symmetrize_orb</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mo</span><span class="p">,</span> <span class="n">orbsym</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Symmetrize the given orbitals</span>
+    <span class="sd">&#39;&#39;&#39;Symmetrize the given orbitals.</span>
+<span class="sd">    </span>
+<span class="sd">    This function is different to the :func:`symmetrize_space`:  In this</span>
+<span class="sd">    function, each orbital is symmetrized by removing non-symmetric components.</span>
+<span class="sd">    :func:`symmetrize_space` symmetrizes the entire space by mixing different</span>
+<span class="sd">    orbitals.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mo : 2D float array</span>
+<span class="sd">            The orbital space to symmetrize</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        orbsym : integer list</span>
+<span class="sd">            Irrep id for each orbital.  If not given, the irreps are guessed</span>
+<span class="sd">            by calling :func:`label_orb_symm`.</span>
+<span class="sd">        s : 2D float array</span>
+<span class="sd">            Overlap matrix.  If given, use this overlap than the the overlap</span>
+<span class="sd">            of the input mol.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        2D orbital coefficients</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyscf import gto, symm, scf</span>
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom = &#39;C  0  0  0; H  1  1  1; H -1 -1  1; H  1 -1 -1; H -1  1 -1&#39;,</span>
+<span class="sd">    ...             basis = &#39;sto3g&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; mf = scf.RHF(mol).run()</span>
+<span class="sd">    &gt;&gt;&gt; mol.build(0, 0, symmetry=&#39;D2&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; mo = symm.symmetrize_orb(mol, mf.mo_coeff)</span>
+<span class="sd">    &gt;&gt;&gt; print(symm.label_orb_symm(mol, mol.irrep_name, mol.symm_orb, mo))</span>
+<span class="sd">    [&#39;A&#39;, &#39;A&#39;, &#39;B1&#39;, &#39;B2&#39;, &#39;B3&#39;, &#39;A&#39;, &#39;B1&#39;, &#39;B2&#39;, &#39;B3&#39;]</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">)</span>
@@ -142,8 +175,68 @@
         <span class="n">idx</span> <span class="o">=</span> <span class="n">orbsym</span> <span class="o">==</span> <span class="n">ir</span>
         <span class="n">csym</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="n">ovlpso</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">csym</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">csym</span><span class="p">))</span>
-        <span class="n">sc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">ovlpso</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_s</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">csym</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">sc</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">cho_solve</span><span class="p">(</span><span class="n">ovlpso</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_s</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">csym</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
         <span class="n">mo1</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">csym</span><span class="p">,</span> <span class="n">sc</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mo1</span>
+</div>
+<div class="viewcode-block" id="symmetrize_space"><a class="viewcode-back" href="../../../symm.html#pyscf.symm.addons.symmetrize_space">[docs]</a><span class="k">def</span> <span class="nf">symmetrize_space</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mo</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Symmetrize the given orbital space.</span>
+<span class="sd">    </span>
+<span class="sd">    This function is different to the :func:`symmetrize_orb`:  In this function,</span>
+<span class="sd">    the given orbitals are mixed to reveal the symmtery; :func:`symmetrize_orb`</span>
+<span class="sd">    projects out non-symmetric components for each orbital.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mo : 2D float array</span>
+<span class="sd">            The orbital space to symmetrize</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        s : 2D float array</span>
+<span class="sd">            Overlap matrix.  If not given, overlap is computed with the input mol.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        2D orbital coefficients</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyscf import gto, symm, scf</span>
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom = &#39;C  0  0  0; H  1  1  1; H -1 -1  1; H  1 -1 -1; H -1  1 -1&#39;,</span>
+<span class="sd">    ...             basis = &#39;sto3g&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; mf = scf.RHF(mol).run()</span>
+<span class="sd">    &gt;&gt;&gt; mol.build(0, 0, symmetry=&#39;D2&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; mo = symm.symmetrize_space(mol, mf.mo_coeff)</span>
+<span class="sd">    &gt;&gt;&gt; print(symm.label_orb_symm(mol, mol.irrep_name, mol.symm_orb, mo))</span>
+<span class="sd">    [&#39;A&#39;, &#39;A&#39;, &#39;A&#39;, &#39;B1&#39;, &#39;B1&#39;, &#39;B2&#39;, &#39;B2&#39;, &#39;B3&#39;, &#39;B3&#39;]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">)</span>
+    <span class="n">nmo</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">mo_s</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="n">mo1</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ir</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">irrep_id</span><span class="p">):</span>
+        <span class="n">csym</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">moso</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_s</span><span class="p">,</span> <span class="n">csym</span><span class="p">)</span>
+        <span class="n">ovlpso</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">csym</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">csym</span><span class="p">))</span>
+
+<span class="c"># excluding orbitals which are already symmetrized</span>
+        <span class="n">diag</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ik,ki-&gt;i&#39;</span><span class="p">,</span> <span class="n">moso</span><span class="p">,</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">cho_solve</span><span class="p">(</span><span class="n">ovlpso</span><span class="p">,</span> <span class="n">moso</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">diag</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-8</span>
+        <span class="n">orb_exclude</span> <span class="o">=</span> <span class="n">mo</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">mo1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">orb_exclude</span><span class="p">)</span>
+        <span class="n">moso1</span> <span class="o">=</span> <span class="n">moso</span><span class="p">[</span><span class="o">~</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">moso1</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">moso1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dm</span><span class="o">.</span><span class="n">trace</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">1e-8</span><span class="p">:</span>
+            <span class="n">e</span><span class="p">,</span> <span class="n">u</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">ovlpso</span><span class="p">)</span>
+            <span class="n">mo1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">csym</span><span class="p">,</span> <span class="n">u</span><span class="p">[:,</span><span class="nb">abs</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">]))</span>
+    <span class="n">mo1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">mo1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mo1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nmo</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;The input orbital space is not symmetrized.</span><span class="se">\n</span><span class="s"> It is &#39;</span>
+                         <span class="s">&#39;probably because the input mol and orbitals are of &#39;</span>
+                         <span class="s">&#39;different orientation.&#39;</span><span class="p">)</span>
+    <span class="n">snorm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mo1</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">mo1</span><span class="p">))</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nmo</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">snorm</span> <span class="o">&gt;</span> <span class="mf">1e-6</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Orbitals are not orthogonalized&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">mo1</span>
 </div>
 <div class="viewcode-block" id="std_symb"><a class="viewcode-back" href="../../../symm.html#pyscf.symm.addons.std_symb">[docs]</a><span class="k">def</span> <span class="nf">std_symb</span><span class="p">(</span><span class="n">gpname</span><span class="p">):</span>
@@ -214,7 +307,6 @@
 
 </div>
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">scipy.linalg</span>
     <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
     <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
     <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
@@ -276,7 +368,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

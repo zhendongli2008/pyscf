@@ -124,15 +124,15 @@
         <span class="n">mo_core</span> <span class="o">=</span> <span class="n">mo</span><span class="p">[:,:</span><span class="n">ncore</span><span class="p">]</span>
         <span class="n">mo_cas</span> <span class="o">=</span> <span class="n">mo</span><span class="p">[:,</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">]</span>
         <span class="n">dm_core</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_core</span><span class="p">,</span> <span class="n">mo1</span><span class="p">[:,:</span><span class="n">ncore</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
-        <span class="n">dm_core</span> <span class="o">=</span> <span class="n">dm_core</span> <span class="o">+</span> <span class="n">dm_core</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">dm_core</span> <span class="o">=</span> <span class="n">dm_core</span> <span class="o">+</span> <span class="n">dm_core</span><span class="o">.</span><span class="n">T</span> <span class="c">#+ numpy.dot(mo_core, mo_core.T)*2 (%)</span>
         <span class="n">dm_cas</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mo_cas</span><span class="p">,</span> <span class="n">casdm1</span><span class="p">,</span> <span class="n">mo1</span><span class="p">[:,</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
-        <span class="n">dm_cas</span> <span class="o">=</span> <span class="n">dm_cas</span> <span class="o">+</span> <span class="n">dm_cas</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">dm_cas</span> <span class="o">=</span> <span class="n">dm_cas</span> <span class="o">+</span> <span class="n">dm_cas</span><span class="o">.</span><span class="n">T</span> <span class="c">#+ reduce(numpy.dot, (mo_cas, casdm1, mo_cas.T)) (^)</span>
         <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">get_jk</span><span class="p">(</span><span class="n">casscf</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="p">(</span><span class="n">dm_core</span><span class="p">,</span><span class="n">dm_cas</span><span class="p">))</span> <span class="c"># first order response only</span>
         <span class="n">vhfc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">eris</span><span class="o">.</span><span class="n">vhf_c</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
-        <span class="n">vhfc</span> <span class="o">=</span> <span class="p">(</span><span class="n">vhfc</span> <span class="o">+</span> <span class="n">vhfc</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">eris</span><span class="o">.</span><span class="n">vhf_c</span>
+        <span class="n">vhfc</span> <span class="o">=</span> <span class="p">(</span><span class="n">vhfc</span> <span class="o">+</span> <span class="n">vhfc</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">eris</span><span class="o">.</span><span class="n">vhf_c</span> <span class="c"># eris.vhf_c for the extra term in (%)</span>
                 <span class="o">+</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mo</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">vj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">vk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*.</span><span class="mi">5</span><span class="p">,</span> <span class="n">mo</span><span class="p">)))</span>
         <span class="n">vhfa</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vhf_a</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
-        <span class="n">vhfa</span> <span class="o">=</span> <span class="p">(</span><span class="n">vhfa</span> <span class="o">+</span> <span class="n">vhfa</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">vhf_a</span>
+        <span class="n">vhfa</span> <span class="o">=</span> <span class="p">(</span><span class="n">vhfa</span> <span class="o">+</span> <span class="n">vhfa</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">vhf_a</span> <span class="c"># vhf_a for the extra term in (^)</span>
                 <span class="o">+</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mo</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">vj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">vk</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*.</span><span class="mi">5</span><span class="p">,</span> <span class="n">mo</span><span class="p">)))</span>
         <span class="n">g</span><span class="p">[:,:</span><span class="n">ncore</span><span class="p">]</span> <span class="o">+=</span> <span class="n">vhfc</span><span class="p">[:,:</span><span class="n">ncore</span><span class="p">]</span><span class="o">+</span><span class="n">vhfa</span><span class="p">[:,:</span><span class="n">ncore</span><span class="p">]</span>
         <span class="n">g</span><span class="p">[:,:</span><span class="n">ncore</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
@@ -161,9 +161,34 @@
 
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">eris</span><span class="p">,</span> <span class="s">&#39;_paaa&#39;</span><span class="p">):</span>
             <span class="n">g</span><span class="p">[:,</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">]</span> <span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;puvw,tuvw-&gt;pt&#39;</span><span class="p">,</span> <span class="n">eris</span><span class="o">.</span><span class="n">_paaa</span><span class="p">,</span> <span class="n">casdm2</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c">#FIXME</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;dep4 not consistent with ah keyframe&#39;</span><span class="p">)</span>
+            <span class="n">g</span><span class="p">[:,</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">]</span> <span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;purv,rv-&gt;pu&#39;</span><span class="p">,</span> <span class="n">hdm2</span><span class="p">,</span>
+                                                           <span class="n">u</span><span class="p">[:,</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">]))</span>
         <span class="k">return</span> <span class="n">g</span>
+
+<span class="c">#X        def gdepmix2(u): # mixed order, unbalance, slow convergence</span>
+<span class="c">#X            dt = u - numpy.eye(u.shape[0])</span>
+<span class="c">#X            mo1 = numpy.dot(mo, u)</span>
+<span class="c">#X            g = reduce(numpy.dot, (u.T, h1e_mo, u))</span>
+<span class="c">#X            g[:,nocc:] = 0</span>
+<span class="c">#X            mo_core = mo[:,:ncore]</span>
+<span class="c">#X            mo_cas = mo[:,ncore:nocc]</span>
+<span class="c">#X            dm_core = numpy.dot(mo1[:,:ncore], mo1[:,:ncore].T)</span>
+<span class="c">#X            dm_cas = reduce(numpy.dot, (mo1[:,ncore:nocc], casdm1, mo1[:,ncore:nocc].T))</span>
+<span class="c">#X            vj, vk = casscf._scf.get_jk(casscf.mol, (dm_core,dm_cas))</span>
+<span class="c">#X            vhfc = reduce(numpy.dot, (mo1.T, vj[0]-vk[0]*.5, mo1))</span>
+<span class="c">#X            vhfa = reduce(numpy.dot, (mo1.T, vj[1]-vk[1]*.5, mo1))</span>
+<span class="c">#X            g[:,:ncore] += vhfc[:,:ncore]+vhfa[:,:ncore]</span>
+<span class="c">#X            g[:,:ncore] *= 2</span>
+<span class="c">#X            g[:,ncore:nocc] = numpy.dot(g[:,ncore:nocc]+vhfc[:,ncore:nocc], casdm1)</span>
+<span class="c">#X</span>
+<span class="c">#X            #g[:,ncore:nocc] += numpy.dot(u.T, numpy.einsum(&#39;purv,rv-&gt;pu&#39;, hdm2, dt[:,ncore:nocc]))</span>
+<span class="c">#X            #g[:,ncore:nocc] += numpy.dot(u.T, g_dm2)</span>
+<span class="c">#X            g[:,ncore:nocc] += numpy.einsum(&#39;purv,rv-&gt;pu&#39;, hdm2, dt[:,ncore:nocc])</span>
+<span class="c">#X            g[:,ncore:nocc] += numpy.dot(u.T, g_dm2)</span>
+<span class="c">#X            g1[:] = g</span>
+<span class="c">#X            return casscf.pack_uniq_var(g-g.T)</span>
 
     <span class="k">def</span> <span class="nf">gorb_update</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">casscf</span><span class="o">.</span><span class="n">grad_update_dep</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c"># FEP0/first order R-expansion</span>
@@ -232,6 +257,7 @@
         <span class="n">x2</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">h1e_mo</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">dm1</span><span class="p">))</span>
         <span class="c"># part8</span>
         <span class="c"># (g_{ps}\delta_{qr}R_rs + g_{qr}\delta_{ps}) * R_pq)/2 + (pr&lt;-&gt;qs)</span>
+        <span class="c">#Does Hessian symmetrization help?  x2 -= numpy.dot(g+g.T, x1) * .5</span>
         <span class="n">x2</span> <span class="o">-=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x1</span><span class="p">)</span>
         <span class="c"># part2</span>
         <span class="c"># (-2Vhf_{sp}\delta_{qr}R_pq - 2Vhf_{qr}\delta_{sp}R_rs)/2 + (pr&lt;-&gt;qs)</span>
@@ -302,13 +328,13 @@
     <span class="k">if</span> <span class="n">x0_guess</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">x0_guess</span> <span class="o">=</span> <span class="n">g_orb</span>
     <span class="n">ah_conv_tol</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">norm_gorb</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">casscf</span><span class="o">.</span><span class="n">ah_conv_tol</span><span class="p">)</span>
+    <span class="c">#ah_start_cycle = max(casscf.ah_start_cycle, int(-numpy.log10(norm_gorb)))</span>
+    <span class="n">ah_start_cycle</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">ah_start_cycle</span>
     <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
         <span class="c"># increase the AH accuracy when approach convergence</span>
         <span class="n">ah_start_tol</span> <span class="o">=</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">norm_gorb</span><span class="o">+</span><span class="n">conv_tol_grad</span><span class="p">)</span> <span class="o">-</span>
                         <span class="n">numpy</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">norm_gorb</span><span class="p">,</span><span class="n">conv_tol_grad</span><span class="p">)))</span> <span class="o">*</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">norm_gorb</span>
         <span class="n">ah_start_tol</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">ah_start_tol</span><span class="p">,</span> <span class="n">casscf</span><span class="o">.</span><span class="n">ah_start_tol</span><span class="p">),</span> <span class="n">ah_conv_tol</span><span class="p">)</span>
-        <span class="c">#ah_start_cycle = max(casscf.ah_start_cycle, int(-numpy.log10(norm_gorb)))</span>
-        <span class="n">ah_start_cycle</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">ah_start_cycle</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Set ah_start_tol </span><span class="si">%g</span><span class="s">, ah_start_cycle </span><span class="si">%d</span><span class="s">, max_cycle </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span>
                   <span class="n">ah_start_tol</span><span class="p">,</span> <span class="n">ah_start_cycle</span><span class="p">,</span> <span class="n">max_cycle</span><span class="p">)</span>
         <span class="n">g_orb0</span> <span class="o">=</span> <span class="n">g_orb</span>
@@ -381,12 +407,14 @@
 
                 <span class="k">if</span> <span class="n">scale</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
 <span class="c"># Gradually decrease start_tol/conv_tol, so the next step is more accurate</span>
+<span class="c"># seems not that usefule</span>
                     <span class="n">ah_start_tol</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">norm_gorb</span> <span class="o">*</span> <span class="mf">1.2</span><span class="p">,</span>
                                        <span class="n">ah_start_tol</span><span class="o">*</span><span class="n">casscf</span><span class="o">.</span><span class="n">ah_decay_rate</span><span class="p">)</span>
                     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Set ah_start_tol </span><span class="si">%g</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">ah_start_tol</span><span class="p">)</span>
 
         <span class="n">u</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">update_rotate_matrix</span><span class="p">(</span><span class="n">dr</span><span class="p">)</span>
         <span class="n">jkcount</span> <span class="o">+=</span> <span class="n">ihop</span>
+        <span class="c"># release gen_g_hop object before calling CI solver</span>
         <span class="n">gorb_update</span> <span class="o">=</span> <span class="n">h_op</span> <span class="o">=</span> <span class="n">h_diag</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="n">t3m</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;aug_hess in </span><span class="si">%d</span><span class="s"> inner iters&#39;</span> <span class="o">%</span> <span class="n">imic</span><span class="p">,</span> <span class="o">*</span><span class="n">t3m</span><span class="p">)</span>
 
@@ -396,20 +424,28 @@
         <span class="n">g_kf1</span><span class="p">,</span> <span class="n">gorb_update</span><span class="p">,</span> <span class="n">h_op</span><span class="p">,</span> <span class="n">h_diag</span> <span class="o">=</span> \
                 <span class="n">casscf</span><span class="o">.</span><span class="n">gen_g_hop</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">fcasdm1</span><span class="p">(),</span> <span class="n">fcasdm2</span><span class="p">(),</span> <span class="n">eris</span><span class="p">)</span>
         <span class="n">g_kf1</span> <span class="o">=</span> <span class="n">gorb_update</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">g_kf1</span><span class="o">-</span><span class="n">g_kf</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">norm_gkf</span><span class="o">*</span><span class="n">casscf</span><span class="o">.</span><span class="n">ah_grad_trust_region</span><span class="p">):</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;    Rejct keyframe |g|= </span><span class="si">%4.3g</span><span class="s">  |g_last| = </span><span class="si">%4.3f</span><span class="s">&#39;</span><span class="p">,</span>
-                      <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">g_kf1</span><span class="p">),</span> <span class="n">norm_gkf</span><span class="p">)</span>
-            <span class="k">break</span>
-        <span class="n">norm_gkf</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">g_kf1</span><span class="p">)</span>
+        <span class="n">norm_gkf1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">g_kf1</span><span class="p">)</span>
         <span class="n">norm_dg</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">g_kf1</span><span class="o">-</span><span class="n">g_orb</span><span class="p">)</span>
-        <span class="n">kf_compensate</span> <span class="o">=</span> <span class="n">norm_dg</span> <span class="o">/</span> <span class="n">norm_gorb</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;    |g|= </span><span class="si">%4.3g</span><span class="s"> (keyframe), |g-correction|= </span><span class="si">%4.3g</span><span class="s">&#39;</span><span class="p">,</span>
-                  <span class="n">norm_gkf</span><span class="p">,</span> <span class="n">norm_dg</span><span class="p">)</span>
+                  <span class="n">norm_gkf1</span><span class="p">,</span> <span class="n">norm_dg</span><span class="p">)</span>
+<span class="c">#### trust region trial</span>
+<span class="c">#        if (numpy.linalg.norm(g_kf1-g_kf) &gt; norm_gkf*casscf.ah_grad_trust_region):</span>
+<span class="c">#            log.debug(&#39;    Rejct keyframe |g|= %4.3g  |g_last| = %4.3g&#39;,</span>
+<span class="c">#                      norm_gkf1, norm_gkf)</span>
+<span class="c">#            break</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">norm_dg</span> <span class="o">&gt;</span> <span class="n">norm_gorb</span><span class="o">*</span><span class="n">casscf</span><span class="o">.</span><span class="n">ah_grad_trust_region</span> <span class="ow">and</span>
+            <span class="n">norm_gorb</span> <span class="o">&gt;</span> <span class="n">conv_tol_grad</span><span class="o">*.</span><span class="mi">4</span><span class="p">):</span>  <span class="c"># More iters when close to local minimum</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;    Rejct keyframe |g|= </span><span class="si">%4.3g</span><span class="s">  |g_last| = </span><span class="si">%4.3g</span><span class="s">&#39;</span><span class="p">,</span>
+                      <span class="n">norm_gkf1</span><span class="p">,</span> <span class="n">norm_gorb</span><span class="p">)</span>
+            <span class="k">break</span>
+<span class="c">#### trial end</span>
+        <span class="n">kf_compensate</span> <span class="o">=</span> <span class="n">norm_dg</span> <span class="o">/</span> <span class="n">norm_gorb</span>
         <span class="n">t3m</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;gen h_op&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t3m</span><span class="p">)</span>
         <span class="n">g_orb</span> <span class="o">=</span> <span class="n">g_kf</span> <span class="o">=</span> <span class="n">g_kf1</span>
-        <span class="n">norm_gorb</span> <span class="o">=</span> <span class="n">norm_gkf</span>
+        <span class="n">norm_gorb</span> <span class="o">=</span> <span class="n">norm_gkf</span> <span class="o">=</span> <span class="n">norm_gkf1</span>
         <span class="n">x0_guess</span> <span class="o">=</span> <span class="n">dxi</span>
         <span class="n">jkcount</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">ah_start_cycle</span> <span class="o">-=</span> <span class="mi">1</span>
 
 
 <span class="k">def</span> <span class="nf">davidson_cc</span><span class="p">(</span><span class="n">h_op</span><span class="p">,</span> <span class="n">g_op</span><span class="p">,</span> <span class="n">precond</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span> <span class="n">xs</span><span class="o">=</span><span class="p">[],</span> <span class="n">ax</span><span class="o">=</span><span class="p">[],</span>
@@ -441,6 +477,10 @@
             <span class="n">heff</span><span class="p">[</span><span class="n">nx</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">heff</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">nx</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="n">nx</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
             <span class="n">ovlp</span><span class="p">[</span><span class="n">nx</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ovlp</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">nx</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="n">nx</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">xs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
         <span class="n">nvec</span> <span class="o">=</span> <span class="n">nx</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="c">#        s0 = scipy.linalg.eigh(ovlp[:nvec,:nvec])[0][0]</span>
+<span class="c">#        if s0 &lt; lindep:</span>
+<span class="c">#            yield True, istep, w_t, xtrial, hx, dx, s0</span>
+<span class="c">#            break</span>
         <span class="n">wlast</span> <span class="o">=</span> <span class="n">w_t</span>
         <span class="n">xtrial</span><span class="p">,</span> <span class="n">w_t</span><span class="p">,</span> <span class="n">v_t</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">seig</span> <span class="o">=</span> \
                 <span class="n">_regular_step</span><span class="p">(</span><span class="n">heff</span><span class="p">[:</span><span class="n">nvec</span><span class="p">,:</span><span class="n">nvec</span><span class="p">],</span> <span class="n">ovlp</span><span class="p">[:</span><span class="n">nvec</span><span class="p">,:</span><span class="n">nvec</span><span class="p">],</span> <span class="n">xs</span><span class="p">,</span>
@@ -509,13 +549,7 @@
     <span class="n">ncas</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">ncas</span>
     <span class="c">#TODO: lazy evaluate eris, to leave enough memory for FCI solver</span>
     <span class="n">eris</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">ao2mo</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
-    <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">,</span> <span class="n">fcivec</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">casci</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">eris</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">casscf</span><span class="o">.</span><span class="n">fcisolver</span><span class="p">,</span> <span class="s">&#39;spin_square&#39;</span><span class="p">):</span>
-            <span class="n">ss</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">spin_square</span><span class="p">(</span><span class="n">fcivec</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">casscf</span><span class="o">.</span><span class="n">nelecas</span><span class="p">)</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;CASCI E = </span><span class="si">%.15g</span><span class="s">  S^2 = </span><span class="si">%.7f</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">e_tot</span><span class="p">,</span> <span class="n">ss</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;CASCI E = </span><span class="si">%.15g</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">e_tot</span><span class="p">)</span>
+    <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">,</span> <span class="n">fcivec</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">casci</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">eris</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">ncas</span> <span class="o">==</span> <span class="n">nmo</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;CASSCF canonicalization&#39;</span><span class="p">)</span>
         <span class="n">mo</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">mo_energy</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">canonicalize</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">eris</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span>
@@ -558,15 +592,15 @@
 
             <span class="n">casdm1</span><span class="p">,</span> <span class="n">casdm2</span><span class="p">,</span> <span class="n">gci</span><span class="p">,</span> <span class="n">fcivec</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">update_casdm</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">,</span> <span class="n">eris</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gci</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-                <span class="n">norm_gci</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gci</span><span class="p">)</span>
+                <span class="n">norm_gci</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%4.3g</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gci</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">norm_gci</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="n">norm_gci</span> <span class="o">=</span> <span class="bp">None</span>
             <span class="n">norm_ddm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">casdm1</span> <span class="o">-</span> <span class="n">casdm1_last</span><span class="p">)</span>
             <span class="n">norm_ddm_micro</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">casdm1</span> <span class="o">-</span> <span class="n">casdm1_prev</span><span class="p">)</span>
             <span class="n">casdm1_prev</span> <span class="o">=</span> <span class="n">casdm1</span>
             <span class="n">t3m</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;update CAS DM&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t3m</span><span class="p">)</span>
             <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;micro </span><span class="si">%d</span><span class="s">  |u-1|= </span><span class="si">%4.3g</span><span class="s">  |g[o]|= </span><span class="si">%4.3g</span><span class="s">  &#39;</span>
-                      <span class="s">&#39;|g[c]|= </span><span class="si">%4.3g</span><span class="s">  |ddm|= </span><span class="si">%4.3g</span><span class="s">&#39;</span><span class="p">,</span>
+                      <span class="s">&#39;|g[c]|= </span><span class="si">%s</span><span class="s">  |ddm|= </span><span class="si">%4.3g</span><span class="s">&#39;</span><span class="p">,</span>
                       <span class="n">imicro</span><span class="p">,</span> <span class="n">norm_t</span><span class="p">,</span> <span class="n">norm_gorb</span><span class="p">,</span> <span class="n">norm_gci</span><span class="p">,</span> <span class="n">norm_ddm</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">callback</span><span class="p">):</span>
@@ -575,7 +609,7 @@
             <span class="n">t3m</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;micro iter </span><span class="si">%d</span><span class="s">&#39;</span><span class="o">%</span><span class="n">imicro</span><span class="p">,</span> <span class="o">*</span><span class="n">t3m</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">norm_t</span> <span class="o">&lt;</span> <span class="n">conv_tol_grad</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="n">norm_gorb</span> <span class="o">&lt;</span> <span class="n">conv_tol_grad</span><span class="o">*.</span><span class="mi">4</span> <span class="ow">and</span>
-                 <span class="p">(</span><span class="n">norm_ddm</span> <span class="o">&lt;</span> <span class="n">conv_tol_ddm</span> <span class="ow">or</span> <span class="n">norm_ddm_micro</span> <span class="o">&lt;</span> <span class="n">conv_tol_ddm</span><span class="o">*.</span><span class="mi">1</span><span class="p">))):</span>
+                 <span class="p">(</span><span class="n">norm_ddm</span> <span class="o">&lt;</span> <span class="n">conv_tol_ddm</span><span class="o">*.</span><span class="mi">4</span> <span class="ow">or</span> <span class="n">norm_ddm_micro</span> <span class="o">&lt;</span> <span class="n">conv_tol_ddm</span><span class="o">*.</span><span class="mi">4</span><span class="p">))):</span>
                 <span class="k">break</span>
 
         <span class="n">rota</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -601,22 +635,11 @@
         <span class="n">t2m</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;update eri&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t3m</span><span class="p">)</span>
 
         <span class="n">elast</span> <span class="o">=</span> <span class="n">e_tot</span>
-        <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">,</span> <span class="n">fcivec</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">casci</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">eris</span><span class="p">)</span>
+        <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">,</span> <span class="n">fcivec</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">casci</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">,</span> <span class="n">eris</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>
         <span class="n">casdm1</span><span class="p">,</span> <span class="n">casdm2</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">make_rdm12</span><span class="p">(</span><span class="n">fcivec</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">casscf</span><span class="o">.</span><span class="n">nelecas</span><span class="p">)</span>
         <span class="n">norm_ddm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">casdm1</span> <span class="o">-</span> <span class="n">casdm1_last</span><span class="p">)</span>
         <span class="n">casdm1_prev</span> <span class="o">=</span> <span class="n">casdm1_last</span> <span class="o">=</span> <span class="n">casdm1</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;CAS space CI energy = </span><span class="si">%.15g</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;CASCI solver&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t2m</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">casscf</span><span class="o">.</span><span class="n">fcisolver</span><span class="p">,</span> <span class="s">&#39;spin_square&#39;</span><span class="p">):</span>
-                <span class="n">ss</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">spin_square</span><span class="p">(</span><span class="n">fcivec</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">casscf</span><span class="o">.</span><span class="n">nelecas</span><span class="p">)</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;macro iter </span><span class="si">%d</span><span class="s"> (</span><span class="si">%d</span><span class="s"> JK  </span><span class="si">%d</span><span class="s"> micro), CASSCF E = </span><span class="si">%.15g</span><span class="s">  dE = </span><span class="si">%.8g</span><span class="s">  S^2 = </span><span class="si">%.7f</span><span class="s">&#39;</span><span class="p">,</span>
-                     <span class="n">imacro</span><span class="p">,</span> <span class="n">njk</span><span class="p">,</span> <span class="n">imicro</span><span class="p">,</span> <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_tot</span><span class="o">-</span><span class="n">elast</span><span class="p">,</span> <span class="n">ss</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;macro iter </span><span class="si">%d</span><span class="s"> (</span><span class="si">%d</span><span class="s"> JK  </span><span class="si">%d</span><span class="s"> micro), CASSCF E = </span><span class="si">%.15g</span><span class="s">  dE = </span><span class="si">%.8g</span><span class="s">  &#39;</span><span class="p">,</span>
-                         <span class="n">imacro</span><span class="p">,</span> <span class="n">njk</span><span class="p">,</span> <span class="n">imicro</span><span class="p">,</span> <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_tot</span><span class="o">-</span><span class="n">elast</span><span class="p">)</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;               |grad[o]|= </span><span class="si">%4.3g</span><span class="s">  |grad[c]|= </span><span class="si">%4.3g</span><span class="s">  |ddm|= </span><span class="si">%4.3g</span><span class="s">&#39;</span><span class="p">,</span>
-                     <span class="n">norm_gorb0</span><span class="p">,</span> <span class="n">norm_gci</span><span class="p">,</span> <span class="n">norm_ddm</span><span class="p">)</span>
         <span class="n">t3m</span> <span class="o">=</span> <span class="n">t2m</span> <span class="o">=</span> <span class="n">t1m</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;macro iter </span><span class="si">%d</span><span class="s">&#39;</span><span class="o">%</span><span class="n">imacro</span><span class="p">,</span> <span class="o">*</span><span class="n">t1m</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">e_tot</span> <span class="o">-</span> <span class="n">elast</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span>
@@ -746,7 +769,7 @@
 <span class="s">    &gt;&gt;&gt; mc.kernel()[0]</span>
 <span class="s">    -109.044401882238134</span>
 <span class="s">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ncore</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ncore</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="n">casci</span><span class="o">.</span><span class="n">CASCI</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ncore</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frozen</span> <span class="o">=</span> <span class="n">frozen</span>
 <span class="c"># the max orbital rotation and CI increment, prefer small step size</span>
@@ -781,14 +804,14 @@
 <span class="c">#   be fixed by increasing the accuracy of AH solver, e.g.</span>
 <span class="c">#               ah_start_tol = 1e-8;  ah_conv_tol = 1e-10</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ah_start_tol</span> <span class="o">=</span> <span class="mf">1.5</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ah_start_cycle</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ah_start_cycle</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="c"># * Classic AH can be simulated by setting eg</span>
 <span class="c">#               max_cycle_micro_inner = 1</span>
 <span class="c">#               ah_start_tol = 1e-7</span>
 <span class="c">#               max_stepsize = 1.5</span>
 <span class="c">#               ah_grad_trust_region = 1e6</span>
 <span class="c"># ah_grad_trust_region allow gradients increase for AH optimization</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ah_grad_trust_region</span> <span class="o">=</span> <span class="mf">2.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ah_grad_trust_region</span> <span class="o">=</span> <span class="mf">3.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ah_decay_rate</span> <span class="o">=</span> <span class="o">.</span><span class="mi">8</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">grad_update_dep</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ci_update_dep</span> <span class="o">=</span> <span class="mi">2</span>
@@ -822,7 +845,7 @@
         <span class="n">nvir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncore</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncas</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;CAS (</span><span class="si">%d</span><span class="s">e+</span><span class="si">%d</span><span class="s">e, </span><span class="si">%d</span><span class="s">o), ncore = </span><span class="si">%d</span><span class="s">, nvir = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> \
                  <span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncore</span><span class="p">,</span> <span class="n">nvir</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frozen</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frozen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;frozen orbitals </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frozen</span><span class="p">))</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;max_cycle_macro = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_cycle_macro</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;max_cycle_micro = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_cycle_micro</span><span class="p">)</span>
@@ -871,7 +894,8 @@
         <span class="k">if</span> <span class="n">micro</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">micro</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_cycle_micro</span>
         <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">callback</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">callback</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">check_sanity</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">WARN</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_sanity</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">converged</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_tot</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_cas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci</span><span class="p">,</span> \
@@ -894,15 +918,60 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">macro</span><span class="p">,</span> <span class="n">micro</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span>
                            <span class="n">mc2step</span><span class="o">.</span><span class="n">kernel</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">casci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">eris</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">casci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">eris</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">envs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">eris</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="kn">import</span> <span class="nn">copy</span>
             <span class="n">fcasci</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
             <span class="n">fcasci</span><span class="o">.</span><span class="n">ao2mo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_h2cas</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">fcasci</span> <span class="o">=</span> <span class="n">_fake_h_for_fast_casci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">eris</span><span class="p">)</span>
-        <span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">casci</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">fcasci</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="n">ci0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">verbose</span><span class="p">,</span> <span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">):</span>
+            <span class="n">log</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">verbose</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span>
+            <span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+        <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">,</span> <span class="n">fcivec</span> <span class="o">=</span> <span class="n">casci</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">fcasci</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e_ci</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">number</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;Multiple roots are detected in fcisolver.  &#39;</span>
+                               <span class="s">&#39;CASSCF does not know which state to optimize.</span><span class="se">\n</span><span class="s">&#39;</span>
+                               <span class="s">&#39;See also  mcscf.state_average  or  mcscf.state_specific  for excited states.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">envs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">log</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;CAS space CI energy = </span><span class="si">%.15g</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="p">,</span><span class="s">&#39;spin_square&#39;</span><span class="p">):</span>
+                <span class="n">ss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">spin_square</span><span class="p">(</span><span class="n">fcivec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ss</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="k">if</span> <span class="s">&#39;imicro&#39;</span> <span class="ow">in</span> <span class="n">envs</span><span class="p">:</span>  <span class="c"># Within CASSCF iteration</span>
+                <span class="k">if</span> <span class="n">ss</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;macro iter </span><span class="si">%d</span><span class="s"> (</span><span class="si">%d</span><span class="s"> JK  </span><span class="si">%d</span><span class="s"> micro), &#39;</span>
+                             <span class="s">&#39;CASSCF E = </span><span class="si">%.15g</span><span class="s">  dE = </span><span class="si">%.8g</span><span class="s">&#39;</span><span class="p">,</span>
+                             <span class="n">envs</span><span class="p">[</span><span class="s">&#39;imacro&#39;</span><span class="p">],</span> <span class="n">envs</span><span class="p">[</span><span class="s">&#39;njk&#39;</span><span class="p">],</span> <span class="n">envs</span><span class="p">[</span><span class="s">&#39;imicro&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_tot</span><span class="o">-</span><span class="n">envs</span><span class="p">[</span><span class="s">&#39;elast&#39;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;macro iter </span><span class="si">%d</span><span class="s"> (</span><span class="si">%d</span><span class="s"> JK  </span><span class="si">%d</span><span class="s"> micro), &#39;</span>
+                             <span class="s">&#39;CASSCF E = </span><span class="si">%.15g</span><span class="s">  dE = </span><span class="si">%.8g</span><span class="s">  S^2 = </span><span class="si">%.7f</span><span class="s">&#39;</span><span class="p">,</span>
+                             <span class="n">envs</span><span class="p">[</span><span class="s">&#39;imacro&#39;</span><span class="p">],</span> <span class="n">envs</span><span class="p">[</span><span class="s">&#39;njk&#39;</span><span class="p">],</span> <span class="n">envs</span><span class="p">[</span><span class="s">&#39;imicro&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_tot</span><span class="o">-</span><span class="n">envs</span><span class="p">[</span><span class="s">&#39;elast&#39;</span><span class="p">],</span> <span class="n">ss</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="s">&#39;norm_gci&#39;</span> <span class="ow">in</span> <span class="n">envs</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;               |grad[o]|= </span><span class="si">%4.3g</span><span class="s">  &#39;</span>
+                             <span class="s">&#39;|grad[c]|= </span><span class="si">%s</span><span class="s">  |ddm|= </span><span class="si">%4.3g</span><span class="s">&#39;</span><span class="p">,</span>
+                             <span class="n">envs</span><span class="p">[</span><span class="s">&#39;norm_gorb&#39;</span><span class="p">],</span>
+                             <span class="n">envs</span><span class="p">[</span><span class="s">&#39;norm_gci&#39;</span><span class="p">],</span> <span class="n">envs</span><span class="p">[</span><span class="s">&#39;norm_ddm&#39;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;               |grad[o]|= </span><span class="si">%4.3g</span><span class="s">  |ddm|= </span><span class="si">%4.3g</span><span class="s">&#39;</span><span class="p">,</span>
+                             <span class="n">envs</span><span class="p">[</span><span class="s">&#39;norm_gorb&#39;</span><span class="p">],</span> <span class="n">envs</span><span class="p">[</span><span class="s">&#39;norm_ddm&#39;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c"># Initialization step</span>
+                <span class="k">if</span> <span class="n">ss</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;CASCI E = </span><span class="si">%.15g</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">e_tot</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;CASCI E = </span><span class="si">%.15g</span><span class="s">  S^2 = </span><span class="si">%.7f</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">e_tot</span><span class="p">,</span> <span class="n">ss</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">e_tot</span><span class="p">,</span> <span class="n">e_ci</span><span class="p">,</span> <span class="n">fcivec</span>
 
     <span class="k">def</span> <span class="nf">uniq_var_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nmo</span><span class="p">,</span> <span class="n">ncore</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">frozen</span><span class="p">):</span>
         <span class="n">nocc</span> <span class="o">=</span> <span class="n">ncore</span> <span class="o">+</span> <span class="n">ncas</span>
@@ -911,7 +980,7 @@
         <span class="n">mask</span><span class="p">[</span><span class="n">nocc</span><span class="p">:,:</span><span class="n">nocc</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">internal_rotation</span><span class="p">:</span>
             <span class="n">mask</span><span class="p">[</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">,</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">][</span><span class="n">numpy</span><span class="o">.</span><span class="n">tril_indices</span><span class="p">(</span><span class="n">ncas</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">True</span>
-        <span class="k">if</span> <span class="n">frozen</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">frozen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">frozen</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
                 <span class="n">mask</span><span class="p">[:</span><span class="n">frozen</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask</span><span class="p">[:,:</span><span class="n">frozen</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
             <span class="k">else</span><span class="p">:</span>
@@ -936,16 +1005,12 @@
         <span class="n">dr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unpack_uniq_var</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u0</span><span class="p">,</span> <span class="n">expmat</span><span class="p">(</span><span class="n">dr</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">gen_g_hop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">gen_g_hop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">rotate_orb_cc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">,</span> <span class="n">fcasdm1</span><span class="p">,</span> <span class="n">fcasdm2</span><span class="p">,</span> <span class="n">eris</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span>
-                      <span class="n">conv_tol_grad</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">rotate_orb_cc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">,</span> <span class="n">fcasdm1</span><span class="p">,</span> <span class="n">fcasdm2</span><span class="p">,</span> <span class="n">eris</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span>
-                             <span class="n">conv_tol_grad</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="n">gen_g_hop</span> <span class="o">=</span> <span class="n">gen_g_hop</span>
+    <span class="n">rotate_orb_cc</span> <span class="o">=</span> <span class="n">rotate_orb_cc</span>
 
     <span class="k">def</span> <span class="nf">update_ao2mo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;update_ao2mo was obseleted since pyscf v1.0.  Use .ao2mo method instead&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">DeprecationWarning</span><span class="p">(</span><span class="s">&#39;update_ao2mo was obseleted since pyscf v1.0.  &#39;</span>
+                                 <span class="s">&#39;Use .ao2mo method instead&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">ao2mo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">):</span>
 <span class="c">#        nmo = mo.shape[1]</span>
@@ -963,6 +1028,16 @@
 <span class="c">#        eris.papa = numpy.asarray(eri[:,ncore:nocc,:,ncore:nocc], order=&#39;C&#39;)</span>
 <span class="c">#        return eris</span>
 
+<span class="c">#FIXME: scf.density_fit(newton) object has _tag_df label, misleads ao2mo function here!?</span>
+        <span class="c">#if hasattr(self._scf, &#39;_tag_df&#39;) and self._scf._tag_df:</span>
+        <span class="c">#    from pyscf.mcscf import df</span>
+        <span class="c">#    # a hacky call using dm=[], to make sure all things are initialized</span>
+        <span class="c">#    if not hasattr(self, &#39;_cderi&#39;) or self._cderi is None:</span>
+        <span class="c">#        self._scf.get_jk(self.mol, [])</span>
+        <span class="c">#        self._cderi = self._scf._cderi</span>
+        <span class="c">#        self._naoaux = self._scf._naoaux</span>
+        <span class="c">#    return df.ao2mo_(self, mo)</span>
+        <span class="c">#else:</span>
         <span class="k">return</span> <span class="n">mc_ao2mo</span><span class="o">.</span><span class="n">_ERIS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;incore&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_h2eff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -1121,6 +1196,27 @@
 <span class="c">#   has not obvious advantage than simple gradeint.</span>
 
         <span class="n">g</span> <span class="o">=</span> <span class="n">hc</span> <span class="o">-</span> <span class="p">(</span><span class="n">e_ci</span><span class="o">-</span><span class="n">ecore</span><span class="p">)</span> <span class="o">*</span> <span class="n">ci0</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>  <span class="c"># hc-eci*ci0 equals to eqs. (@)</span>
+<span class="c"># should we switch to 2D subspace when rmat is small?</span>
+<span class="c"># * 2D subspace spanned by ci0 and hc.  It does not have significant</span>
+<span class="c">#   improvement to minimal subspace.</span>
+<span class="c">#FIXME: trial vector in terms of Davidson precond seems worse than hc?</span>
+            <span class="c">#hdiag = self.fcisolver.make_hdiag(h1, h2, ncas, nelecas)</span>
+            <span class="c">#addr, h0 = self.fcisolver.pspace(h1, h2, ncas, nelecas, hdiag)</span>
+            <span class="c">#pw, pv = scipy.linalg.eigh(h0)</span>
+            <span class="c">#precond = self.fcisolver.make_precond(hdiag, pw, pv, addr)</span>
+            <span class="c">#x1 = precond(hc-ci0.ravel()*e_ci, e_ci, ci0.ravel())</span>
+<span class="c">#            x1 = hc - ci0.ravel() * e_ci</span>
+<span class="c">#            hx1 = self.fcisolver.contract_2e(h2eff, x1, ncas, nelecas).ravel()</span>
+<span class="c">#            heff = numpy.zeros((2,2))</span>
+<span class="c">#            seff = numpy.zeros((2,2))</span>
+<span class="c">#            heff[0,0] = numpy.dot(ci0.ravel(), hc)</span>
+<span class="c">#            heff[0,1] = heff[1,0] = numpy.dot(x1, hc)</span>
+<span class="c">#            heff[1,1] = numpy.dot(x1, hx1)</span>
+<span class="c">#            seff[0,0] = 1 #numpy.dot(ci0.ravel(), ci0.ravel())</span>
+<span class="c">#            seff[0,1] = seff[1,0] = numpy.dot(ci0.ravel(), x1)</span>
+<span class="c">#            seff[1,1] = numpy.dot(x1, x1)</span>
+<span class="c">#            w, v = scipy.linalg.eigh(heff, seff)</span>
+<span class="c">#            ci1 = ci0.ravel() * v[0,0] + x1.ravel() * v[1,0]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_response_space</span> <span class="o">&gt;</span> <span class="mi">6</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;CI step by full response&#39;</span><span class="p">)</span>
             <span class="c"># full response</span>
@@ -1172,7 +1268,7 @@
             <span class="n">mo_energy</span> <span class="o">=</span> <span class="s">&#39;None&#39;</span>
         <span class="n">chkfile</span><span class="o">.</span><span class="n">dump_mcscf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;mcscf&#39;</span><span class="p">,</span> <span class="n">envs</span><span class="p">[</span><span class="s">&#39;e_tot&#39;</span><span class="p">],</span>
                            <span class="n">mo</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncore</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncas</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">,</span> <span class="n">mo_energy</span><span class="p">,</span>
-                           <span class="n">envs</span><span class="p">[</span><span class="s">&#39;e_ci&#39;</span><span class="p">],</span> <span class="n">civec</span><span class="p">)</span>
+                           <span class="n">envs</span><span class="p">[</span><span class="s">&#39;e_ci&#39;</span><span class="p">],</span> <span class="n">civec</span><span class="p">,</span> <span class="n">overwrite_mol</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="nf">update_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chkfile</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -1200,6 +1296,12 @@
 
 <span class="k">def</span> <span class="nf">expmat</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="c">#x1 = numpy.dot(a,a)</span>
+    <span class="c">#u = numpy.eye(a.shape[0]) + a + .5 * x1</span>
+    <span class="c">#x2 = numpy.dot(x1,a)</span>
+    <span class="c">#u = u + 1./6 * x2</span>
+    <span class="c">#u, w, vh = numpy.linalg.svd(u)</span>
+    <span class="c">#return numpy.dot(u,vh)</span>
 
 
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
@@ -1310,7 +1412,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

@@ -57,8 +57,8 @@
 <span id="installing"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>You may already have <a class="reference external" href="http://www.cmake.org">cmake</a>,
 <a class="reference external" href="http://www.numpy.org/">numpy</a>, <a class="reference external" href="http://www.scipy.org/">scipy</a>
-and <a class="reference external" href="http://www.h5py.org/">h5py</a> installed.  If not, you can use pip
-to install numpy, scipy and h5py:</p>
+and <a class="reference external" href="http://www.h5py.org/">h5py</a> installed.  If not, you can use
+<tt class="docutils literal"><span class="pre">python-pypi</span></tt> to install numpy, scipy and h5py:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ pip install --target=/path/to/python/libs numpy
 $ pip install --target=/path/to/python/libs scipy
 $ pip install --target=/path/to/python/libs h5py
@@ -77,11 +77,11 @@ $ make
 </pre></div>
 </div>
 <p>It will automatically download the analytical GTO integral library
-<tt class="docutils literal"><span class="pre">libcint</span></tt> <a class="reference external" href="https://github.com/sunqm/libcint.git">https://github.com/sunqm/libcint.git</a> and the DFT
-exchange correlation functional library <tt class="docutils literal"><span class="pre">libxc</span></tt>
-<a class="reference external" href="http://www.tddft.org/programs/Libxc">http://www.tddft.org/programs/Libxc</a>.  Finally, to make Python find pyscf
-package, add the <strong>parent directory</strong> of pyscf to <tt class="code docutils literal"><span class="pre">PYTHONPATH</span></tt>,
-e.g. assuming pyscf is put in <tt class="docutils literal"><span class="pre">/home/abc</span></tt>:</p>
+<tt class="docutils literal"><span class="pre">libcint</span></tt> <a class="reference external" href="https://github.com/sunqm/libcint.git">https://github.com/sunqm/libcint.git</a> and the DFT exchange
+correlation functional library <cite>libxc &lt;http://www.tddft.org/programs/Libxc&gt;_</cite>
+and <cite>xcfun &lt;https://github.com/dftlibs/xcfun.git&gt;_</cite>.  Finally, to make Python
+be able to find pyscf package, add the <strong>parent directory</strong> of pyscf to
+<tt class="code docutils literal"><span class="pre">PYTHONPATH</span></tt>, e.g. assuming pyscf is put in <tt class="docutils literal"><span class="pre">/home/abc</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre>export PYTHONPATH=/home/abc:$PYTHONPATH
 </pre></div>
 </div>
@@ -111,12 +111,11 @@ $ make
 </pre></div>
 </div>
 <p>You can link to other BLAS libraries by setting <tt class="docutils literal"><span class="pre">BLA_VENDOR</span></tt>, eg
-<tt class="docutils literal"><span class="pre">BLA_VENDOR=ATLAS</span></tt>, <tt class="docutils literal"><span class="pre">BLA_VENDOR=IBMESSL</span></tt>.  Please refer to <a class="reference external" href="http://www.cmake.org/cmake/help/v3.0/module/FindBLAS.html">cmake
-mannual</a>
-for more details of the use of <tt class="docutils literal"><span class="pre">FindBLAS</span></tt> macro.</p>
-<p>If the cmake <tt class="docutils literal"><span class="pre">BLA_VENDOR</span></tt> cannot detect the right BLAS library as you
-expected, you can simply assign the libraries to the variable
-<tt class="docutils literal"><span class="pre">BLAS_LIBRARIES</span></tt> in <tt class="file docutils literal"><span class="pre">lib/CMakeLists.txt</span></tt>:</p>
+<tt class="docutils literal"><span class="pre">BLA_VENDOR=ATLAS</span></tt>, <tt class="docutils literal"><span class="pre">BLA_VENDOR=IBMESSL</span></tt>.  Please refer to <a class="reference external" href="http://www.cmake.org/cmake/help/v3.0/module/FindBLAS.html">cmake mannual</a> for more details
+of the use of <tt class="docutils literal"><span class="pre">FindBLAS</span></tt> macro.</p>
+<p>If the cmake <tt class="docutils literal"><span class="pre">BLA_VENDOR</span></tt> cannot find the right BLAS library as you expected,
+you can assign the libraries to the variable <tt class="docutils literal"><span class="pre">BLAS_LIBRARIES</span></tt> in
+<tt class="file docutils literal"><span class="pre">lib/CMakeLists.txt</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre>set(BLAS_LIBRARIES &quot;${BLAS_LIBRARIES};/path/to/mkl/lib/intel64/libmkl_intel_lp64.so&quot;)
 set(BLAS_LIBRARIES &quot;${BLAS_LIBRARIES};/path/to/mkl/lib/intel64/libmkl_sequential.so&quot;)
 set(BLAS_LIBRARIES &quot;${BLAS_LIBRARIES};/path/to/mkl/lib/intel64/libmkl_core.so&quot;)
@@ -146,19 +145,42 @@ of the integral library in lib/CMakeLists.txt file:</p>
 <span id="installing-plugin"></span><h2>Plugins<a class="headerlink" href="#plugins" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="dmrg-solver">
 <h3>DMRG solver<a class="headerlink" href="#dmrg-solver" title="Permalink to this headline">¶</a></h3>
-<p>There are two DMRG solver interfaces avaialbe in PySCF:
-Block (<a class="reference external" href="http://chemists.princeton.edu/chan/software/block-code-for-dmrg">http://chemists.princeton.edu/chan/software/block-code-for-dmrg</a>)
-and CheMPS2 (<a class="reference external" href="http://sebwouters.github.io/CheMPS2/index.html">http://sebwouters.github.io/CheMPS2/index.html</a>).
-Before using the DMRG, you need create a config file
+<p>Density matrix renormalization group (DMRG) implementations Block
+(<a class="reference external" href="http://chemists.princeton.edu/chan/software/block-code-for-dmrg">http://chemists.princeton.edu/chan/software/block-code-for-dmrg</a>) and
+CheMPS2 (<a class="reference external" href="http://sebwouters.github.io/CheMPS2/index.html">http://sebwouters.github.io/CheMPS2/index.html</a>)
+are efficient DMRG solvers for ab initio quantum chemistry problem.
+<a class="reference external" href="http://sanshar.github.io/Block/build.html">Installing Block</a> requires
+C++11 compiler.  If C++11 is not supported by your compiler, you can
+register and download precompiled Block binary from
+<a class="reference external" href="http://chemists.princeton.edu/chan/software/block-code-for-dmrg">http://chemists.princeton.edu/chan/software/block-code-for-dmrg</a>.
+Before using the Block or CheMPS2, you need create a config file
 future/dmrgscf/settings.py  (as shown by settings.py.example) to store
 the path where the DMRG solver was installed.</p>
 </div>
 <div class="section" id="fciqmc">
 <h3>FCIQMC<a class="headerlink" href="#fciqmc" title="Permalink to this headline">¶</a></h3>
-<p>PySCF has an interface to call FCIQMC solver NECI
-(<a class="reference external" href="https://github.com/ghb24/NECI_STABLE">https://github.com/ghb24/NECI_STABLE</a>).  To use NECI, you need
-create a config file future/fciqmc/settings.py to store the path where
-NECI was installed.</p>
+<p>NECI (<a class="reference external" href="https://github.com/ghb24/NECI_STABLE">https://github.com/ghb24/NECI_STABLE</a>) is FCIQMC code developed by
+George Booth and Ali Alavi.  PySCF has an interface to call FCIQMC
+solver NECI.  To use NECI, you need create a config file
+future/fciqmc/settings.py to store the path where NECI was installed.</p>
+</div>
+<div class="section" id="libxc">
+<h3>Libxc<a class="headerlink" href="#libxc" title="Permalink to this headline">¶</a></h3>
+<p>By default, building PySCF will automatically download and install
+<a class="reference external" href="http://www.tddft.org/programs/octopus/wiki/index.php/Libxc:download">Libxc 2.2.2</a>
+<tt class="docutils literal"><span class="pre">pyscf.dft.libxc</span></tt> module provided a general interface to access Libxc functionals.</p>
+</div>
+<div class="section" id="xcfun">
+<h3>Xcfun<a class="headerlink" href="#xcfun" title="Permalink to this headline">¶</a></h3>
+<p>By default, building PySCF will automatically download and install
+latest xcfun code from <a class="reference external" href="https://github.com/dftlibs/xcfun">https://github.com/dftlibs/xcfun</a>.
+<tt class="docutils literal"><span class="pre">pyscf.dft.xcfun</span></tt> module provided a general interface to access Libxc
+functionals.</p>
+</div>
+<div class="section" id="xianci">
+<h3>XianCI<a class="headerlink" href="#xianci" title="Permalink to this headline">¶</a></h3>
+<p>XianCI is a spin-adapted MRCI program.  &#8220;Bingbing Sun&#8221; &lt;<a class="reference external" href="mailto:bsuo&#37;&#52;&#48;nwu&#46;edu&#46;cn">bsuo<span>&#64;</span>nwu<span>&#46;</span>edu<span>&#46;</span>cn</a>&gt;
+is the main developer of XianCI program.</p>
 </div>
 </div>
 </div>
@@ -177,6 +199,9 @@ NECI was installed.</p>
 <li><a class="reference internal" href="#plugins">Plugins</a><ul>
 <li><a class="reference internal" href="#dmrg-solver">DMRG solver</a></li>
 <li><a class="reference internal" href="#fciqmc">FCIQMC</a></li>
+<li><a class="reference internal" href="#libxc">Libxc</a></li>
+<li><a class="reference internal" href="#xcfun">Xcfun</a></li>
+<li><a class="reference internal" href="#xianci">XianCI</a></li>
 </ul>
 </li>
 </ul>
@@ -231,7 +256,7 @@ NECI was installed.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

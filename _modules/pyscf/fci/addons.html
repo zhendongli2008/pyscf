@@ -295,7 +295,10 @@
     <span class="k">return</span> <span class="n">airrep</span> <span class="o">^</span> <span class="n">birrep</span>
 
 
-<div class="viewcode-block" id="des_a"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.addons.des_a">[docs]</a><span class="k">def</span> <span class="nf">des_a</span><span class="p">(</span><span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">ap_id</span><span class="p">):</span>
+<span class="c"># construct (N-1)-electron wavefunction by removing an alpha electron from</span>
+<span class="c"># N-electron wavefunction:</span>
+<span class="c"># |N-1&gt; = a_p |N&gt;</span>
+<div class="viewcode-block" id="des_a"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.addons.des_a">[docs]</a><span class="k">def</span> <span class="nf">des_a</span><span class="p">(</span><span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">neleca_nelecb</span><span class="p">,</span> <span class="n">ap_id</span><span class="p">):</span>
     <span class="sd">r&#39;&#39;&#39;Construct (N-1)-electron wavefunction by removing an alpha electron from</span>
 <span class="sd">    the N-electron wavefunction.</span>
 
@@ -308,8 +311,8 @@
 <span class="sd">            CI coefficients, row for alpha strings and column for beta strings.</span>
 <span class="sd">        norb : int</span>
 <span class="sd">            Number of orbitals.</span>
-<span class="sd">        nelec : int or 2-item list</span>
-<span class="sd">            Number of electrons, or 2-item list for (alpha, beta) electrons</span>
+<span class="sd">        (neleca,nelecb) : (int,int)</span>
+<span class="sd">            Number of (alpha, beta) electrons of the input CI function</span>
 <span class="sd">        ap_id : int</span>
 <span class="sd">            Orbital index (0-based), for the annihilation operator</span>
 
@@ -317,11 +320,9 @@
 <span class="sd">        2D array, row for alpha strings and column for beta strings.  Note it</span>
 <span class="sd">        has different number of rows to the input CI coefficients</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
-        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span> <span class="o">//</span> <span class="mi">2</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span>
-
+    <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">neleca_nelecb</span>
+    <span class="k">if</span> <span class="n">neleca</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">ci0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
     <span class="n">des_index</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_des_str_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">neleca</span><span class="p">)</span>
     <span class="n">na_ci1</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">num_strings</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">neleca</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">ci1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">na_ci1</span><span class="p">,</span> <span class="n">ci0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
@@ -334,8 +335,10 @@
     <span class="c">#print(addr_ci1)</span>
     <span class="n">ci1</span><span class="p">[</span><span class="n">addr_ci1</span><span class="p">]</span> <span class="o">=</span> <span class="n">sign</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">ci0</span><span class="p">[</span><span class="n">addr_ci0</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">ci1</span>
-</div>
-<div class="viewcode-block" id="des_b"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.addons.des_b">[docs]</a><span class="k">def</span> <span class="nf">des_b</span><span class="p">(</span><span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">ap_id</span><span class="p">):</span>
+
+<span class="c"># construct (N-1)-electron wavefunction by removing a beta electron from</span>
+<span class="c"># N-electron wavefunction:</span></div>
+<div class="viewcode-block" id="des_b"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.addons.des_b">[docs]</a><span class="k">def</span> <span class="nf">des_b</span><span class="p">(</span><span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">neleca_nelecb</span><span class="p">,</span> <span class="n">ap_id</span><span class="p">):</span>
     <span class="sd">r&#39;&#39;&#39;Construct (N-1)-electron wavefunction by removing a beta electron from</span>
 <span class="sd">    N-electron wavefunction.</span>
 
@@ -344,8 +347,8 @@
 <span class="sd">            CI coefficients, row for alpha strings and column for beta strings.</span>
 <span class="sd">        norb : int</span>
 <span class="sd">            Number of orbitals.</span>
-<span class="sd">        nelec : int or 2-item list</span>
-<span class="sd">            Number of electrons, or 2-item list for (alpha, beta) electrons</span>
+<span class="sd">        (neleca,nelecb) : (int,int)</span>
+<span class="sd">            Number of (alpha, beta) electrons of the input CI function</span>
 <span class="sd">        ap_id : int</span>
 <span class="sd">            Orbital index (0-based), for the annihilation operator</span>
 
@@ -353,10 +356,9 @@
 <span class="sd">        2D array, row for alpha strings and column for beta strings. Note it</span>
 <span class="sd">        has different number of columns to the input CI coefficients.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
-        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span> <span class="o">//</span> <span class="mi">2</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span>
+    <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">neleca_nelecb</span>
+    <span class="k">if</span> <span class="n">nelecb</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ci0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">))</span>
     <span class="n">des_index</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_des_str_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">nelecb</span><span class="p">)</span>
     <span class="n">nb_ci1</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">num_strings</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">nelecb</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">ci1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ci0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nb_ci1</span><span class="p">))</span>
@@ -370,8 +372,11 @@
         <span class="n">sign</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
     <span class="n">ci1</span><span class="p">[:,</span><span class="n">addr_ci1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ci0</span><span class="p">[:,</span><span class="n">addr_ci0</span><span class="p">]</span> <span class="o">*</span> <span class="n">sign</span>
     <span class="k">return</span> <span class="n">ci1</span>
-</div>
-<div class="viewcode-block" id="cre_a"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.addons.cre_a">[docs]</a><span class="k">def</span> <span class="nf">cre_a</span><span class="p">(</span><span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">ap_id</span><span class="p">):</span>
+
+<span class="c"># construct (N+1)-electron wavefunction by adding an alpha electron to</span>
+<span class="c"># N-electron wavefunction:</span>
+<span class="c"># |N+1&gt; = a_p^+ |N&gt;</span></div>
+<div class="viewcode-block" id="cre_a"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.addons.cre_a">[docs]</a><span class="k">def</span> <span class="nf">cre_a</span><span class="p">(</span><span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">neleca_nelecb</span><span class="p">,</span> <span class="n">ap_id</span><span class="p">):</span>
     <span class="sd">r&#39;&#39;&#39;Construct (N+1)-electron wavefunction by adding an alpha electron in</span>
 <span class="sd">    the N-electron wavefunction.</span>
 
@@ -384,8 +389,8 @@
 <span class="sd">            CI coefficients, row for alpha strings and column for beta strings.</span>
 <span class="sd">        norb : int</span>
 <span class="sd">            Number of orbitals.</span>
-<span class="sd">        nelec : int or 2-item list</span>
-<span class="sd">            Number of electrons, or 2-item list for (alpha, beta) electrons</span>
+<span class="sd">        (neleca,nelecb) : (int,int)</span>
+<span class="sd">            Number of (alpha, beta) electrons of the input CI function</span>
 <span class="sd">        ap_id : int</span>
 <span class="sd">            Orbital index (0-based), for the creation operator</span>
 
@@ -393,10 +398,9 @@
 <span class="sd">        2D array, row for alpha strings and column for beta strings. Note it</span>
 <span class="sd">        has different number of rows to the input CI coefficients.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
-        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span> <span class="o">//</span> <span class="mi">2</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span>
+    <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">neleca_nelecb</span>
+    <span class="k">if</span> <span class="n">neleca</span> <span class="o">&gt;=</span> <span class="n">norb</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">ci0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
     <span class="n">cre_index</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_cre_str_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">neleca</span><span class="p">)</span>
     <span class="n">na_ci1</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">num_strings</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">neleca</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">ci1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">na_ci1</span><span class="p">,</span> <span class="n">ci0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
@@ -410,7 +414,7 @@
 
 <span class="c"># construct (N+1)-electron wavefunction by adding a beta electron to</span>
 <span class="c"># N-electron wavefunction:</span></div>
-<div class="viewcode-block" id="cre_b"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.addons.cre_b">[docs]</a><span class="k">def</span> <span class="nf">cre_b</span><span class="p">(</span><span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">ap_id</span><span class="p">):</span>
+<div class="viewcode-block" id="cre_b"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.addons.cre_b">[docs]</a><span class="k">def</span> <span class="nf">cre_b</span><span class="p">(</span><span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">neleca_nelecb</span><span class="p">,</span> <span class="n">ap_id</span><span class="p">):</span>
     <span class="sd">r&#39;&#39;&#39;Construct (N+1)-electron wavefunction by adding a beta electron in</span>
 <span class="sd">    the N-electron wavefunction.</span>
 
@@ -419,8 +423,8 @@
 <span class="sd">            CI coefficients, row for alpha strings and column for beta strings.</span>
 <span class="sd">        norb : int</span>
 <span class="sd">            Number of orbitals.</span>
-<span class="sd">        nelec : int or 2-item list</span>
-<span class="sd">            Number of electrons, or 2-item list for (alpha, beta) electrons</span>
+<span class="sd">        (neleca,nelecb) : (int,int)</span>
+<span class="sd">            Number of (alpha, beta) electrons of the input CI function</span>
 <span class="sd">        ap_id : int</span>
 <span class="sd">            Orbital index (0-based), for the creation operator</span>
 
@@ -428,10 +432,9 @@
 <span class="sd">        2D array, row for alpha strings and column for beta strings. Note it</span>
 <span class="sd">        has different number of columns to the input CI coefficients.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
-        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span> <span class="o">//</span> <span class="mi">2</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span>
+    <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">neleca_nelecb</span>
+    <span class="k">if</span> <span class="n">nelecb</span> <span class="o">&gt;=</span> <span class="n">norb</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ci0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">))</span>
     <span class="n">cre_index</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">gen_cre_str_index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">nelecb</span><span class="p">)</span>
     <span class="n">nb_ci1</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">num_strings</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">nelecb</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">ci1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ci0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nb_ci1</span><span class="p">))</span>
@@ -555,7 +558,10 @@
     <span class="k">return</span> <span class="n">fciobj</span></div>
 <span class="k">def</span> <span class="nf">fix_spin</span><span class="p">(</span><span class="n">fciobj</span><span class="p">,</span> <span class="n">shift</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span> <span class="n">ss_value</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">fix_spin_</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">fciobj</span><span class="p">),</span> <span class="n">shift</span><span class="p">,</span> <span class="n">ss_value</span><span class="p">)</span>
+<span class="n">force_spin_</span> <span class="o">=</span> <span class="n">fix_spin_</span>
 
+<span class="c">#TODO:</span>
+<span class="c">#fix_spin</span>
 
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">a4</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">)[:,</span><span class="bp">None</span><span class="p">]</span>
@@ -652,7 +658,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

@@ -669,45 +669,6 @@ e.g.:</p>
 <h3>SCF<a class="headerlink" href="#scf" title="Permalink to this headline">¶</a></h3>
 <p>To control the HF determinant symmetry,  one can assign occupancy for
 particular irreps, e.g.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
-<span class="c">#</span>
-<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
-<span class="c">#</span>
-
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
-
-<span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">Specify irrep_nelec to control the wave function symmetry</span>
-<span class="sd">&#39;&#39;&#39;</span>
-
-<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
-<span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">[</span><span class="s">&quot;O&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span>  <span class="mf">0.7</span><span class="p">)],</span>
-    <span class="p">[</span><span class="s">&quot;O&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.7</span><span class="p">)],]</span>
-
-<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;O&#39;</span><span class="p">:</span> <span class="s">&#39;cc-pvdz&#39;</span><span class="p">}</span>
-<span class="n">mol</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="bp">True</span>
-<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
-
-<span class="n">m</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-<span class="n">m</span><span class="o">.</span><span class="n">irrep_nelec</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;B2g&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;B3g&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;B2u&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;B3u&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
-<span class="k">print</span><span class="p">(</span><span class="s">&#39;RHF    = </span><span class="si">%.15g</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">m</span><span class="o">.</span><span class="n">scf</span><span class="p">())</span>
-
-
-<span class="n">m</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">UHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-<span class="n">m</span><span class="o">.</span><span class="n">irrep_nelec</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;B2g&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="s">&#39;B3g&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="s">&#39;B2u&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="s">&#39;B3u&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)}</span>
-<span class="k">print</span><span class="p">(</span><span class="s">&#39;UHF    = </span><span class="si">%.15g</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">m</span><span class="o">.</span><span class="n">scf</span><span class="p">())</span>
-
-
-<span class="n">mol</span><span class="o">.</span><span class="n">spin</span> <span class="o">=</span> <span class="mi">2</span> <span class="c"># triplet</span>
-<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="bp">False</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-<span class="n">m</span><span class="o">.</span><span class="n">irrep_nelec</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;B2u&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="s">&#39;B3u&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)}</span>
-<span class="k">print</span><span class="p">(</span><span class="s">&#39;ROHF   = </span><span class="si">%.15g</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">m</span><span class="o">.</span><span class="n">scf</span><span class="p">())</span>
-</pre></div>
-</div>
 </div>
 <div class="section" id="fci">
 <h3>FCI<a class="headerlink" href="#fci" title="Permalink to this headline">¶</a></h3>
@@ -801,7 +762,7 @@ effects.  For example</p>
 
 <span class="c">#</span>
 <span class="c"># 4. Newton method for non-relativistic HF with density fitting for orbital</span>
-<span class="c"># hessian of newton solver.  Note the anwser is equivalent to case 3, but the</span>
+<span class="c"># hessian of newton solver.  Note the answer is equal to case 3, but the</span>
 <span class="c"># solver &quot;mf&quot; is different.</span>
 <span class="c">#</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">newton</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)))</span>
@@ -854,17 +815,6 @@ Hamiltonian.  For example</p>
 <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">Density fitting for orbital optimzation.</span>
 
-<span class="sd">NOTE mcscf.density_fit function decorates the mcscf.CASSCF object to</span>
-<span class="sd">approximate the orbital hessian.  The 2e integrals are evaluated by the</span>
-<span class="sd">regular 4-center integration (exactly) when computing the total energy.</span>
-<span class="sd">The CASSCF answer should not be affected by this approximation.</span>
-
-<span class="sd">The overall density fitting for CASCI/CASSCF (which affects total energy)</span>
-<span class="sd">needs mcscf.DFCASSCF or mcscf.DFCASCI class.  The overall density fitting also</span>
-<span class="sd">requires the underlying SCF object to be DF-SCF, which can be obtained by</span>
-<span class="sd">decoration function scf.density_fit.  See also the example</span>
-<span class="sd">pyscf/examples/scf/20-density_fitting.py.</span>
-
 <span class="sd">Note mcscf.density_fit function follows the same convention of decoration</span>
 <span class="sd">ordering which is applied in the SCF decoration.  See pyscf/mcscf/df.py for</span>
 <span class="sd">more details and pyscf/example/scf/23-decorate_scf.py as an exmple.</span>
@@ -892,27 +842,18 @@ Hamiltonian.  For example</p>
 <span class="n">mf</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-8</span>
 <span class="n">e</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 
-<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-<span class="n">mo</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sort_mo</span><span class="p">([</span><span class="mi">17</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s">&#39;E(CAS) = </span><span class="si">%.12f</span><span class="s">, ref = -230.848493421389&#39;</span> <span class="o">%</span> <span class="n">mc</span><span class="o">.</span><span class="n">e_tot</span><span class="p">)</span>
-
 <span class="c">#</span>
-<span class="c"># DFCASSCF + conventional SCF will only affect the orbital hessian.  You&#39;ll</span>
-<span class="c"># probably see the warning msg for this combination</span>
-<span class="c"># Warn: DFCASSCF: the first argument needs to be density-fitting SCF object.  &lt;class &#39;pyscf.scf.hf.RHF&#39;&gt; is not density-fitting SCF object.</span>
+<span class="c"># DFCASSCF uses density-fitting 2e integrals overall, regardless the</span>
+<span class="c"># underlying mean-filed object</span>
 <span class="c">#</span>
 <span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">DFCASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
 <span class="n">mo</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sort_mo</span><span class="p">([</span><span class="mi">17</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
 <span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s">&#39;E(CAS) = </span><span class="si">%.12f</span><span class="s">, ref = -230.848493421389&#39;</span> <span class="o">%</span> <span class="n">mc</span><span class="o">.</span><span class="n">e_tot</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;E(CAS) = </span><span class="si">%.12f</span><span class="s">, ref = -230.845892901370&#39;</span> <span class="o">%</span> <span class="n">mc</span><span class="o">.</span><span class="n">e_tot</span><span class="p">)</span>
 
 <span class="c">#</span>
-<span class="c"># To carry out the overall density-fitting CASSCF calculation,  you need start</span>
-<span class="c"># from DF-SCF calculation</span>
+<span class="c"># Assign DF basis</span>
 <span class="c">#</span>
-<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">),</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;ccpvtzfit&#39;</span><span class="p">)</span>
-<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 <span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">DFCASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;ccpvtzfit&#39;</span><span class="p">)</span>
 <span class="n">mo</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sort_mo</span><span class="p">([</span><span class="mi">17</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
 <span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
@@ -1137,7 +1078,7 @@ Hamiltonian for Hartree-Fock</p>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

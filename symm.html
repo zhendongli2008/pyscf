@@ -182,7 +182,78 @@ If solution is not found, return []</p>
 <dl class="function">
 <dt id="pyscf.symm.addons.symmetrize_orb">
 <tt class="descclassname">pyscf.symm.addons.</tt><tt class="descname">symmetrize_orb</tt><big>(</big><em>mol</em>, <em>mo</em>, <em>orbsym=None</em>, <em>s=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/symm/addons.html#symmetrize_orb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.symm.addons.symmetrize_orb" title="Permalink to this definition">¶</a></dt>
-<dd><p>Symmetrize the given orbitals</p>
+<dd><p>Symmetrize the given orbitals.</p>
+<p>This function is different to the <a class="reference internal" href="#pyscf.symm.addons.symmetrize_space" title="pyscf.symm.addons.symmetrize_space"><tt class="xref py py-func docutils literal"><span class="pre">symmetrize_space()</span></tt></a>:  In this
+function, each orbital is symmetrized by removing non-symmetric components.
+<a class="reference internal" href="#pyscf.symm.addons.symmetrize_space" title="pyscf.symm.addons.symmetrize_space"><tt class="xref py py-func docutils literal"><span class="pre">symmetrize_space()</span></tt></a> symmetrizes the entire space by mixing different
+orbitals.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>mo <span class="classifier-delimiter">:</span> <span class="classifier">2D float array</span></dt>
+<dd>The orbital space to symmetrize</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>orbsym <span class="classifier-delimiter">:</span> <span class="classifier">integer list</span></dt>
+<dd>Irrep id for each orbital.  If not given, the irreps are guessed
+by calling <a class="reference internal" href="#pyscf.symm.addons.label_orb_symm" title="pyscf.symm.addons.label_orb_symm"><tt class="xref py py-func docutils literal"><span class="pre">label_orb_symm()</span></tt></a>.</dd>
+<dt>s <span class="classifier-delimiter">:</span> <span class="classifier">2D float array</span></dt>
+<dd>Overlap matrix.  If given, use this overlap than the the overlap
+of the input mol.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>2D orbital coefficients</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">symm</span><span class="p">,</span> <span class="n">scf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;C  0  0  0; H  1  1  1; H -1 -1  1; H  1 -1 -1; H -1  1 -1&#39;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="s">&#39;D2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mo</span> <span class="o">=</span> <span class="n">symm</span><span class="o">.</span><span class="n">symmetrize_orb</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">symm</span><span class="o">.</span><span class="n">label_orb_symm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">irrep_name</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">,</span> <span class="n">mo</span><span class="p">))</span>
+<span class="go">[&#39;A&#39;, &#39;A&#39;, &#39;B1&#39;, &#39;B2&#39;, &#39;B3&#39;, &#39;A&#39;, &#39;B1&#39;, &#39;B2&#39;, &#39;B3&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.symm.addons.symmetrize_space">
+<tt class="descclassname">pyscf.symm.addons.</tt><tt class="descname">symmetrize_space</tt><big>(</big><em>mol</em>, <em>mo</em>, <em>s=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/symm/addons.html#symmetrize_space"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.symm.addons.symmetrize_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>Symmetrize the given orbital space.</p>
+<p>This function is different to the <a class="reference internal" href="#pyscf.symm.addons.symmetrize_orb" title="pyscf.symm.addons.symmetrize_orb"><tt class="xref py py-func docutils literal"><span class="pre">symmetrize_orb()</span></tt></a>:  In this function,
+the given orbitals are mixed to reveal the symmtery; <a class="reference internal" href="#pyscf.symm.addons.symmetrize_orb" title="pyscf.symm.addons.symmetrize_orb"><tt class="xref py py-func docutils literal"><span class="pre">symmetrize_orb()</span></tt></a>
+projects out non-symmetric components for each orbital.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>mo <span class="classifier-delimiter">:</span> <span class="classifier">2D float array</span></dt>
+<dd>The orbital space to symmetrize</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>s <span class="classifier-delimiter">:</span> <span class="classifier">2D float array</span></dt>
+<dd>Overlap matrix.  If not given, overlap is computed with the input mol.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>2D orbital coefficients</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">symm</span><span class="p">,</span> <span class="n">scf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;C  0  0  0; H  1  1  1; H -1 -1  1; H  1 -1 -1; H -1  1 -1&#39;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="s">&#39;D2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mo</span> <span class="o">=</span> <span class="n">symm</span><span class="o">.</span><span class="n">symmetrize_space</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">symm</span><span class="o">.</span><span class="n">label_orb_symm</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">irrep_name</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">,</span> <span class="n">mo</span><span class="p">))</span>
+<span class="go">[&#39;A&#39;, &#39;A&#39;, &#39;A&#39;, &#39;B1&#39;, &#39;B1&#39;, &#39;B2&#39;, &#39;B2&#39;, &#39;B3&#39;, &#39;B3&#39;]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -253,7 +324,7 @@ If solution is not found, return []</p>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

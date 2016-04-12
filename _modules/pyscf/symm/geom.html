@@ -211,6 +211,9 @@
                 <span class="n">gpname</span> <span class="o">=</span> <span class="s">&#39;Cs&#39;</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">gpname</span> <span class="o">=</span> <span class="s">&#39;C1&#39;</span>
+<span class="c">#    charge_center = get_charge_center(atoms)</span>
+<span class="c">#    if not numpy.allclose(charge_center, rawsys.charge_center, atol=tol):</span>
+<span class="c">#        assert(parallel_vectors(charge_center-rawsys.charge_center, axes[2]))</span>
     <span class="k">return</span> <span class="n">gpname</span><span class="p">,</span> <span class="n">rawsys</span><span class="o">.</span><span class="n">charge_center</span><span class="p">,</span> <span class="n">_pesudo_vectors</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
 
 
@@ -315,9 +318,9 @@
         <span class="k">return</span> <span class="n">eql_atom_ids</span>
 
     <span class="n">center</span> <span class="o">=</span> <span class="n">get_charge_center</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">GEOM_THRESHOLD</span><span class="p">):</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;WARN: Molecular charge center </span><span class="si">%s</span><span class="s"> is not on (0,0,0)</span><span class="se">\n</span><span class="s">&#39;</span>
-                        <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">center</span><span class="p">))</span>
+<span class="c">#    if not numpy.allclose(center, 0, atol=GEOM_THRESHOLD):</span>
+<span class="c">#        sys.stderr.write(&#39;WARN: Molecular charge center %s is not on (0,0,0)\n&#39;</span>
+<span class="c">#                        % str(center))</span>
     <span class="n">opdic</span> <span class="o">=</span> <span class="n">symm_ops</span><span class="p">(</span><span class="n">gpname</span><span class="p">)</span>
     <span class="n">ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">opdic</span><span class="p">[</span><span class="n">op</span><span class="p">]</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">symm</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">OPERATOR_TABLE</span><span class="p">[</span><span class="n">gpname</span><span class="p">]]</span>
     <span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -480,7 +483,7 @@
                         <span class="n">maybe_mirrorx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">zaxis</span><span class="p">,</span> <span class="n">r1</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span><span class="o">+</span><span class="n">r1</span><span class="p">[</span><span class="n">i2</span><span class="p">]))</span>
 
         <span class="n">possible_cn</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">maybe_cn</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">maybe_cn</span><span class="p">)):</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">n</span> <span class="o">%</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">possible_cn</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
@@ -643,10 +646,9 @@
     <span class="c"># ensure z component &gt; 0</span>
     <span class="n">vs</span><span class="p">[</span><span class="n">vs</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
     <span class="c"># if z component == 0, ensure y component &gt; 0</span>
-    <span class="n">vs</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">vs</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">,</span> <span class="n">idz0</span><span class="p">)]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">vs</span><span class="p">[(</span><span class="n">vs</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">idz0</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
     <span class="c"># if y and z component == 0, ensure x component &gt; 0</span>
-    <span class="n">idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">idy0</span><span class="p">,</span> <span class="n">idz0</span><span class="p">)</span>
-    <span class="n">vs</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">vs</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">,</span> <span class="n">idx</span><span class="p">)]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">vs</span><span class="p">[(</span><span class="n">vs</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">idy0</span> <span class="o">&amp;</span> <span class="n">idz0</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
     <span class="k">return</span> <span class="n">vs</span>
 
 
@@ -725,7 +727,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

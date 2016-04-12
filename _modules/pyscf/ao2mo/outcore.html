@@ -57,7 +57,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">pyscf.lib</span>
-<span class="kn">import</span> <span class="nn">pyscf.lib.logger</span> <span class="kn">as</span> <span class="nn">logger</span>
+<span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">pyscf.ao2mo</span> <span class="kn">import</span> <span class="n">_ao2mo</span>
 
 <span class="c"># default ioblk_size is 256 MB</span>
@@ -78,7 +78,7 @@
 <span class="sd">        erifile : str or h5py File or h5py Group object</span>
 <span class="sd">            To store the transformed integrals, in HDF5 format.</span>
 
-<span class="sd">    Kwargs</span>
+<span class="sd">    Kwargs:</span>
 <span class="sd">        dataname : str</span>
 <span class="sd">            The dataset name in the erifile (ref the hierarchy of HDF5 format</span>
 <span class="sd">            http://www.hdfgroup.org/HDF5/doc1.6/UG/09_Groups.html).  By assigning</span>
@@ -107,8 +107,6 @@
 
 <span class="sd">        comp : int</span>
 <span class="sd">            Components of the integrals, e.g. cint2e_ip_sph has 3 components.</span>
-<span class="sd">        verbose : int</span>
-<span class="sd">            Print level</span>
 <span class="sd">        max_memory : float or int</span>
 <span class="sd">            The maximum size of cache to use (in MB), large cache may **not**</span>
 <span class="sd">            improve performance.</span>
@@ -197,8 +195,6 @@
 
 <span class="sd">        comp : int</span>
 <span class="sd">            Components of the integrals, e.g. cint2e_ip_sph has 3 components.</span>
-<span class="sd">        verbose : int</span>
-<span class="sd">            Print level</span>
 <span class="sd">        max_memory : float or int</span>
 <span class="sd">            The maximum size of cache to use (in MB), large cache may **not**</span>
 <span class="sd">            improve performance.</span>
@@ -752,64 +748,40 @@
     <span class="n">max_aobuf</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_aobuf</span><span class="p">)</span>
     <span class="n">ao_loc</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">ao_loc_nr</span><span class="p">()</span>
 
-    <span class="n">accum</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">lstdij</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">if</span> <span class="n">aosym</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;s4&#39;</span><span class="p">,</span> <span class="s">&#39;s2kl&#39;</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">):</span>
             <span class="n">di</span> <span class="o">=</span> <span class="n">ao_loc</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ao_loc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
                 <span class="n">dj</span> <span class="o">=</span> <span class="n">ao_loc</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ao_loc</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
-                <span class="n">accum</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">di</span><span class="o">*</span><span class="n">dj</span><span class="p">)</span>
-            <span class="n">accum</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">di</span><span class="o">*</span><span class="p">(</span><span class="n">di</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">lstdij</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">di</span><span class="o">*</span><span class="n">dj</span><span class="p">)</span>
+            <span class="n">lstdij</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">di</span><span class="o">*</span><span class="p">(</span><span class="n">di</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">):</span>
             <span class="n">di</span> <span class="o">=</span> <span class="n">ao_loc</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ao_loc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">):</span>
                 <span class="n">dj</span> <span class="o">=</span> <span class="n">ao_loc</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ao_loc</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
-                <span class="n">accum</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">di</span><span class="o">*</span><span class="n">dj</span><span class="p">)</span>
+                <span class="n">lstdij</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">di</span><span class="o">*</span><span class="n">dj</span><span class="p">)</span>
 
-    <span class="n">ijsh_range</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">buflen</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">ij_start</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">ij</span><span class="p">,</span> <span class="n">dij</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">accum</span><span class="p">):</span>
-        <span class="n">buflen</span> <span class="o">+=</span> <span class="n">dij</span>
-        <span class="k">if</span> <span class="n">buflen</span> <span class="o">&gt;</span> <span class="n">max_iobuf</span> <span class="ow">and</span> <span class="n">buflen</span> <span class="o">&gt;</span> <span class="n">dij</span><span class="p">:</span>
-<span class="c"># to fill each iobuf, AO integrals may need to be fill to aobuf several times</span>
-            <span class="k">if</span> <span class="n">max_aobuf</span> <span class="o">&lt;</span> <span class="n">buflen</span><span class="o">-</span><span class="n">dij</span><span class="p">:</span>
-                <span class="n">ijdiv</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="n">n0</span> <span class="o">=</span> <span class="n">ij_start</span>
-                <span class="n">aobuf</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ij_start</span><span class="p">,</span> <span class="n">ij</span><span class="p">):</span>
-                    <span class="n">aobuf</span> <span class="o">+=</span> <span class="n">accum</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                    <span class="k">if</span> <span class="n">aobuf</span> <span class="o">&gt;</span> <span class="n">max_aobuf</span> <span class="ow">and</span> <span class="n">aobuf</span> <span class="o">&gt;</span> <span class="n">accum</span><span class="p">[</span><span class="n">n</span><span class="p">]:</span>
-                        <span class="n">ijdiv</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">n0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">aobuf</span><span class="o">-</span><span class="n">accum</span><span class="p">[</span><span class="n">n</span><span class="p">]))</span>
-                        <span class="n">n0</span> <span class="o">=</span> <span class="n">n</span>
-                        <span class="n">aobuf</span> <span class="o">=</span> <span class="n">accum</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                <span class="n">ijdiv</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">n0</span><span class="p">,</span> <span class="n">ij</span><span class="p">,</span> <span class="n">aobuf</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">div_shls</span><span class="p">(</span><span class="n">ijstart</span><span class="p">,</span> <span class="n">ij_max</span><span class="p">,</span> <span class="n">bufsize</span><span class="p">):</span>
+        <span class="n">ij_now</span> <span class="o">=</span> <span class="n">ijstart</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">grouped</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ijstart</span><span class="p">,</span> <span class="n">ij_now</span><span class="p">,</span> <span class="n">lstdij</span><span class="p">[</span><span class="n">ijstart</span><span class="p">])]</span>
+        <span class="k">while</span> <span class="n">ij_now</span> <span class="o">&lt;</span> <span class="n">ij_max</span><span class="p">:</span>
+            <span class="n">ijstart</span><span class="p">,</span> <span class="n">ijstop</span><span class="p">,</span> <span class="n">buflen</span> <span class="o">=</span> <span class="n">grouped</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">dij</span> <span class="o">=</span> <span class="n">lstdij</span><span class="p">[</span><span class="n">ij_now</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">buflen</span> <span class="o">+</span> <span class="n">dij</span> <span class="o">&gt;</span> <span class="n">bufsize</span><span class="p">:</span>
+                <span class="n">grouped</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ij_now</span><span class="p">,</span> <span class="n">ij_now</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">dij</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">ijdiv</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ij_start</span><span class="p">,</span> <span class="n">ij</span><span class="p">,</span> <span class="n">buflen</span><span class="o">-</span><span class="n">dij</span><span class="p">)]</span>
+                <span class="n">grouped</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ijstart</span><span class="p">,</span> <span class="n">ij_now</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">buflen</span><span class="o">+</span><span class="n">dij</span><span class="p">)</span>
+            <span class="n">ij_now</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">grouped</span>
+    <span class="n">ijsh_range</span> <span class="o">=</span> <span class="n">div_shls</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lstdij</span><span class="p">),</span> <span class="n">max_iobuf</span><span class="p">)</span>
 
-            <span class="n">ijsh_range</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ij_start</span><span class="p">,</span> <span class="n">ij</span><span class="p">,</span> <span class="n">buflen</span><span class="o">-</span><span class="n">dij</span><span class="p">,</span> <span class="n">ijdiv</span><span class="p">))</span>
-
-            <span class="n">ij_start</span> <span class="o">=</span> <span class="n">ij</span>
-            <span class="n">buflen</span> <span class="o">=</span> <span class="n">dij</span>
-
-    <span class="n">ij</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">accum</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">max_aobuf</span> <span class="o">&lt;</span> <span class="n">buflen</span><span class="p">:</span>
-        <span class="n">ijdiv</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">n0</span> <span class="o">=</span> <span class="n">ij_start</span>
-        <span class="n">aobuf</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ij_start</span><span class="p">,</span> <span class="n">ij</span><span class="p">):</span>
-            <span class="n">aobuf</span> <span class="o">+=</span> <span class="n">accum</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">aobuf</span> <span class="o">&gt;</span> <span class="n">max_aobuf</span><span class="p">:</span>
-                <span class="n">ijdiv</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">n0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">aobuf</span><span class="o">-</span><span class="n">accum</span><span class="p">[</span><span class="n">n</span><span class="p">]))</span>
-                <span class="n">n0</span> <span class="o">=</span> <span class="n">n</span>
-                <span class="n">aobuf</span> <span class="o">=</span> <span class="n">accum</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-        <span class="n">ijdiv</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">n0</span><span class="p">,</span> <span class="n">ij</span><span class="p">,</span> <span class="n">aobuf</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">ijdiv</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ij_start</span><span class="p">,</span> <span class="n">ij</span><span class="p">,</span> <span class="n">buflen</span><span class="p">)]</span>
-    <span class="n">ijsh_range</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ij_start</span><span class="p">,</span> <span class="n">ij</span><span class="p">,</span> <span class="n">buflen</span><span class="p">,</span> <span class="n">ijdiv</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">div_each_iobuf</span><span class="p">(</span><span class="n">ijstart</span><span class="p">,</span> <span class="n">ijstop</span><span class="p">,</span> <span class="n">buflen</span><span class="p">):</span>
+<span class="c"># to fill each iobuf, AO integrals may need to be fill to aobuf several times</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">ijstart</span><span class="p">,</span> <span class="n">ijstop</span><span class="p">,</span> <span class="n">buflen</span><span class="p">,</span> <span class="n">div_shls</span><span class="p">(</span><span class="n">ijstart</span><span class="p">,</span> <span class="n">ijstop</span><span class="p">,</span> <span class="n">max_aobuf</span><span class="p">))</span>
+    <span class="n">ijsh_range</span> <span class="o">=</span> <span class="p">[</span><span class="n">div_each_iobuf</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ijsh_range</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">ijsh_range</span>
 
 <span class="k">def</span> <span class="nf">_stand_sym_code</span><span class="p">(</span><span class="n">sym</span><span class="p">):</span>
@@ -906,7 +878,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>
