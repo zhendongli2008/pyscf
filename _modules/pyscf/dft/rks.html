@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyscf.dft.rks &mdash; PySCF 1.1 alpha documentation</title>
+    <title>pyscf.dft.rks &mdash; PySCF 1.1 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.1 alpha',
+        VERSION:     '1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 alpha documentation" href="../../../index.html" />
+    <link rel="top" title="PySCF 1.1 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -109,7 +109,10 @@
     <span class="n">t0</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">(),</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">build_</span><span class="p">()</span>
+        <span class="n">small_rho_cutoff</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">small_rho_cutoff</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="s">&#39;setting up grids&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">small_rho_cutoff</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="n">hyb</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">hybrid_coeff</span><span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">xc</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">spin</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
 
@@ -151,10 +154,11 @@
     <span class="k">if</span> <span class="n">nset</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">ks</span><span class="o">.</span><span class="n">_ecoul</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">vj</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
 
-    <span class="k">if</span> <span class="n">ks</span><span class="o">.</span><span class="n">small_rho_cutoff</span> <span class="o">&gt;</span> <span class="mf">1e-20</span> <span class="ow">and</span> <span class="n">nset</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">small_rho_cutoff</span> <span class="o">&gt;</span> <span class="mf">1e-20</span> <span class="ow">and</span> <span class="n">nset</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="c"># Filter grids the first time setup grids</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="n">numint</span><span class="o">.</span><span class="n">large_rho_indices</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="p">,</span>
-                                       <span class="n">ks</span><span class="o">.</span><span class="n">small_rho_cutoff</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">large_rho_indices</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="p">,</span> <span class="n">small_rho_cutoff</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="s">&#39;Drop grids </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span>
+                     <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
         <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span>  <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span> <span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
         <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
         <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">non0tab</span> <span class="o">=</span> <span class="bp">None</span>
@@ -187,35 +191,45 @@
     <span class="n">__doc__</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;Restricted Kohn-Sham</span><span class="se">\n</span><span class="s">&#39;&#39;&#39;</span> <span class="o">+</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">+</span> <span class="s">&#39;&#39;&#39;</span>
 <span class="s">    Attributes for RKS:</span>
 <span class="s">        xc : str</span>
-<span class="s">            &#39;X_name,C_name&#39; for the XC functional</span>
+<span class="s">            &#39;X_name,C_name&#39; for the XC functional.  Default is &#39;lda,vwn&#39;</span>
 <span class="s">        grids : Grids object</span>
-<span class="s">            grids.level (0 - 6)  big number for large mesh grids, default is 3</span>
+<span class="s">            grids.level (0 - 9)  big number for large mesh grids. Default is 3</span>
 
-<span class="s">            grids.atomic_radii  can be one of</span>
-<span class="s">                | radi.treutler_atomic_radii_adjust(mol, radi.BRAGG_RADII)</span>
-<span class="s">                | radi.treutler_atomic_radii_adjust(mol, radi.COVALENT_RADII)</span>
-<span class="s">                | radi.becke_atomic_radii_adjust(mol, radi.BRAGG_RADII)</span>
-<span class="s">                | radi.becke_atomic_radii_adjust(mol, radi.COVALENT_RADII)</span>
-<span class="s">                | None,          to switch off atomic radii adjustment</span>
+<span class="s">            radii_adjust</span>
+<span class="s">                | radi.treutler_atomic_radii_adjust (default)</span>
+<span class="s">                | radi.becke_atomic_radii_adjust</span>
+<span class="s">                | None : to switch off atomic radii adjustment</span>
 
-<span class="s">            grids.radi_method  scheme for radial grids, can be one of</span>
-<span class="s">                | radi.treutler</span>
+<span class="s">            grids.atomic_radii</span>
+<span class="s">                | radi.BRAGG_RADII  (default)</span>
+<span class="s">                | radi.COVALENT_RADII</span>
+<span class="s">                | None : to switch off atomic radii adjustment</span>
+
+<span class="s">            grids.radi_method  scheme for radial grids</span>
+<span class="s">                | radi.treutler  (default)</span>
+<span class="s">                | radi.delley</span>
+<span class="s">                | radi.mura_knowles</span>
 <span class="s">                | radi.gauss_chebyshev</span>
 
-<span class="s">            grids.becke_scheme  weight partition function, can be one of</span>
+<span class="s">            grids.becke_scheme  weight partition function</span>
+<span class="s">                | gen_grid.original_becke  (default)</span>
 <span class="s">                | gen_grid.stratmann</span>
-<span class="s">                | gen_grid.original_becke</span>
 
-<span class="s">            grids.prune  scheme to reduce number of grids, can be one of</span>
+<span class="s">            grids.prune  scheme to reduce number of grids</span>
+<span class="s">                | gen_grid.nwchem_prune  (default)</span>
 <span class="s">                | gen_grid.sg1_prune</span>
-<span class="s">                | gen_grid.nwchem_prune</span>
 <span class="s">                | gen_grid.treutler_prune</span>
+<span class="s">                | None : to switch off grids pruning</span>
 
 <span class="s">            grids.symmetry  True/False  to symmetrize mesh grids (TODO)</span>
 
 <span class="s">            grids.atom_grid  Set (radial, angular) grids for particular atoms.</span>
 <span class="s">            Eg, grids.atom_grid = {&#39;H&#39;: (20,110)} will generate 20 radial</span>
 <span class="s">            grids and 110 angular grids for H atom.</span>
+
+<span class="s">        small_rho_cutoff : float</span>
+<span class="s">            Drop grids if their contribution to total electrons smaller than</span>
+<span class="s">            this cutoff value.  Default is 1e-7.</span>
 
 <span class="s">    Examples:</span>
 
@@ -227,15 +241,6 @@
 <span class="s">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">):</span>
         <span class="n">pyscf</span><span class="o">.</span><span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">RHF</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">)</span>
-<span class="c">#        self.xc = &#39;LDA,VWN&#39;</span>
-<span class="c">#        self.grids = gen_grid.Grids(mol)</span>
-<span class="c">#        self.small_rho_cutoff = 1e-12  # Use rho to filter grids</span>
-<span class="c">###################################################</span>
-<span class="c">## don&#39;t modify the following attributes, they are not input options</span>
-<span class="c">#        self._ecoul = 0</span>
-<span class="c">#        self._exc = 0</span>
-<span class="c">#        self._numint = numint._NumInt()</span>
-<span class="c">#        self._keys = self._keys.union([&#39;xc&#39;, &#39;grids&#39;, &#39;small_rho_cutoff&#39;])</span>
         <span class="n">_dft_common_init_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -253,7 +258,7 @@
 <span class="k">def</span> <span class="nf">_dft_common_init_</span><span class="p">(</span><span class="n">mf</span><span class="p">):</span>
     <span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s">&#39;LDA,VWN&#39;</span>
     <span class="n">mf</span><span class="o">.</span><span class="n">grids</span> <span class="o">=</span> <span class="n">gen_grid</span><span class="o">.</span><span class="n">Grids</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="p">)</span>
-    <span class="n">mf</span><span class="o">.</span><span class="n">small_rho_cutoff</span> <span class="o">=</span> <span class="mf">1e-12</span>  <span class="c"># Use rho to filter grids</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">small_rho_cutoff</span> <span class="o">=</span> <span class="mf">1e-7</span>  <span class="c"># Use rho to filter grids</span>
 <span class="c">##################################################</span>
 <span class="c"># don&#39;t modify the following attributes, they are not input options</span>
     <span class="n">mf</span><span class="o">.</span><span class="n">_ecoul</span> <span class="o">=</span> <span class="mi">0</span>
@@ -315,7 +320,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyscf.dft.uks &mdash; PySCF 1.1 alpha documentation</title>
+    <title>pyscf.dft.uks &mdash; PySCF 1.1 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.1 alpha',
+        VERSION:     '1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 alpha documentation" href="../../../index.html" />
+    <link rel="top" title="PySCF 1.1 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -78,7 +78,10 @@
     <span class="n">t0</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">(),</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">build_</span><span class="p">()</span>
+        <span class="n">small_rho_cutoff</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">small_rho_cutoff</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="s">&#39;setting up grids&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">small_rho_cutoff</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="n">n</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">_exc</span><span class="p">,</span> <span class="n">vx</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">nr_uks_</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">xc</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="n">hermi</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="s">&#39;nelec by numeric integration = </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
@@ -123,10 +126,12 @@
     <span class="k">if</span> <span class="n">nset</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">ks</span><span class="o">.</span><span class="n">_ecoul</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">vj</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
 
-    <span class="k">if</span> <span class="n">ks</span><span class="o">.</span><span class="n">small_rho_cutoff</span> <span class="o">&gt;</span> <span class="mf">1e-20</span> <span class="ow">and</span> <span class="n">nset</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">small_rho_cutoff</span> <span class="o">&gt;</span> <span class="mf">1e-20</span> <span class="ow">and</span> <span class="n">nset</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="c"># Filter grids the first time setup grids</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="n">numint</span><span class="o">.</span><span class="n">large_rho_indices</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="p">,</span>
-                                       <span class="n">ks</span><span class="o">.</span><span class="n">small_rho_cutoff</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">large_rho_indices</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="p">,</span>
+                                           <span class="n">small_rho_cutoff</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="s">&#39;Drop grids </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span>
+                     <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
         <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span>  <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span> <span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
         <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
         <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">non0tab</span> <span class="o">=</span> <span class="bp">None</span>
@@ -209,7 +214,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

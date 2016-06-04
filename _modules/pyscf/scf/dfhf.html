@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyscf.scf.dfhf &mdash; PySCF 1.1 alpha documentation</title>
+    <title>pyscf.scf.dfhf &mdash; PySCF 1.1 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.1 alpha',
+        VERSION:     '1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 alpha documentation" href="../../../index.html" />
+    <link rel="top" title="PySCF 1.1 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -99,8 +99,21 @@
 <span class="sd">    -100.005306000435510</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="kn">import</span> <span class="nn">pyscf.scf</span>
-    <span class="k">class</span> <span class="nc">DFHF</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">__class__</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="kn">import</span> <span class="n">dhf</span>
+    <span class="n">mf_class</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">__class__</span>
+    <span class="k">if</span> <span class="n">mf_class</span><span class="o">.</span><span class="n">__doc__</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">mf_class</span><span class="o">.</span><span class="n">__doc__</span>
+    <span class="k">class</span> <span class="nc">DFHF</span><span class="p">(</span><span class="n">mf_class</span><span class="p">):</span>
+        <span class="n">__doc__</span> <span class="o">=</span> <span class="n">doc</span> <span class="o">+</span> \
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Attributes for density-fitting SCF:</span>
+<span class="sd">            auxbasis : str or basis dict</span>
+<span class="sd">                Same format to the input attribute mol.basis.</span>
+<span class="sd">                The default basis &#39;weigend+etb&#39; means weigend-coulomb-fit basis</span>
+<span class="sd">                for light elements and even-tempered basis for heavy elements.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">auxbasis</span> <span class="o">=</span> <span class="n">auxbasis</span>
@@ -111,28 +124,37 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span><span class="o">.</span><span class="n">union</span><span class="p">([</span><span class="s">&#39;auxbasis&#39;</span><span class="p">])</span>
 
         <span class="k">def</span> <span class="nf">get_jk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
-            <span class="k">if</span> <span class="n">dm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">scf</span><span class="o">.</span><span class="n">dhf</span><span class="o">.</span><span class="n">UHF</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">r_get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag_df</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
+                <span class="k">if</span> <span class="n">dm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dhf</span><span class="o">.</span><span class="n">UHF</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">r_get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">mf_class</span><span class="o">.</span><span class="n">get_jk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">get_j</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
-            <span class="k">if</span> <span class="n">dm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">scf</span><span class="o">.</span><span class="n">dhf</span><span class="o">.</span><span class="n">UHF</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">r_get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag_df</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
+                <span class="k">if</span> <span class="n">dm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dhf</span><span class="o">.</span><span class="n">UHF</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">r_get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">,</span> <span class="n">with_k</span><span class="o">=</span><span class="bp">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">,</span> <span class="n">with_k</span><span class="o">=</span><span class="bp">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">mf_class</span><span class="o">.</span><span class="n">get_j</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">get_k</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
-            <span class="k">if</span> <span class="n">dm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">scf</span><span class="o">.</span><span class="n">dhf</span><span class="o">.</span><span class="n">UHF</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">r_get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag_df</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
+                <span class="k">if</span> <span class="n">dm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dhf</span><span class="o">.</span><span class="n">UHF</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">r_get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">,</span> <span class="n">with_j</span><span class="o">=</span><span class="bp">False</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">,</span> <span class="n">with_j</span><span class="o">=</span><span class="bp">False</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">mf_class</span><span class="o">.</span><span class="n">get_k</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">DFHF</span><span class="p">()</span>
 
@@ -143,8 +165,6 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s">&#39;_cderi&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
         <span class="n">nao_pair</span> <span class="o">=</span> <span class="n">nao</span><span class="o">*</span><span class="p">(</span><span class="n">nao</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
-<span class="c">#        auxmol = df.incore.format_aux_basis(mol, mf.auxbasis)</span>
-<span class="c">#        mf._naoaux = auxmol.nao_nr()</span>
         <span class="n">max_memory</span> <span class="o">=</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">max_memory</span> <span class="o">-</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">current_memory</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="o">.</span><span class="mi">8</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">nao_pair</span><span class="o">*</span><span class="n">nao</span><span class="o">*</span><span class="mi">3</span><span class="o">*</span><span class="mi">8</span><span class="o">/</span><span class="mf">1e6</span><span class="o">*</span><span class="mi">2</span> <span class="o">&lt;</span> <span class="n">max_memory</span><span class="p">):</span>
             <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">incore</span><span class="o">.</span><span class="n">cholesky_eri</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">auxbasis</span><span class="p">,</span>
@@ -153,10 +173,10 @@
             <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">()</span>
             <span class="n">df</span><span class="o">.</span><span class="n">outcore</span><span class="o">.</span><span class="n">cholesky_eri</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">auxbasis</span><span class="p">,</span>
                                     <span class="n">verbose</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">nao_pair</span><span class="o">*</span><span class="n">nao</span><span class="o">*</span><span class="mi">3</span><span class="o">*</span><span class="mi">8</span><span class="o">/</span><span class="mf">1e6</span> <span class="o">&lt;</span> <span class="n">mf</span><span class="o">.</span><span class="n">max_memory</span><span class="p">):</span>
-                <span class="k">with</span> <span class="n">df</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span><span class="p">)</span> <span class="k">as</span> <span class="n">feri</span><span class="p">:</span>
-                    <span class="n">cderi</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">feri</span><span class="p">)</span>
-                <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span> <span class="o">=</span> <span class="n">cderi</span>
+<span class="c">#            if (nao_pair*nao*3*8/1e6 &lt; mf.max_memory):</span>
+<span class="c">#                with df.load(mf._cderi) as feri:</span>
+<span class="c">#                    cderi = numpy.asarray(feri)</span>
+<span class="c">#                mf._cderi = cderi</span>
         <span class="k">if</span> <span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">DEBUG1</span><span class="p">:</span>
             <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;Generate density fitting integrals&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">mf</span><span class="o">.</span><span class="n">_naoaux</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -286,48 +306,7 @@
     <span class="k">return</span> <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span>
 
 
-<div class="viewcode-block" id="r_get_jk_o0_"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.dfhf.r_get_jk_o0_">[docs]</a><span class="k">def</span> <span class="nf">r_get_jk_o0_</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dms</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Relativistic density fitting JK&#39;&#39;&#39;</span>
-    <span class="n">t0</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">(),</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s">&#39;_cderi&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
-        <span class="n">auxmol</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">incore</span><span class="o">.</span><span class="n">format_aux_basis</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">auxbasis</span><span class="p">)</span>
-        <span class="n">mf</span><span class="o">.</span><span class="n">_naoaux</span> <span class="o">=</span> <span class="n">auxmol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
-        <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">r_incore</span><span class="o">.</span><span class="n">cholesky_eri</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">auxbasis</span><span class="p">,</span>
-                                             <span class="n">verbose</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
-    <span class="n">n2c</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_2c</span><span class="p">()</span>
-    <span class="n">c1</span> <span class="o">=</span> <span class="o">.</span><span class="mi">5</span> <span class="o">/</span> <span class="n">mol</span><span class="o">.</span><span class="n">light_speed</span>
-    <span class="k">def</span> <span class="nf">fjk</span><span class="p">(</span><span class="n">dm</span><span class="p">):</span>
-        <span class="c"># dm is 4C density matrix</span>
-        <span class="n">cderi_ll</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n2c</span><span class="p">,</span><span class="n">n2c</span><span class="p">)</span>
-        <span class="n">cderi_ss</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n2c</span><span class="p">,</span><span class="n">n2c</span><span class="p">)</span>
-        <span class="n">vj</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n2c</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span><span class="n">n2c</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dm</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="n">vk</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n2c</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span><span class="n">n2c</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dm</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-
-        <span class="n">rho</span> <span class="o">=</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dm</span><span class="p">[:</span><span class="n">n2c</span><span class="p">,:</span><span class="n">n2c</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-            <span class="o">+</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dm</span><span class="p">[</span><span class="n">n2c</span><span class="p">:,</span><span class="n">n2c</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">c1</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
-        <span class="n">vj</span><span class="p">[:</span><span class="n">n2c</span><span class="p">,:</span><span class="n">n2c</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n2c</span><span class="p">,</span><span class="n">n2c</span><span class="p">)</span>
-        <span class="n">vj</span><span class="p">[</span><span class="n">n2c</span><span class="p">:,</span><span class="n">n2c</span><span class="p">:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n2c</span><span class="p">,</span><span class="n">n2c</span><span class="p">)</span> <span class="o">*</span> <span class="n">c1</span><span class="o">**</span><span class="mi">2</span>
-
-        <span class="n">v1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pij,ki-&gt;pkj&#39;</span><span class="p">,</span> <span class="n">cderi_ll</span><span class="p">,</span> <span class="n">dm</span><span class="p">[:</span><span class="n">n2c</span><span class="p">,:</span><span class="n">n2c</span><span class="p">])</span>
-        <span class="n">vk</span><span class="p">[:</span><span class="n">n2c</span><span class="p">,:</span><span class="n">n2c</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pik,pkj-&gt;ij&#39;</span><span class="p">,</span> <span class="n">cderi_ll</span><span class="p">,</span> <span class="n">v1</span><span class="p">)</span>
-        <span class="n">v1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pij,ki-&gt;pkj&#39;</span><span class="p">,</span> <span class="n">cderi_ss</span><span class="p">,</span> <span class="n">dm</span><span class="p">[</span><span class="n">n2c</span><span class="p">:,</span><span class="n">n2c</span><span class="p">:])</span>
-        <span class="n">vk</span><span class="p">[</span><span class="n">n2c</span><span class="p">:,</span><span class="n">n2c</span><span class="p">:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pik,pkj-&gt;ij&#39;</span><span class="p">,</span> <span class="n">cderi_ss</span><span class="p">,</span> <span class="n">v1</span><span class="p">)</span> <span class="o">*</span> <span class="n">c1</span><span class="o">**</span><span class="mi">4</span>
-        <span class="n">v1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pij,ki-&gt;pkj&#39;</span><span class="p">,</span> <span class="n">cderi_ll</span><span class="p">,</span> <span class="n">dm</span><span class="p">[:</span><span class="n">n2c</span><span class="p">,</span><span class="n">n2c</span><span class="p">:])</span>
-        <span class="n">vk</span><span class="p">[:</span><span class="n">n2c</span><span class="p">,</span><span class="n">n2c</span><span class="p">:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;pik,pkj-&gt;ij&#39;</span><span class="p">,</span> <span class="n">cderi_ss</span><span class="p">,</span> <span class="n">v1</span><span class="p">)</span> <span class="o">*</span> <span class="n">c1</span><span class="o">**</span><span class="mi">2</span>
-        <span class="n">vk</span><span class="p">[</span><span class="n">n2c</span><span class="p">:,:</span><span class="n">n2c</span><span class="p">]</span> <span class="o">=</span> <span class="n">vk</span><span class="p">[:</span><span class="n">n2c</span><span class="p">,</span><span class="n">n2c</span><span class="p">:]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span>
-
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dms</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dms</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span> <span class="o">=</span> <span class="n">fjk</span><span class="p">(</span><span class="n">dms</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">vjk</span> <span class="o">=</span> <span class="p">[</span><span class="n">fjk</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span> <span class="k">for</span> <span class="n">dm</span> <span class="ow">in</span> <span class="n">dms</span><span class="p">]</span>
-        <span class="n">vj</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">vjk</span><span class="p">])</span>
-        <span class="n">vk</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">vjk</span><span class="p">])</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s">&#39;vj and vk&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span>
-</div>
-<div class="viewcode-block" id="r_get_jk_o1_"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.dfhf.r_get_jk_o1_">[docs]</a><span class="k">def</span> <span class="nf">r_get_jk_o1_</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dms</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="r_get_jk_"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.dfhf.r_get_jk_">[docs]</a><span class="k">def</span> <span class="nf">r_get_jk_</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dms</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Relativistic density fitting JK&#39;&#39;&#39;</span>
     <span class="n">t0</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">(),</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s">&#39;_cderi&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">mf</span><span class="o">.</span><span class="n">_cderi</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -432,11 +411,8 @@
         <span class="n">vk</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">vjk</span><span class="p">])</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s">&#39;vj and vk&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span>
+
 </div>
-<span class="k">def</span> <span class="nf">r_get_jk_</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dms</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">r_get_jk_o1_</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dms</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)</span>
-
-
 <span class="n">_call_count</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">def</span> <span class="nf">prange</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
     <span class="k">global</span> <span class="n">_call_count</span>
@@ -517,7 +493,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

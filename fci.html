@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>fci &mdash; PySCF 1.1 alpha documentation</title>
+    <title>fci &mdash; PySCF 1.1 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1 alpha',
+        VERSION:     '1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 alpha documentation" href="index.html" />
+    <link rel="top" title="PySCF 1.1 documentation" href="index.html" />
     <link rel="next" title="symm" href="symm.html" />
     <link rel="prev" title="mcscf" href="mcscf.html" /> 
   </head>
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="mcscf.html" title="mcscf"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PySCF 1.1 alpha documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -96,6 +96,12 @@ vector.</p>
 <dt id="pyscf.fci.direct_spin1.energy">
 <tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">energy</tt><big>(</big><em>h1e</em>, <em>eri</em>, <em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.energy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the FCI electronic energy for given Hamiltonian and FCI vector.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin1.get_init_guess">
+<tt class="descclassname">pyscf.fci.direct_spin1.</tt><tt class="descname">get_init_guess</tt><big>(</big><em>norb</em>, <em>nelec</em>, <em>nroots</em>, <em>hdiag</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#get_init_guess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.get_init_guess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initial guess is the single Slater determinant</p>
 </dd></dl>
 
 <dl class="function">
@@ -165,7 +171,82 @@ stored as [p,r,q,s]</p>
 <dd><p>Spin separated transition 1-particle density matrices</p>
 </dd></dl>
 
-<span class="target" id="module-pyscf.fci.direct_spin1_symm"></span><span class="target" id="module-pyscf.fci.direct_spin0"></span><span class="target" id="module-pyscf.fci.direct_spin0_symm"></span><span class="target" id="module-pyscf.fci.direct_uhf"></span></div>
+<span class="target" id="module-pyscf.fci.direct_spin1_symm"></span><span class="target" id="module-pyscf.fci.direct_spin0"></span><dl class="function">
+<dt id="pyscf.fci.direct_spin0.contract_1e">
+<tt class="descclassname">pyscf.fci.direct_spin0.</tt><tt class="descname">contract_1e</tt><big>(</big><em>f1e</em>, <em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#contract_1e"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.contract_1e" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contract the 1-electron Hamiltonian with a FCI vector to get a new FCI
+vector.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin0.contract_2e">
+<tt class="descclassname">pyscf.fci.direct_spin0.</tt><tt class="descname">contract_2e</tt><big>(</big><em>eri</em>, <em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#contract_2e"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.contract_2e" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contract the 2-electron Hamiltonian with a FCI vector to get a new FCI
+vector.</p>
+<p>Note the input arg eri is NOT the 2e hamiltonian matrix, the 2e hamiltonian is</p>
+<div class="math">
+\[\begin{split}h2e &amp;= eri_{pq,rs} p^+ q r^+ s \\
+    &amp;= (pq|rs) p^+ r^+ s q - (pq|rs) \delta_{qr} p^+ s\end{split}\]</div>
+<p>So eri is defined as</p>
+<div class="math">
+\[eri_{pq,rs} = (pq|rs) - (1/Nelec) \sum_q (pq|qs)\]</div>
+<p>to restore the symmetry between pq and rs,</p>
+<div class="math">
+\[eri_{pq,rs} = (pq|rs) - (.5/Nelec) [\sum_q (pq|qs) + \sum_p (pq|rp)]\]</div>
+<p>See also <tt class="xref py py-func docutils literal"><span class="pre">direct_spin1.absorb_h1e()</span></tt></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin0.make_hdiag">
+<tt class="descclassname">pyscf.fci.direct_spin0.</tt><tt class="descname">make_hdiag</tt><big>(</big><em>h1e</em>, <em>eri</em>, <em>norb</em>, <em>nelec</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#make_hdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.make_hdiag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Diagonal Hamiltonian for Davidson preconditioner</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin0.make_rdm1">
+<tt class="descclassname">pyscf.fci.direct_spin0.</tt><tt class="descname">make_rdm1</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#make_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.make_rdm1" title="Permalink to this definition">¶</a></dt>
+<dd><p>spin-traced 1-particle density matrix</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin0.make_rdm12">
+<tt class="descclassname">pyscf.fci.direct_spin0.</tt><tt class="descname">make_rdm12</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#make_rdm12"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.make_rdm12" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin traced 1- and 2-particle density matrices,</p>
+<p>NOTE the 2pdm is <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span> but is
+stored as [p,r,q,s]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin0.make_rdm1s">
+<tt class="descclassname">pyscf.fci.direct_spin0.</tt><tt class="descname">make_rdm1s</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#make_rdm1s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.make_rdm1s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin searated 1-particle density matrices, (alpha,beta)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin0.pspace">
+<tt class="descclassname">pyscf.fci.direct_spin0.</tt><tt class="descname">pspace</tt><big>(</big><em>h1e</em>, <em>eri</em>, <em>norb</em>, <em>nelec</em>, <em>hdiag</em>, <em>np=400</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#pspace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.pspace" title="Permalink to this definition">¶</a></dt>
+<dd><p>pspace Hamiltonian to improve Davidson preconditioner. See, CPL, 169, 463</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin0.trans_rdm1">
+<tt class="descclassname">pyscf.fci.direct_spin0.</tt><tt class="descname">trans_rdm1</tt><big>(</big><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#trans_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.trans_rdm1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin traced transition 1-particle density matrices</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin0.trans_rdm12">
+<tt class="descclassname">pyscf.fci.direct_spin0.</tt><tt class="descname">trans_rdm12</tt><big>(</big><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#trans_rdm12"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.trans_rdm12" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin traced transition 1- and 2-particle density matrices.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.direct_spin0.trans_rdm1s">
+<tt class="descclassname">pyscf.fci.direct_spin0.</tt><tt class="descname">trans_rdm1s</tt><big>(</big><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#trans_rdm1s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.trans_rdm1s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin separated transition 1-particle density matrices</p>
+</dd></dl>
+
+<span class="target" id="module-pyscf.fci.direct_spin0_symm"></span><span class="target" id="module-pyscf.fci.direct_uhf"></span></div>
 <div class="section" id="module-pyscf.fci.cistring">
 <span id="cistring"></span><h2>cistring<a class="headerlink" href="#module-pyscf.fci.cistring" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -252,11 +333,9 @@ index, to match the 4-fold symmetry of integrals.</p>
 <div class="section" id="module-pyscf.fci.spin_op">
 <span id="spin-operator"></span><h2>spin operator<a class="headerlink" href="#module-pyscf.fci.spin_op" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="pyscf.fci.spin_op.local_spin">
-<tt class="descclassname">pyscf.fci.spin_op.</tt><tt class="descname">local_spin</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>mo_coeff=None</em>, <em>ovlp=1</em>, <em>aolst=[]</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/spin_op.html#local_spin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.spin_op.local_spin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Local spin expectation value, which is defined as</p>
-<p>&lt;CI|ao&gt;&lt;ao|S^2|CI&gt;</p>
-<p>For a complete list of AOs, I = sum <a href="#id1"><span class="problematic" id="id2">|ao&gt;&lt;ao|</span></a>, it becomes &lt;CI|S^2|CI&gt;</p>
+<dt id="pyscf.fci.spin_op.contract_ss">
+<tt class="descclassname">pyscf.fci.spin_op.</tt><tt class="descname">contract_ss</tt><big>(</big><em>fcivec</em>, <em>norb</em>, <em>nelec</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/spin_op.html#contract_ss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.spin_op.contract_ss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contract spin square operator with FCI wavefunction <span class="math">\(S^2 |CI&gt;\)</span></p>
 </dd></dl>
 
 <dl class="function">
@@ -290,14 +369,8 @@ Hamiltonian)</p>
 <span id="rdm"></span><h2>rdm<a class="headerlink" href="#module-pyscf.fci.rdm" title="Permalink to this headline">¶</a></h2>
 <dl class="data">
 <dt id="pyscf.fci.rdm.librdm">
-<tt class="descclassname">pyscf.fci.rdm.</tt><tt class="descname">librdm</tt><em class="property"> = &lt;CDLL '/home/sunqm/code/python/pyscf/lib/libfci.so', handle 3df1df0 at 2b1930639c50&gt;</em><a class="headerlink" href="#pyscf.fci.rdm.librdm" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.fci.rdm.</tt><tt class="descname">librdm</tt><em class="property"> = &lt;CDLL '/home/sunqm/workspace/program/pyscf/lib/libfci.so', handle 3263010 at 2b563145d490&gt;</em><a class="headerlink" href="#pyscf.fci.rdm.librdm" title="Permalink to this definition">¶</a></dt>
 <dd><p>FCI 1, 2, 3, 4-particle density matrices.</p>
-<dl class="docutils">
-<dt>Note the index difference to the mean-field density matrix.  Here,</dt>
-<dd>dm[p,q,r,s,...] = &lt;p^+ q r^+ s ... &gt;</dd>
-<dt>rather than the mean-field DM</dt>
-<dd>dm[p,q] = &lt; q^+ p &gt;</dd>
-</dl>
 </dd></dl>
 
 <dl class="function">
@@ -465,25 +538,25 @@ adding a shift on spin square operator</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyscf.fci.addons.force_spin_">
-<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">force_spin_</tt><big>(</big><em>fciobj</em>, <em>shift=0.2</em>, <em>ss_value=None</em><big>)</big><a class="headerlink" href="#pyscf.fci.addons.force_spin_" title="Permalink to this definition">¶</a></dt>
-<dd><p>If FCI solver cannot stick on spin eigenfunction, modify the solver by
-adding a shift on spin square operator</p>
-<div class="math">
-\[(H + shift*S^2) |\Psi\rangle = E |\Psi\rangle\]</div>
+<dt id="pyscf.fci.addons.guess_wfnsym">
+<tt class="descclassname">pyscf.fci.addons.</tt><tt class="descname">guess_wfnsym</tt><big>(</big><em>ci</em>, <em>norb</em>, <em>nelec</em>, <em>orbsym</em><big>)</big><a class="reference internal" href="_modules/pyscf/fci/addons.html#guess_wfnsym"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.guess_wfnsym" title="Permalink to this definition">¶</a></dt>
+<dd><p>Guess the wavefunction symmetry based on the non-zero elements in the
+given CI coefficients.</p>
 <dl class="docutils">
 <dt>Args:</dt>
-<dd>fciobj : An instance of <tt class="xref py py-class docutils literal"><span class="pre">FCISolver</span></tt></dd>
-<dt>Kwargs:</dt>
 <dd><dl class="first last docutils">
-<dt>shift <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>Level shift for states which have different spin</dd>
-<dt>ss_value <span class="classifier-delimiter">:</span> <span class="classifier">number</span></dt>
-<dd>S^2 expection value == s*(s+1)</dd>
+<dt>ci <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>CI coefficients, row for alpha strings and column for beta strings.</dd>
+<dt>norb <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of orbitals.</dd>
+<dt>nelec <span class="classifier-delimiter">:</span> <span class="classifier">int or 2-item list</span></dt>
+<dd>Number of electrons, or 2-item list for (alpha, beta) electrons</dd>
+<dt>orbsym <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>The irrep ID for each orbital.</dd>
 </dl>
 </dd>
-<dt>Returns</dt>
-<dd>A modified FCI object based on fciobj.</dd>
+<dt>Returns:</dt>
+<dd>Irrep ID</dd>
 </dl>
 </dd></dl>
 
@@ -639,7 +712,7 @@ do not have the right symmetry.</p>
         <li class="right" >
           <a href="mcscf.html" title="mcscf"
              >previous</a> |</li>
-        <li><a href="index.html">PySCF 1.1 alpha documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

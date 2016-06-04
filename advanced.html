@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Advanced topics &mdash; PySCF 1.1 alpha documentation</title>
+    <title>Advanced topics &mdash; PySCF 1.1 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1 alpha',
+        VERSION:     '1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 alpha documentation" href="index.html" />
+    <link rel="top" title="PySCF 1.1 documentation" href="index.html" />
     <link rel="next" title="Installation" href="install.html" />
     <link rel="prev" title="Tutorial" href="tutorial.html" /> 
   </head>
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PySCF 1.1 alpha documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -669,6 +669,67 @@ e.g.:</p>
 <h3>SCF<a class="headerlink" href="#scf" title="Permalink to this headline">¶</a></h3>
 <p>To control the HF determinant symmetry,  one can assign occupancy for
 particular irreps, e.g.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Specify irrep_nelec to control the wave function symmetry</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">        C     0.   0.   0.625</span>
+<span class="s">        C     0.   0.  -0.625 &#39;&#39;&#39;</span><span class="p">,</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;cc-pVDZ&#39;</span><span class="p">,</span>
+    <span class="n">spin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">symmetry</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+<span class="c"># Frozen occupancy</span>
+<span class="c"># &#39;A1g&#39;: 4 electrons</span>
+<span class="c"># &#39;E1gx&#39;: 2 electrons</span>
+<span class="c"># &#39;E1gy&#39;: 2 electrons</span>
+<span class="c"># Rest 4 electrons are put in irreps A1u, E1ux, E1uy ... based on Aufbau principle</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">irrep_nelec</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;A1g&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s">&#39;E1gx&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;E1gy&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.15g</span><span class="s">  ref = -74.1112374269129&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+
+
+<span class="n">mol</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="s">&#39;D2h&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">spin</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">dump_input</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">parse_arg</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+<span class="c"># Frozen occupancy</span>
+<span class="c"># &#39;Ag&#39;: 2 alpha, 1 beta electrons</span>
+<span class="c"># &#39;B1u&#39;: 4 electrons</span>
+<span class="c"># &#39;B2u&#39;: 2 electrons</span>
+<span class="c"># &#39;B3u&#39;: 2 electrons</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">irrep_nelec</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Ag&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="s">&#39;B1u&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s">&#39;B2u&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;B3u&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,}</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.15g</span><span class="s">  ref = -74.4026583773135&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+
+<span class="c"># Frozen occupancy</span>
+<span class="c"># &#39;Ag&#39;: 4 electrons</span>
+<span class="c"># &#39;B1u&#39;: 2 alpha, 1 beta electrons</span>
+<span class="c"># &#39;B2u&#39;: 2 electrons</span>
+<span class="c"># &#39;B3u&#39;: 2 electrons</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">irrep_nelec</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Ag&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s">&#39;B1u&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="s">&#39;B2u&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;B3u&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,}</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;E = </span><span class="si">%.15g</span><span class="s">  ref = -74.8971476600812&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="fci">
 <h3>FCI<a class="headerlink" href="#fci" title="Permalink to this headline">¶</a></h3>
@@ -1073,7 +1134,7 @@ Hamiltonian for Hartree-Fock</p>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              >previous</a> |</li>
-        <li><a href="index.html">PySCF 1.1 alpha documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

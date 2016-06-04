@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyscf.scf.hf_symm &mdash; PySCF 1.1 alpha documentation</title>
+    <title>pyscf.scf.hf_symm &mdash; PySCF 1.1 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.1 alpha',
+        VERSION:     '1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 alpha documentation" href="../../../index.html" />
+    <link rel="top" title="PySCF 1.1 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -155,13 +155,126 @@
                         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">ir</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">irrep_id</span><span class="p">)])</span>
     <span class="k">return</span> <span class="n">irrep_nelec</span>
 </div>
+<div class="viewcode-block" id="canonicalize"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.hf_symm.canonicalize">[docs]</a><span class="k">def</span> <span class="nf">canonicalize</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">,</span> <span class="n">fock</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Canonicalization diagonalizes the Fock matrix in occupied, open,</span>
+<span class="sd">    virtual subspaces separatedly (without change occupancy).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">fock</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">dm</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">)</span>
+        <span class="n">fock</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">get_hcore</span><span class="p">()</span> <span class="o">+</span> <span class="n">mf</span><span class="o">.</span><span class="n">get_jk</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
+    <span class="n">coreidx</span> <span class="o">=</span> <span class="n">mo_occ</span> <span class="o">==</span> <span class="mi">2</span>
+    <span class="n">viridx</span> <span class="o">=</span> <span class="n">mo_occ</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">openidx</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">coreidx</span> <span class="o">|</span> <span class="n">viridx</span><span class="p">)</span>
+    <span class="n">mo</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">)</span>
+    <span class="n">mo_e</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">mo_occ</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="p">(</span><span class="n">coreidx</span><span class="p">,</span> <span class="n">openidx</span><span class="p">,</span> <span class="n">viridx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">orb</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">f1</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">orb</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">fock</span><span class="p">,</span> <span class="n">orb</span><span class="p">))</span>
+            <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">idx</span><span class="p">],</span> <span class="n">c</span><span class="p">)</span>
+            <span class="n">mo</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">_symmetrize_canonicalization_</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+            <span class="n">mo_e</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+    <span class="k">return</span> <span class="n">mo_e</span><span class="p">,</span> <span class="n">mo</span>
+</div>
+<span class="k">def</span> <span class="nf">_symmetrize_canonicalization_</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mo_energy</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Restore symmetry for canonicalized orbitals</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">search_for_degeneracy</span><span class="p">(</span><span class="n">mo_energy</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">mo_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">mo_energy</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">idx</span><span class="p">,</span> <span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+
+    <span class="n">degidx</span> <span class="o">=</span> <span class="n">search_for_degeneracy</span><span class="p">(</span><span class="n">mo_energy</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;degidx </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">degidx</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">degidx</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">esub</span> <span class="o">=</span> <span class="n">mo_energy</span><span class="p">[</span><span class="n">degidx</span><span class="p">]</span>
+        <span class="n">csub</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">degidx</span><span class="p">]</span>
+        <span class="n">scsub</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">csub</span><span class="p">)</span>
+        <span class="n">emin</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">esub</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+        <span class="n">es</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">ir</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">irrep_id</span><span class="p">):</span>
+            <span class="n">so</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">sosc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">so</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">scsub</span><span class="p">)</span>
+            <span class="n">s_ir</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">so</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">so</span><span class="p">))</span>
+            <span class="n">fock_ir</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">sosc</span><span class="o">*</span><span class="n">esub</span><span class="p">,</span> <span class="n">sosc</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="n">mo_energy</span><span class="p">,</span> <span class="n">u</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">fock_ir</span><span class="p">,</span> <span class="n">s_ir</span><span class="p">)</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mo_energy</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">emin</span>
+            <span class="n">es</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mo_energy</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+            <span class="n">cs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">u</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]))</span>
+        <span class="n">es</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">es</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">es</span><span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">es</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">esub</span><span class="p">))</span>
+        <span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">degidx</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">cs</span><span class="p">)[:,</span><span class="n">idx</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">mo_coeff</span>
+
 <div class="viewcode-block" id="so2ao_mo_coeff"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.hf_symm.so2ao_mo_coeff">[docs]</a><span class="k">def</span> <span class="nf">so2ao_mo_coeff</span><span class="p">(</span><span class="n">so</span><span class="p">,</span> <span class="n">irrep_mo_coeff</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Transfer the basis of MO coefficients, from spin-adapted basis to AO basis</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">so</span><span class="p">[</span><span class="n">ir</span><span class="p">],</span><span class="n">irrep_mo_coeff</span><span class="p">[</span><span class="n">ir</span><span class="p">])</span> \
                          <span class="k">for</span> <span class="n">ir</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">so</span><span class="o">.</span><span class="n">__len__</span><span class="p">())])</span>
-
 </div>
+<span class="k">def</span> <span class="nf">check_irrep_nelec</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">irrep_nelec</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">irname</span> <span class="ow">in</span> <span class="n">irrep_nelec</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">irname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mol</span><span class="o">.</span><span class="n">irrep_name</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;Molecule does not have irrep </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">irname</span><span class="p">)</span>
+
+    <span class="n">float_irname</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">fix_na</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">fix_nb</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">irname</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">irrep_name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">irname</span> <span class="ow">in</span> <span class="n">irrep_nelec</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">irrep_nelec</span><span class="p">[</span><span class="n">irname</span><span class="p">],</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+                <span class="n">nelecb</span> <span class="o">=</span> <span class="n">irrep_nelec</span><span class="p">[</span><span class="n">irname</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+                <span class="n">neleca</span> <span class="o">=</span> <span class="n">irrep_nelec</span><span class="p">[</span><span class="n">irname</span><span class="p">]</span> <span class="o">-</span> <span class="n">nelecb</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">irrep_nelec</span><span class="p">[</span><span class="n">irname</span><span class="p">]</span>
+            <span class="n">norb</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">nelecb</span> <span class="o">&gt;=</span> <span class="n">norb</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span><span class="p">(</span><span class="s">&#39;More electrons than orbitals for irrep </span><span class="si">%s</span><span class="s"> &#39;</span>
+                      <span class="s">&#39;nelec = </span><span class="si">%d</span><span class="s"> + </span><span class="si">%d</span><span class="s">, norb = </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span>
+                      <span class="p">(</span><span class="n">irname</span><span class="p">,</span> <span class="n">neleca</span><span class="p">,</span><span class="n">nelecb</span><span class="p">,</span> <span class="n">norb</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">fix_na</span> <span class="o">+=</span> <span class="n">neleca</span>
+            <span class="n">fix_nb</span> <span class="o">+=</span> <span class="n">nelecb</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">float_irname</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">irname</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fix_na</span> <span class="o">&lt;</span> <span class="n">fix_nb</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;alpha electrons </span><span class="si">%d</span><span class="s"> &lt; beta electrons </span><span class="si">%d</span><span class="se">\n</span><span class="s">&#39;</span>
+                         <span class="s">&#39;irrep_nelec </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">fix_na</span><span class="p">,</span> <span class="n">fix_nb</span><span class="p">,</span> <span class="n">irrep_nelec</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">mol</span><span class="o">.</span><span class="n">spin</span> <span class="o">&lt;</span> <span class="n">fix_na</span><span class="o">-</span><span class="n">fix_nb</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;alpha electrons </span><span class="si">%d</span><span class="s"> - beta electrons </span><span class="si">%d</span><span class="s"> &gt; mol.spin </span><span class="si">%d</span><span class="se">\n</span><span class="s">&#39;</span>
+                         <span class="s">&#39;irrep_nelec </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">fix_na</span><span class="p">,</span> <span class="n">fix_nb</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">spin</span><span class="p">,</span> <span class="n">irrep_nelec</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+        <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelec</span> <span class="o">-</span> <span class="n">nelecb</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span>
+    <span class="n">fix_ne</span> <span class="o">=</span> <span class="n">fix_na</span> <span class="o">+</span> <span class="n">fix_nb</span>
+    <span class="k">if</span> <span class="p">((</span><span class="n">fix_na</span> <span class="o">&gt;</span> <span class="n">neleca</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">fix_nb</span> <span class="o">&gt;</span> <span class="n">nelecb</span><span class="p">)</span> <span class="ow">or</span>
+        <span class="p">(</span><span class="n">fix_na</span><span class="o">+</span><span class="n">nelecb</span> <span class="o">&gt;</span> <span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="p">)</span> <span class="ow">or</span>
+        <span class="p">(</span><span class="n">fix_nb</span><span class="o">+</span><span class="n">neleca</span> <span class="o">&gt;</span> <span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="p">)):</span>
+        <span class="n">msg</span> <span class="o">=</span><span class="p">(</span><span class="s">&#39;More electrons defined by irrep_nelec than total num electrons. &#39;</span>
+              <span class="s">&#39;mol.nelectron = </span><span class="si">%d</span><span class="s">  irrep_nelec = </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+              <span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="p">,</span> <span class="n">irrep_nelec</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;fix </span><span class="si">%d</span><span class="s"> electrons in irreps </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                    <span class="n">fix_ne</span><span class="p">,</span> <span class="n">irrep_nelec</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">float_irname</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">fix_ne</span> <span class="o">!=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span><span class="p">(</span><span class="s">&#39;Num electrons defined by irrep_nelec != total num electrons. &#39;</span>
+              <span class="s">&#39;mol.nelectron = </span><span class="si">%d</span><span class="s">  irrep_nelec = </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+              <span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="p">,</span> <span class="n">irrep_nelec</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;    </span><span class="si">%d</span><span class="s"> free electrons in irreps </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                    <span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="o">-</span><span class="n">fix_ne</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">float_irname</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">fix_na</span><span class="p">,</span> <span class="n">fix_nb</span><span class="p">,</span> <span class="n">float_irname</span>
+
+
 <div class="viewcode-block" id="RHF"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.hf_symm.RHF">[docs]</a><span class="k">class</span> <span class="nc">RHF</span><span class="p">(</span><span class="n">hf</span><span class="o">.</span><span class="n">RHF</span><span class="p">):</span>
     <span class="n">__doc__</span> <span class="o">=</span> <span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">+</span> <span class="s">&#39;&#39;&#39;</span>
 <span class="s">    Attributes for symmetry allowed RHF:</span>
@@ -192,35 +305,7 @@
 
     <span class="k">def</span> <span class="nf">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">hf</span><span class="o">.</span><span class="n">RHF</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> with symmetry adapted basis&#39;</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
-        <span class="n">float_irname</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">fix_ne</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">irname</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">irrep_name</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">irname</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">irrep_nelec</span><span class="p">:</span>
-                <span class="n">fix_ne</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">irrep_nelec</span><span class="p">[</span><span class="n">irname</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">float_irname</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">irname</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">fix_ne</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;fix </span><span class="si">%d</span><span class="s"> electrons in irreps </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
-                        <span class="n">fix_ne</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">irrep_nelec</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-            <span class="k">if</span> <span class="n">fix_ne</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;num. electron error in irrep_nelec </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
-                             <span class="bp">self</span><span class="o">.</span><span class="n">irrep_nelec</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;irrep_nelec&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">float_irname</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s"> free electrons in irreps </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="o">-</span><span class="n">fix_ne</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">float_irname</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="n">fix_ne</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;number of electrons error in irrep_nelec </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
-                         <span class="bp">self</span><span class="o">.</span><span class="n">irrep_nelec</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;irrep_nelec&#39;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">build_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">irname</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">irrep_nelec</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">irname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">irrep_name</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;!! No irrep </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">irname</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">hf</span><span class="o">.</span><span class="n">RHF</span><span class="o">.</span><span class="n">build_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">)</span>
+        <span class="n">check_irrep_nelec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">irrep_nelec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="p">)</span>
 
 <span class="c">#TODO: force E1gx/E1gy ... use the same coefficients</span>
 <div class="viewcode-block" id="RHF.eig"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.hf_symm.RHF.eig">[docs]</a>    <span class="k">def</span> <span class="nf">eig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
@@ -248,8 +333,7 @@
         <span class="k">if</span> <span class="n">mo_energy</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mo_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_energy</span>
         <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
         <span class="k">if</span> <span class="n">orbsym</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">mo_coeff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span>
-                <span class="n">mo_coeff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">mo_coeff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>  <span class="c"># due to linear-dep</span>
+            <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">orbsym</span> <span class="o">=</span> <span class="n">symm</span><span class="o">.</span><span class="n">label_orb_symm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">irrep_id</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">,</span>
                                              <span class="n">mo_coeff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">(),</span> <span class="bp">False</span><span class="p">)</span>
                 <span class="n">orbsym</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">orbsym</span><span class="p">)</span>
@@ -334,12 +418,10 @@
         <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mo_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span>
         <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">get_irrep_nelec</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+</div>
+    <span class="n">canonicalize</span> <span class="o">=</span> <span class="n">canonicalize</span>
 
-<span class="c"># TODO: modify get_grad</span>
-<span class="c">#    def get_grad():</span>
-<span class="c">#        return</span>
-
-</div></div>
+</div>
 <span class="k">class</span> <span class="nc">HF1e</span><span class="p">(</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">scf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
@@ -392,39 +474,17 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">):</span>
         <span class="n">rohf</span><span class="o">.</span><span class="n">ROHF</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">irrep_nelec</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="c">#TODO: self.wfnsym = None</span>
 <span class="c"># use _irrep_doccs and _irrep_soccs help self.eig to compute orbital energy,</span>
 <span class="c"># do not overwrite them</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_irrep_doccs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_irrep_soccs</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span><span class="o">.</span><span class="n">union</span><span class="p">([</span><span class="s">&#39;irrep_nelec&#39;</span><span class="p">,</span> <span class="s">&#39;wfnsym&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span><span class="o">.</span><span class="n">union</span><span class="p">([</span><span class="s">&#39;irrep_nelec&#39;</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="kn">import</span> <span class="n">uhf_symm</span>
         <span class="n">rohf</span><span class="o">.</span><span class="n">ROHF</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">uhf_symm</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">build_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="c"># specify alpha,beta for same irreps</span>
-        <span class="n">na</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">nb</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">irrep_nelec</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
-                <span class="n">v</span> <span class="o">=</span> <span class="n">x</span> <span class="o">//</span> <span class="mi">2</span>
-                <span class="n">na</span> <span class="o">+=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">v</span>
-                <span class="n">nb</span> <span class="o">+=</span> <span class="n">v</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">na</span> <span class="o">+=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">nb</span> <span class="o">+=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">nopen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">spin</span>
-        <span class="k">assert</span><span class="p">(</span><span class="n">na</span> <span class="o">&gt;=</span> <span class="n">nb</span> <span class="ow">and</span> <span class="n">nopen</span> <span class="o">&gt;=</span> <span class="n">na</span><span class="o">-</span><span class="n">nb</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">irname</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">irrep_nelec</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">irname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">irrep_name</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;!! No irrep </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">irname</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">hf</span><span class="o">.</span><span class="n">RHF</span><span class="o">.</span><span class="n">build_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">)</span>
+        <span class="n">check_irrep_nelec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">irrep_nelec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelec</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">eig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
-        <span class="n">ncore</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
         <span class="n">nirrep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="o">.</span><span class="n">__len__</span><span class="p">()</span>
         <span class="n">h</span> <span class="o">=</span> <span class="n">symm</span><span class="o">.</span><span class="n">symmetrize_matrix</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">)</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">symm</span><span class="o">.</span><span class="n">symmetrize_matrix</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">)</span>
@@ -436,8 +496,6 @@
             <span class="n">es</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
         <span class="n">e</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">es</span><span class="p">)</span>
         <span class="n">c</span> <span class="o">=</span> <span class="n">so2ao_mo_coeff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">,</span> <span class="n">cs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_mo_ea</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ik,ik-&gt;k&#39;</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focka_ao</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_mo_eb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ik,ik-&gt;k&#39;</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fockb_ao</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span>
 
     <span class="k">def</span> <span class="nf">get_fock_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h1e</span><span class="p">,</span> <span class="n">s1e</span><span class="p">,</span> <span class="n">vhf</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">cycle</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">adiis</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
@@ -486,15 +544,15 @@
     <span class="k">def</span> <span class="nf">get_occ</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_energy</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">orbsym</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">mo_energy</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mo_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_energy</span>
         <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_ea</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focka_ao</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">mo_ea</span> <span class="o">=</span> <span class="n">mo_eb</span> <span class="o">=</span> <span class="n">mo_energy</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">mo_ea</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_ea</span>
-            <span class="n">mo_eb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_eb</span>
+            <span class="n">mo_ea</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ik,ik-&gt;k&#39;</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focka_ao</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">))</span>
+            <span class="n">mo_eb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ik,ik-&gt;k&#39;</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fockb_ao</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">))</span>
         <span class="n">nmo</span> <span class="o">=</span> <span class="n">mo_ea</span><span class="o">.</span><span class="n">size</span>
         <span class="n">mo_occ</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nmo</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">orbsym</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">mo_coeff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">mo_coeff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">orbsym</span> <span class="o">=</span> <span class="n">symm</span><span class="o">.</span><span class="n">label_orb_symm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">irrep_id</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">,</span>
                                              <span class="n">mo_coeff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">(),</span> <span class="bp">False</span><span class="p">)</span>
                 <span class="n">orbsym</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">orbsym</span><span class="p">)</span>
@@ -614,13 +672,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">c_sort</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
                                       <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">o_sort</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
                                       <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">v_sort</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_ea</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_mo_ea</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_mo_ea</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">2</span><span class="p">][</span><span class="n">c_sort</span><span class="p">],</span>
-                                        <span class="bp">self</span><span class="o">.</span><span class="n">_mo_ea</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">1</span><span class="p">][</span><span class="n">o_sort</span><span class="p">],</span>
-                                        <span class="bp">self</span><span class="o">.</span><span class="n">_mo_ea</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">0</span><span class="p">][</span><span class="n">v_sort</span><span class="p">]))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_mo_eb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_mo_eb</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">2</span><span class="p">][</span><span class="n">c_sort</span><span class="p">],</span>
-                                        <span class="bp">self</span><span class="o">.</span><span class="n">_mo_eb</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">1</span><span class="p">][</span><span class="n">o_sort</span><span class="p">],</span>
-                                        <span class="bp">self</span><span class="o">.</span><span class="n">_mo_eb</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">0</span><span class="p">][</span><span class="n">v_sort</span><span class="p">]))</span>
         <span class="n">ncore</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">c_sort</span><span class="p">)</span>
         <span class="n">nocc</span> <span class="o">=</span> <span class="n">ncore</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">o_sort</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="p">[:</span><span class="n">ncore</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
@@ -651,7 +702,7 @@
             <span class="n">nsoccs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">orbsym</span><span class="p">[</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">ir</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">nsoccs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="n">wfnsym</span> <span class="o">^=</span> <span class="n">ir</span>
-        <span class="k">if</span> <span class="n">mol</span><span class="o">.</span><span class="n">groupname</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;Dooh&#39;</span><span class="p">,</span> <span class="s">&#39;Coov&#39;</span><span class="p">,</span> <span class="s">&#39;SO3&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mol</span><span class="o">.</span><span class="n">groupname</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;Dooh&#39;</span><span class="p">,</span> <span class="s">&#39;Coov&#39;</span><span class="p">):</span>
             <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;TODO: total symmetry for </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">groupname</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;total symmetry = </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
@@ -665,7 +716,7 @@
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">ir</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">irrep_id</span><span class="p">):</span>
             <span class="n">irname_full</span><span class="p">[</span><span class="n">ir</span><span class="p">]</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">irrep_name</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
         <span class="n">irorbcnt</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_ea</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focka_ao</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">orbsym</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">irorbcnt</span><span class="p">:</span>
                     <span class="n">irorbcnt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -675,15 +726,15 @@
                          <span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">irname_full</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">irorbcnt</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
                          <span class="n">mo_energy</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">mo_occ</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">mo_ea</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_ea</span>
-            <span class="n">mo_eb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mo_eb</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">note</span><span class="p">(</span><span class="s">&#39;                Roothaan           | alpha              | beta&#39;</span><span class="p">)</span>
+            <span class="n">mo_ea</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ik,ik-&gt;k&#39;</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_focka_ao</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">))</span>
+            <span class="n">mo_eb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ik,ik-&gt;k&#39;</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fockb_ao</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">))</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">note</span><span class="p">(</span><span class="s">&#39;                          Roothaan           | alpha              | beta&#39;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">orbsym</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">irorbcnt</span><span class="p">:</span>
                     <span class="n">irorbcnt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">irorbcnt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">note</span><span class="p">(</span><span class="s">&#39;MO #</span><span class="si">%-3d</span><span class="s"> (</span><span class="si">%s</span><span class="s"> #</span><span class="si">%-2d</span><span class="s">) energy= </span><span class="si">%-18.15g</span><span class="s"> | </span><span class="si">%-18.15g</span><span class="s"> | </span><span class="si">%-18.15g</span><span class="s"> occ= </span><span class="si">%g</span><span class="s">&#39;</span><span class="p">,</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">note</span><span class="p">(</span><span class="s">&#39;MO #</span><span class="si">%-4d</span><span class="s">(</span><span class="si">%-3s</span><span class="s"> #</span><span class="si">%-2d</span><span class="s">) energy= </span><span class="si">%-18.15g</span><span class="s"> | </span><span class="si">%-18.15g</span><span class="s"> | </span><span class="si">%-18.15g</span><span class="s"> occ= </span><span class="si">%g</span><span class="s">&#39;</span><span class="p">,</span>
                          <span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">irname_full</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">irorbcnt</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
                          <span class="n">mo_energy</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">mo_ea</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">mo_eb</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">mo_occ</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
 
@@ -710,7 +761,16 @@
         <span class="k">if</span> <span class="n">mo_occ</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mo_occ</span> <span class="o">=</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_occ</span><span class="o">==</span><span class="mi">2</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">uhf_symm</span><span class="o">.</span><span class="n">get_irrep_nelec</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">)</span>
 
-</div>
+    <span class="nd">@pyscf.lib.with_doc</span><span class="p">(</span><span class="n">canonicalize</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
+<div class="viewcode-block" id="ROHF.canonicalize"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.hf_symm.ROHF.canonicalize">[docs]</a>    <span class="k">def</span> <span class="nf">canonicalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">,</span> <span class="n">fock</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fock</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_hcore</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jk</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fock</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">fock</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">fock</span> <span class="o">=</span> <span class="n">rohf</span><span class="o">.</span><span class="n">get_roothaan_fock</span><span class="p">(</span><span class="n">fock</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">canonicalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">,</span> <span class="n">fock</span><span class="p">)</span>
+
+</div></div>
 <span class="k">def</span> <span class="nf">_dump_mo_energy</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mo_energy</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">,</span> <span class="n">ehomo</span><span class="p">,</span> <span class="n">elumo</span><span class="p">,</span> <span class="n">orbsym</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span>
                     <span class="n">verbose</span><span class="o">=</span><span class="n">logger</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">verbose</span><span class="p">,</span> <span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">):</span>
@@ -755,7 +815,7 @@
     <span class="p">)</span>
 
     <span class="n">method</span> <span class="o">=</span> <span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-    <span class="c">#method.irrep_nelec[&#39;B2u&#39;] = 2</span>
+    <span class="n">method</span><span class="o">.</span><span class="n">irrep_nelec</span><span class="p">[</span><span class="s">&#39;A1u&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">energy</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
     <span class="k">print</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
 </pre></div>
@@ -791,7 +851,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

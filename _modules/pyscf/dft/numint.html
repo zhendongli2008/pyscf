@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyscf.dft.numint &mdash; PySCF 1.1 alpha documentation</title>
+    <title>pyscf.dft.numint &mdash; PySCF 1.1 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.1 alpha',
+        VERSION:     '1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 alpha documentation" href="../../../index.html" />
+    <link rel="top" title="PySCF 1.1 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -58,13 +58,16 @@
 <span class="kn">import</span> <span class="nn">scipy.linalg</span>
 <span class="kn">import</span> <span class="nn">pyscf.lib</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span>
-<span class="kn">from</span> <span class="nn">pyscf.dft</span> <span class="kn">import</span> <span class="n">libxc</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">pyscf.dft</span> <span class="kn">import</span> <span class="n">libxc</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">pyscf.dft</span> <span class="kn">import</span> <span class="n">xcfun</span> <span class="k">as</span> <span class="n">libxc</span>
 
 <span class="n">libdft</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">load_library</span><span class="p">(</span><span class="s">&#39;libdft&#39;</span><span class="p">)</span>
 <span class="n">OCCDROP</span> <span class="o">=</span> <span class="mf">1e-12</span>
 <span class="n">BLKSIZE</span> <span class="o">=</span> <span class="mi">96</span>
 
-<div class="viewcode-block" id="eval_ao"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.eval_ao">[docs]</a><span class="k">def</span> <span class="nf">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bastart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bascount</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+<div class="viewcode-block" id="eval_ao"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.eval_ao">[docs]</a><span class="k">def</span> <span class="nf">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">shls_slice</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
             <span class="n">non0tab</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Evaluate AO function value on the given grids.</span>
 
@@ -83,8 +86,10 @@
 <span class="sd">            M is the size associated to the derivative deriv.</span>
 <span class="sd">        relativity : bool</span>
 <span class="sd">            No effects.</span>
-<span class="sd">        bastart, bascount : int</span>
-<span class="sd">            If given, only part of AOs (bastart &lt;= shell_id &lt; bastart+bascount) are evaluated.</span>
+<span class="sd">        shls_slice : 2-element list</span>
+<span class="sd">            (shl_start, shl_end).</span>
+<span class="sd">            If given, only part of AOs (shl_start &lt;= shell_id &lt; shl_end) are</span>
+<span class="sd">            evaluated.  By default, all shells defined in mol will be evaluated.</span>
 <span class="sd">        non0tab : 2D bool array</span>
 <span class="sd">            mask array to indicate whether the AO values are zero.  The mask</span>
 <span class="sd">            array can be obtained by calling :func:`make_mask`</span>
@@ -109,14 +114,13 @@
 <span class="sd">    &gt;&gt;&gt; ao_value = eval_ao(mol, coords)</span>
 <span class="sd">    &gt;&gt;&gt; print(ao_value.shape)</span>
 <span class="sd">    (100, 24)</span>
-<span class="sd">    &gt;&gt;&gt; ao_value = eval_ao(mol, coords, deriv=1, bastart=1, bascount=3)</span>
+<span class="sd">    &gt;&gt;&gt; ao_value = eval_ao(mol, coords, deriv=1, shls_slice=(1,4))</span>
 <span class="sd">    &gt;&gt;&gt; print(ao_value.shape)</span>
 <span class="sd">    (4, 100, 7)</span>
-<span class="sd">    &gt;&gt;&gt; ao_value = eval_ao(mol, coords, deriv=2, bastart=1, bascount=3)</span>
+<span class="sd">    &gt;&gt;&gt; ao_value = eval_ao(mol, coords, deriv=2, shls_slice=(1,4))</span>
 <span class="sd">    &gt;&gt;&gt; print(ao_value.shape)</span>
 <span class="sd">    (10, 100, 7)</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">assert</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">c_contiguous</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">deriv</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;&#39;&#39;</span>
 <span class="s">You see this error message because of the API updates in pyscf v1.1.</span>
@@ -124,10 +128,9 @@
 
     <span class="n">comp</span> <span class="o">=</span> <span class="p">(</span><span class="n">deriv</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">deriv</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">deriv</span><span class="o">+</span><span class="mi">3</span><span class="p">)</span><span class="o">//</span><span class="mi">6</span>
     <span class="n">feval</span> <span class="o">=</span> <span class="s">&#39;GTOval_sph_deriv</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">deriv</span>
-    <span class="k">return</span> <span class="n">mol</span><span class="o">.</span><span class="n">eval_gto</span><span class="p">(</span><span class="n">feval</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">comp</span><span class="p">,</span> <span class="n">bastart</span><span class="p">,</span> <span class="n">bascount</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mol</span><span class="o">.</span><span class="n">eval_gto</span><span class="p">(</span><span class="n">feval</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">comp</span><span class="p">,</span> <span class="n">shls_slice</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="make_mask"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.make_mask">[docs]</a><span class="k">def</span> <span class="nf">make_mask</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bastart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bascount</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-              <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="make_mask"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.make_mask">[docs]</a><span class="k">def</span> <span class="nf">make_mask</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">shls_slice</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Mask to indicate whether a shell is zero on particular grid</span>
 
 <span class="sd">    Args:</span>
@@ -139,8 +142,10 @@
 <span class="sd">    Kwargs:</span>
 <span class="sd">        relativity : bool</span>
 <span class="sd">            No effects.</span>
-<span class="sd">        bastart, bascount : int</span>
-<span class="sd">            If given, only part of AOs (bastart &lt;= shell_id &lt; bastart+bascount) are evaluated.</span>
+<span class="sd">        shls_slice : 2-element list</span>
+<span class="sd">            (shl_start, shl_end).</span>
+<span class="sd">            If given, only part of AOs (shl_start &lt;= shell_id &lt; shl_end) are</span>
+<span class="sd">            evaluated.  By default, all shells defined in mol will be evaluated.</span>
 <span class="sd">        non0tab : 2D bool array</span>
 <span class="sd">            mask array to indicate whether the AO values are zero.  The mask</span>
 <span class="sd">            array can be obtained by calling :func:`make_mask`</span>
@@ -151,14 +156,15 @@
 <span class="sd">        2D bool array of shape (N,nbas), where N is the number of grids, nbas</span>
 <span class="sd">        is the number of shells</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">assert</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">c_contiguous</span><span class="p">)</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
     <span class="n">natm</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">nbas</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">)</span>
     <span class="n">ngrids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">bascount</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">bascount</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span> <span class="o">-</span> <span class="n">bastart</span>
+    <span class="k">if</span> <span class="n">shls_slice</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">shls_slice</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">shls_slice</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">))</span>
 
-    <span class="n">non0tab</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(((</span><span class="n">ngrids</span><span class="o">+</span><span class="n">BLKSIZE</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">BLKSIZE</span><span class="p">,</span><span class="n">bascount</span><span class="p">),</span>
+    <span class="n">non0tab</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(((</span><span class="n">ngrids</span><span class="o">+</span><span class="n">BLKSIZE</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">BLKSIZE</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">),</span>
                           <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
     <span class="n">libdft</span><span class="o">.</span><span class="n">VXCnr_ao_screen</span><span class="p">(</span><span class="n">non0tab</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
                            <span class="n">coords</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
@@ -751,14 +757,6 @@
 <span class="sd">    Examples:</span>
 
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="c">#ni = copy.copy(ni)</span>
-    <span class="c">#try:</span>
-    <span class="c">#    from pyscf.dft import xcfun</span>
-    <span class="c">#    ni.libxc = xcfun</span>
-    <span class="c">#    xctype = ni._xc_type(xc_code)</span>
-    <span class="c">#except (ImportError, KeyError, NotImplementedError):</span>
-    <span class="c">#    ni.libxc = libxc</span>
-    <span class="c">#    xctype = ni._xc_type(xc_code)</span>
     <span class="n">xctype</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">_xc_type</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span>
 
     <span class="n">make_rho</span><span class="p">,</span> <span class="n">nset</span><span class="p">,</span> <span class="n">nao</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">_gen_rho_evaluator</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dms</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)</span>
@@ -914,7 +912,7 @@
                 <span class="n">fxc0</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">eval_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="p">(</span><span class="n">rho0a</span><span class="p">,</span><span class="n">rho0b</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">relativity</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
                 <span class="n">u_u</span><span class="p">,</span> <span class="n">u_d</span><span class="p">,</span> <span class="n">d_d</span> <span class="o">=</span> <span class="n">fxc0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">u_u</span><span class="p">,</span> <span class="n">u_d</span><span class="p">,</span> <span class="n">d_d</span> <span class="o">=</span> <span class="n">fxc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">ip</span><span class="p">:</span><span class="n">ip</span><span class="o">+</span><span class="n">ngrid</span><span class="o">*</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+                <span class="n">u_u</span><span class="p">,</span> <span class="n">u_d</span><span class="p">,</span> <span class="n">d_d</span> <span class="o">=</span> <span class="n">fxc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">ip</span><span class="p">:</span><span class="n">ip</span><span class="o">+</span><span class="n">ngrid</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
                 <span class="n">ip</span> <span class="o">+=</span> <span class="n">ngrid</span>
 
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nset</span><span class="p">):</span>
@@ -1088,15 +1086,16 @@
     <span class="k">return</span> <span class="n">rho</span><span class="p">,</span> <span class="n">vxc</span><span class="p">,</span> <span class="n">fxc</span>
 
 </div>
-<div class="viewcode-block" id="large_rho_indices"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.large_rho_indices">[docs]</a><span class="k">def</span> <span class="nf">large_rho_indices</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">ni</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">max_memory</span><span class="o">=</span><span class="mi">2000</span><span class="p">):</span>
+<div class="viewcode-block" id="large_rho_indices"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.numint.large_rho_indices">[docs]</a><span class="k">def</span> <span class="nf">large_rho_indices</span><span class="p">(</span><span class="n">ni</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span> <span class="n">max_memory</span><span class="o">=</span><span class="mi">2000</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Indices of density which are larger than given cutoff</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">make_rho</span><span class="p">,</span> <span class="n">nset</span><span class="p">,</span> <span class="n">nao</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">_gen_rho_evaluator</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">idx</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cutoff</span> <span class="o">=</span> <span class="n">cutoff</span> <span class="o">/</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">size</span>
     <span class="k">for</span> <span class="n">ao</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">coords</span> \
             <span class="ow">in</span> <span class="n">ni</span><span class="o">.</span><span class="n">block_loop</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">nao</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">max_memory</span><span class="p">,</span> <span class="n">ni</span><span class="o">.</span><span class="n">non0tab</span><span class="p">):</span>
         <span class="n">rho</span> <span class="o">=</span> <span class="n">make_rho</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="s">&#39;LDA&#39;</span><span class="p">)</span>
-        <span class="n">idx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rho</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">)</span>
+        <span class="n">idx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">rho</span><span class="o">*</span><span class="n">weight</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
 
 </div>
@@ -1148,16 +1147,18 @@
     <span class="n">cache_xc_kernel_</span> <span class="o">=</span> <span class="n">cache_xc_kernel_</span>
     <span class="n">cache_xc_kernel</span>  <span class="o">=</span> <span class="n">cache_xc_kernel_</span>
 
+    <span class="n">large_rho_indices</span> <span class="o">=</span> <span class="n">large_rho_indices</span>
+
     <span class="nd">@pyscf.lib.with_doc</span><span class="p">(</span><span class="n">eval_ao</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">eval_ao</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bastart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">bascount</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">non0tab</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="p">,</span> <span class="n">relativity</span><span class="p">,</span> <span class="n">bastart</span><span class="p">,</span> <span class="n">bascount</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">eval_ao</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">shls_slice</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">non0tab</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="p">,</span> <span class="n">relativity</span><span class="p">,</span> <span class="n">shls_slice</span><span class="p">,</span>
                        <span class="n">non0tab</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
 
     <span class="nd">@pyscf.lib.with_doc</span><span class="p">(</span><span class="n">make_mask</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">make_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bastart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bascount</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">make_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">shls_slice</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                   <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">make_mask</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">relativity</span><span class="p">,</span> <span class="n">bastart</span><span class="p">,</span> <span class="n">bascount</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">make_mask</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">relativity</span><span class="p">,</span> <span class="n">shls_slice</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
 
     <span class="nd">@pyscf.lib.with_doc</span><span class="p">(</span><span class="n">eval_rho2</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">eval_rho2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">,</span> <span class="n">non0tab</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">xctype</span><span class="o">=</span><span class="s">&#39;LDA&#39;</span><span class="p">,</span>
@@ -1188,7 +1189,7 @@
             <span class="n">coords</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">ip0</span><span class="p">:</span><span class="n">ip1</span><span class="p">]</span>
             <span class="n">weight</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="n">ip0</span><span class="p">:</span><span class="n">ip1</span><span class="p">]</span>
             <span class="n">non0</span> <span class="o">=</span> <span class="n">non0tab</span><span class="p">[</span><span class="n">ip0</span><span class="o">//</span><span class="n">BLKSIZE</span><span class="p">:]</span>
-            <span class="n">ao</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="p">,</span> <span class="n">non0tab</span><span class="o">=</span><span class="n">non0</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">buf</span><span class="p">)</span>
+            <span class="n">ao</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="n">deriv</span><span class="p">,</span> <span class="n">non0tab</span><span class="o">=</span><span class="n">non0</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">buf</span><span class="p">)</span>
             <span class="k">yield</span> <span class="n">ao</span><span class="p">,</span> <span class="n">non0</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">coords</span>
 
     <span class="k">def</span> <span class="nf">_gen_rho_evaluator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dms</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
@@ -1217,7 +1218,7 @@
                 <span class="n">nao</span> <span class="o">=</span> <span class="n">dms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">ndms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dms</span><span class="p">)</span>
             <span class="k">def</span> <span class="nf">make_rho</span><span class="p">(</span><span class="n">idm</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">,</span> <span class="n">xctype</span><span class="p">):</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_rho2</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">dms</span><span class="p">[</span><span class="n">idm</span><span class="p">],</span> <span class="n">non0tab</span><span class="p">,</span> <span class="n">xctype</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_rho</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ao</span><span class="p">,</span> <span class="n">dms</span><span class="p">[</span><span class="n">idm</span><span class="p">],</span> <span class="n">non0tab</span><span class="p">,</span> <span class="n">xctype</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">make_rho</span><span class="p">,</span> <span class="n">ndms</span><span class="p">,</span> <span class="n">nao</span>
 
 <span class="c">####################</span>
@@ -1303,7 +1304,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 alpha documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

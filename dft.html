@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>dft &mdash; PySCF 1.1 alpha documentation</title>
+    <title>dft &mdash; PySCF 1.1 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1 alpha',
+        VERSION:     '1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 alpha documentation" href="index.html" />
+    <link rel="top" title="PySCF 1.1 documentation" href="index.html" />
     <link rel="next" title="tools" href="tools.html" />
     <link rel="prev" title="df — density fitting" href="df.html" /> 
   </head>
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="df.html" title="df — density fitting"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PySCF 1.1 alpha documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -134,36 +134,44 @@ envrionment.</dd>
 <dt>Attributes for RKS:</dt>
 <dd><dl class="first last docutils">
 <dt>xc <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
-<dd>&#8216;X_name,C_name&#8217; for the XC functional</dd>
+<dd>&#8216;X_name,C_name&#8217; for the XC functional.  Default is &#8216;lda,vwn&#8217;</dd>
 <dt>grids <span class="classifier-delimiter">:</span> <span class="classifier">Grids object</span></dt>
-<dd><p class="first">grids.level (0 - 6)  big number for large mesh grids, default is 3</p>
+<dd><p class="first">grids.level (0 - 9)  big number for large mesh grids. Default is 3</p>
 <dl class="docutils">
-<dt>grids.atomic_radii  can be one of</dt>
+<dt>radii_adjust</dt>
 <dd><div class="first last line-block">
-<div class="line">radi.treutler_atomic_radii_adjust(mol, radi.BRAGG_RADII)</div>
-<div class="line">radi.treutler_atomic_radii_adjust(mol, radi.COVALENT_RADII)</div>
-<div class="line">radi.becke_atomic_radii_adjust(mol, radi.BRAGG_RADII)</div>
-<div class="line">radi.becke_atomic_radii_adjust(mol, radi.COVALENT_RADII)</div>
-<div class="line">None,          to switch off atomic radii adjustment</div>
+<div class="line">radi.treutler_atomic_radii_adjust (default)</div>
+<div class="line">radi.becke_atomic_radii_adjust</div>
+<div class="line">None : to switch off atomic radii adjustment</div>
 </div>
 </dd>
-<dt>grids.radi_method  scheme for radial grids, can be one of</dt>
+<dt>grids.atomic_radii</dt>
 <dd><div class="first last line-block">
-<div class="line">radi.treutler</div>
+<div class="line">radi.BRAGG_RADII  (default)</div>
+<div class="line">radi.COVALENT_RADII</div>
+<div class="line">None : to switch off atomic radii adjustment</div>
+</div>
+</dd>
+<dt>grids.radi_method  scheme for radial grids</dt>
+<dd><div class="first last line-block">
+<div class="line">radi.treutler  (default)</div>
+<div class="line">radi.delley</div>
+<div class="line">radi.mura_knowles</div>
 <div class="line">radi.gauss_chebyshev</div>
 </div>
 </dd>
-<dt>grids.becke_scheme  weight partition function, can be one of</dt>
+<dt>grids.becke_scheme  weight partition function</dt>
 <dd><div class="first last line-block">
+<div class="line">gen_grid.original_becke  (default)</div>
 <div class="line">gen_grid.stratmann</div>
-<div class="line">gen_grid.original_becke</div>
 </div>
 </dd>
-<dt>grids.prune  scheme to reduce number of grids, can be one of</dt>
+<dt>grids.prune  scheme to reduce number of grids</dt>
 <dd><div class="first last line-block">
+<div class="line">gen_grid.nwchem_prune  (default)</div>
 <div class="line">gen_grid.sg1_prune</div>
-<div class="line">gen_grid.nwchem_prune</div>
 <div class="line">gen_grid.treutler_prune</div>
+<div class="line">None : to switch off grids pruning</div>
 </div>
 </dd>
 </dl>
@@ -172,6 +180,9 @@ envrionment.</dd>
 Eg, grids.atom_grid = {&#8216;H&#8217;: (20,110)} will generate 20 radial
 grids and 110 angular grids for H atom.</p>
 </dd>
+<dt>small_rho_cutoff <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Drop grids if their contribution to total electrons smaller than
+this cutoff value.  Default is 1e-7.</dd>
 </dl>
 </dd>
 </dl>
@@ -344,31 +355,36 @@ See pyscf/dft/rks.py RKS class for the usage of the attributes</p>
 <dl class="docutils">
 <dt>Attributes for Grids:</dt>
 <dd><dl class="first docutils">
-<dt>level <span class="classifier-delimiter">:</span> <span class="classifier">int (0 - 6)</span></dt>
+<dt>level <span class="classifier-delimiter">:</span> <span class="classifier">int (0 - 9)</span></dt>
 <dd>big number for large mesh grids, default is 3</dd>
 <dt>atomic_radii <span class="classifier-delimiter">:</span> <span class="classifier">1D array</span></dt>
-<dd>Default is radi.BRAGG_RADII</dd>
-<dt>radii_adjust <span class="classifier-delimiter">:</span> <span class="classifier">function or None</span></dt>
+<dd><div class="first last line-block">
+<div class="line">radi.BRAGG_RADII  (default)</div>
+<div class="line">radi.COVALENT_RADII</div>
+<div class="line">None : to switch off atomic radii adjustment</div>
+</div>
+</dd>
+<dt>radii_adjust <span class="classifier-delimiter">:</span> <span class="classifier">function(mol, atomic_radii) =&gt; (function(atom_id, atom_id, g) =&gt; array_like_g)</span></dt>
 <dd>Function to adjust atomic radii, can be one of
 | radi.treutler_atomic_radii_adjust
 | radi.becke_atomic_radii_adjust
-| None,          to switch off atomic radii adjustment</dd>
+| None : to switch off atomic radii adjustment</dd>
 <dt>radi_method <span class="classifier-delimiter">:</span> <span class="classifier">function(n) =&gt; (rad_grids, rad_weights)</span></dt>
 <dd>scheme for radial grids, can be one of
-| radi.treutler
+| radi.treutler  (default)
 | radi.delley
 | radi.mura_knowles
 | radi.gauss_chebyshev</dd>
 <dt>becke_scheme <span class="classifier-delimiter">:</span> <span class="classifier">function(v) =&gt; array_like_v</span></dt>
 <dd>weight partition function, can be one of
-| gen_grid.stratmann
-| gen_grid.original_becke</dd>
+| gen_grid.original_becke  (default)
+| gen_grid.stratmann</dd>
 <dt>prune <span class="classifier-delimiter">:</span> <span class="classifier">function(nuc, rad_grids, n_ang) =&gt; list_n_ang_for_each_rad_grid</span></dt>
 <dd>scheme to reduce number of grids, can be one of
+| gen_grid.nwchem_prune  (default)
 | gen_grid.sg1_prune
-| gen_grid.nwchem_prune
 | gen_grid.treutler_prune
-| None  (to switch off grid pruning)</dd>
+| None : to switch off grid pruning</dd>
 <dt>symmetry <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>whether to symmetrize mesh grids (TODO)</dd>
 <dt>atom_grid <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
@@ -393,7 +409,7 @@ level 3 corresponds to
 </dl>
 <dl class="method">
 <dt id="pyscf.dft.gen_grid.Grids.gen_atomic_grids">
-<tt class="descname">gen_atomic_grids</tt><big>(</big><em>mol</em>, <em>atom_grid=None</em>, <em>radi_method=None</em>, <em>level=None</em>, <em>prune=None</em>, <em>atomic_radii=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#Grids.gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.Grids.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">gen_atomic_grids</tt><big>(</big><em>mol</em>, <em>atom_grid=None</em>, <em>radi_method=None</em>, <em>level=None</em>, <em>prune=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#Grids.gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.Grids.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate number of radial grids and angular grids for the given molecule.</p>
 <dl class="docutils">
 <dt>Returns:</dt>
@@ -457,7 +473,7 @@ atom center; the second is the volume of that grid.</dd>
 <dt>
 <tt class="descname">3.30702072,  3.30702072,  3.30702072,  3.30702072,  3.30702072,</tt></dt>
 <dt>
-<tt class="descname">3.30702072]), becke_scheme=&lt;function original_becke at 0x2b192ff5a2a8&gt;)</tt></dt>
+<tt class="descname">3.30702072]), becke_scheme=&lt;function original_becke at 0x2b702645f758&gt;)</tt></dt>
 <dd><p>Generate the mesh grid coordinates and weights for DFT numerical integration.
 We can change radii_adjust, becke_scheme functions to generate different meshgrid.</p>
 <dl class="docutils">
@@ -471,7 +487,7 @@ weight 1D array has N elements.</dd>
 
 <dl class="function">
 <dt id="pyscf.dft.gen_grid.gen_atomic_grids">
-<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">gen_atomic_grids</tt><big>(</big><em>mol</em>, <em>atom_grid={}</em>, <em>radi_method=&lt;function gauss_chebyshev at 0x2b1930b04de8&gt;</em>, <em>level=3</em>, <em>prune=&lt;function nwchem_prune at 0x2b192ff5a140&gt;</em>, <em>atomic_radii=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">gen_atomic_grids</tt><big>(</big><em>mol</em>, <em>atom_grid={}</em>, <em>radi_method=&lt;function gauss_chebyshev at 0x2b702645f320&gt;</em>, <em>level=3</em>, <em>prune=&lt;function nwchem_prune at 0x2b702645f5f0&gt;</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate number of radial grids and angular grids for the given molecule.</p>
 <dl class="docutils">
 <dt>Returns:</dt>
@@ -535,7 +551,7 @@ atom center; the second is the volume of that grid.</dd>
 <dt>
 <tt class="descname">3.30702072,  3.30702072,  3.30702072,  3.30702072,  3.30702072,</tt></dt>
 <dt>
-<tt class="descname">3.30702072]), becke_scheme=&lt;function original_becke at 0x2b192ff5a2a8&gt;)</tt></dt>
+<tt class="descname">3.30702072]), becke_scheme=&lt;function original_becke at 0x2b702645f758&gt;)</tt></dt>
 <dd><p>Generate the mesh grid coordinates and weights for DFT numerical integration.
 We can change radii_adjust, becke_scheme functions to generate different meshgrid.</p>
 <dl class="docutils">
@@ -697,7 +713,7 @@ DFT hessian module etc.</p>
 
 <dl class="function">
 <dt id="pyscf.dft.numint.eval_ao">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_ao</tt><big>(</big><em>mol</em>, <em>coords</em>, <em>deriv=0</em>, <em>relativity=0</em>, <em>bastart=0</em>, <em>bascount=None</em>, <em>non0tab=None</em>, <em>out=None</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_ao"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_ao" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_ao</tt><big>(</big><em>mol</em>, <em>coords</em>, <em>deriv=0</em>, <em>relativity=0</em>, <em>shls_slice=None</em>, <em>non0tab=None</em>, <em>out=None</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_ao"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_ao" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate AO function value on the given grids.</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -717,8 +733,10 @@ Here N is the number of grids, nao is the number of AO functions,
 M is the size associated to the derivative deriv.</dd>
 <dt>relativity <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>No effects.</dd>
-<dt>bastart, bascount <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>If given, only part of AOs (bastart &lt;= shell_id &lt; bastart+bascount) are evaluated.</dd>
+<dt>shls_slice <span class="classifier-delimiter">:</span> <span class="classifier">2-element list</span></dt>
+<dd>(shl_start, shl_end).
+If given, only part of AOs (shl_start &lt;= shell_id &lt; shl_end) are
+evaluated.  By default, all shells defined in mol will be evaluated.</dd>
 <dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
 <dd>mask array to indicate whether the AO values are zero.  The mask
 array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
@@ -743,10 +761,10 @@ Then 3rd derivatives (10,N,nao) for xxx, xxy, xxz, xyy, xyz, xzz, yyy, yyz, yzz,
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ao_value</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">ao_value</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="go">(100, 24)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ao_value</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bastart</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bascount</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ao_value</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">shls_slice</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">ao_value</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="go">(4, 100, 7)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ao_value</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">bastart</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bascount</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ao_value</span> <span class="o">=</span> <span class="n">eval_ao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">shls_slice</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">ao_value</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="go">(10, 100, 7)</span>
 </pre></div>
@@ -879,13 +897,13 @@ nabla^2 rho and tau = 1/2(nabla f)^2</dd>
 
 <dl class="function">
 <dt id="pyscf.dft.numint.large_rho_indices">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">large_rho_indices</tt><big>(</big><em>mol</em>, <em>dm</em>, <em>ni</em>, <em>grids</em>, <em>cutoff=1e-12</em>, <em>max_memory=2000</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#large_rho_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.large_rho_indices" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">large_rho_indices</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>dm</em>, <em>grids</em>, <em>cutoff=1e-10</em>, <em>max_memory=2000</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#large_rho_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.large_rho_indices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Indices of density which are larger than given cutoff</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.dft.numint.make_mask">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">make_mask</tt><big>(</big><em>mol</em>, <em>coords</em>, <em>relativity=0</em>, <em>bastart=0</em>, <em>bascount=None</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#make_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.make_mask" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">make_mask</tt><big>(</big><em>mol</em>, <em>coords</em>, <em>relativity=0</em>, <em>shls_slice=None</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#make_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.make_mask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mask to indicate whether a shell is zero on particular grid</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -899,8 +917,10 @@ nabla^2 rho and tau = 1/2(nabla f)^2</dd>
 <dd><dl class="first last docutils">
 <dt>relativity <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
 <dd>No effects.</dd>
-<dt>bastart, bascount <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>If given, only part of AOs (bastart &lt;= shell_id &lt; bastart+bascount) are evaluated.</dd>
+<dt>shls_slice <span class="classifier-delimiter">:</span> <span class="classifier">2-element list</span></dt>
+<dd>(shl_start, shl_end).
+If given, only part of AOs (shl_start &lt;= shell_id &lt; shl_end) are
+evaluated.  By default, all shells defined in mol will be evaluated.</dd>
 <dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
 <dd>mask array to indicate whether the AO values are zero.  The mask
 array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
@@ -1415,7 +1435,7 @@ contribution is included.</li>
         <li class="right" >
           <a href="df.html" title="df — density fitting"
              >previous</a> |</li>
-        <li><a href="index.html">PySCF 1.1 alpha documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
