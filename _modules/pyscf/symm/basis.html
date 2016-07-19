@@ -85,12 +85,13 @@
 <span class="k">def</span> <span class="nf">symm_adapted_basis</span><span class="p">(</span><span class="n">gpname</span><span class="p">,</span> <span class="n">eql_atom_ids</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">basis_tab</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">gpname</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;Dooh&#39;</span><span class="p">,</span> <span class="s">&#39;Coov&#39;</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">linearmole_symm_adapted_basis</span><span class="p">(</span><span class="n">gpname</span><span class="p">,</span> <span class="n">eql_atom_ids</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">basis_tab</span><span class="p">)</span>
+    <span class="n">decimals</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">TOLERANCE</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="n">opdic</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">symm_ops</span><span class="p">(</span><span class="n">gpname</span><span class="p">)</span>
     <span class="n">ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">opdic</span><span class="p">[</span><span class="n">op</span><span class="p">]</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">param</span><span class="o">.</span><span class="n">OPERATOR_TABLE</span><span class="p">[</span><span class="n">gpname</span><span class="p">]]</span>
     <span class="n">chartab</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">CHARACTER_TABLE</span><span class="p">[</span><span class="n">gpname</span><span class="p">]</span>
     <span class="n">nirrep</span> <span class="o">=</span> <span class="n">chartab</span><span class="o">.</span><span class="n">__len__</span><span class="p">()</span>
     <span class="n">nfn</span><span class="p">,</span> <span class="n">basoff</span> <span class="o">=</span> <span class="n">_basis_offset_for_atoms</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">basis_tab</span><span class="p">)</span>
-    <span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">around</span><span class="p">([</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">],</span> <span class="n">decimals</span><span class="o">=</span><span class="n">geom</span><span class="o">.</span><span class="n">PLACE</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">around</span><span class="p">([</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">],</span> <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">)</span>
 
     <span class="n">sodic</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">def</span> <span class="nf">add_so</span><span class="p">(</span><span class="n">ir</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
@@ -102,7 +103,7 @@
         <span class="n">at0</span> <span class="o">=</span> <span class="n">atoms</span><span class="p">[</span><span class="n">atom_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
         <span class="n">symb</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">mole</span><span class="o">.</span><span class="n">_symbol</span><span class="p">(</span><span class="n">at0</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">op_coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">around</span><span class="p">([</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">at0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">op</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">],</span>
-                                 <span class="n">decimals</span><span class="o">=</span><span class="n">geom</span><span class="o">.</span><span class="n">PLACE</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                                 <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">)</span>
 <span class="c"># num atoms in atom_ids smaller than num ops?</span>
 <span class="c">## the coord-ids generated from the ops sequence</span>
 <span class="c">#        id_coords = numpy.argsort(geom.argsort_coords(op_coords))</span>
@@ -543,7 +544,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

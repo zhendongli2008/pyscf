@@ -73,7 +73,7 @@
 
 
 <div class="viewcode-block" id="M"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.M">[docs]</a><span class="k">def</span> <span class="nf">M</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">r&#39;&#39;&#39;This is a simple way to build up Mole object quickly.</span>
+    <span class="sd">r&#39;&#39;&#39;This is a shortcut to build up Mole object.</span>
 
 <span class="sd">    Args: Same to :func:`Mole.build`</span>
 
@@ -83,7 +83,7 @@
 <span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;H 0 0 0; F 0 0 1&#39;, basis=&#39;6-31g&#39;)</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">mol</span> <span class="o">=</span> <span class="n">Mole</span><span class="p">()</span>
-    <span class="n">mol</span><span class="o">.</span><span class="n">build_</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">mol</span>
 </div>
 <span class="k">def</span> <span class="nf">_gaussian_int</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
@@ -226,9 +226,9 @@
     <span class="k">if</span> <span class="n">unit</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s">&#39;B&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;au&#39;</span><span class="p">,</span><span class="s">&#39;AU&#39;</span><span class="p">)):</span>
         <span class="n">convert</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="k">elif</span> <span class="n">unit</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s">&#39;A&#39;</span><span class="p">,</span><span class="s">&#39;a&#39;</span><span class="p">)):</span>
-        <span class="n">convert</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">param</span><span class="o">.</span><span class="n">BOHR</span>
+        <span class="n">convert</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">param</span><span class="o">.</span><span class="n">BOHR</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">convert</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">unit</span>
+        <span class="n">convert</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">unit</span>
     <span class="n">fmt_atoms</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">def</span> <span class="nf">str2atm</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
         <span class="n">dat</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
@@ -291,6 +291,17 @@
 <span class="sd">        [0.82454700000000003, 0.90469100000000002]],</span>
 <span class="sd">        [0, [0.18319199999999999, 1.0]]]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">nparray_to_list</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="n">val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nparray_to_list</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">val</span>
+
     <span class="n">fmt_basis</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">basis_tab</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">symb</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">atom</span><span class="p">)</span>
@@ -298,11 +309,14 @@
         <span class="n">stdsymb</span> <span class="o">=</span> <span class="n">_std_symbol</span><span class="p">(</span><span class="n">rawsymb</span><span class="p">)</span>
         <span class="n">symb</span> <span class="o">=</span> <span class="n">symb</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">rawsymb</span><span class="p">,</span> <span class="n">stdsymb</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">basis_tab</span><span class="p">[</span><span class="n">atom</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">fmt_basis</span><span class="p">[</span><span class="n">symb</span><span class="p">]</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">basis_tab</span><span class="p">[</span><span class="n">atom</span><span class="p">],</span> <span class="n">stdsymb</span><span class="p">)</span>
+        <span class="n">atom_basis</span> <span class="o">=</span> <span class="n">basis_tab</span><span class="p">[</span><span class="n">atom</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">atom_basis</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">atom_basis</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;unc&#39;</span><span class="p">):</span>
+                <span class="n">fmt_basis</span><span class="p">[</span><span class="n">symb</span><span class="p">]</span> <span class="o">=</span> <span class="n">uncontract</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">atom_basis</span><span class="p">[</span><span class="mi">3</span><span class="p">:],</span> <span class="n">stdsymb</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fmt_basis</span><span class="p">[</span><span class="n">symb</span><span class="p">]</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">atom_basis</span><span class="p">,</span> <span class="n">stdsymb</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-<span class="c">#TODO: check and replace numpy.ndarray with list</span>
-            <span class="n">fmt_basis</span><span class="p">[</span><span class="n">symb</span><span class="p">]</span> <span class="o">=</span> <span class="n">basis_tab</span><span class="p">[</span><span class="n">atom</span><span class="p">]</span>
+            <span class="n">fmt_basis</span><span class="p">[</span><span class="n">symb</span><span class="p">]</span> <span class="o">=</span> <span class="n">nparray_to_list</span><span class="p">(</span><span class="n">atom_basis</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">fmt_basis</span>
 </div>
 <div class="viewcode-block" id="uncontract_basis"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.uncontract_basis">[docs]</a><span class="k">def</span> <span class="nf">uncontract_basis</span><span class="p">(</span><span class="n">_basis</span><span class="p">):</span>
@@ -438,8 +452,6 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">mol3</span><span class="o">.</span><span class="n">_ecpbas</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">mol1</span><span class="o">.</span><span class="n">_ecpbas</span><span class="p">,</span> <span class="n">ecpbas2</span><span class="p">))</span>
 
-    <span class="n">mol3</span><span class="o">.</span><span class="n">natm</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mol3</span><span class="o">.</span><span class="n">_atm</span><span class="p">)</span>
-    <span class="n">mol3</span><span class="o">.</span><span class="n">nbas</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mol3</span><span class="o">.</span><span class="n">_bas</span><span class="p">)</span>
     <span class="n">mol3</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">mol1</span><span class="o">.</span><span class="n">verbose</span>
     <span class="n">mol3</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">mol1</span><span class="o">.</span><span class="n">output</span>
     <span class="n">mol3</span><span class="o">.</span><span class="n">max_memory</span> <span class="o">=</span> <span class="n">mol1</span><span class="o">.</span><span class="n">max_memory</span>
@@ -682,9 +694,7 @@
 <span class="sd">    &gt;&gt;&gt; mol.tot_electrons()</span>
 <span class="sd">    6</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">nelectron</span> <span class="o">=</span> <span class="o">-</span><span class="n">mol</span><span class="o">.</span><span class="n">charge</span>
-    <span class="k">for</span> <span class="n">ia</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">):</span>
-        <span class="n">nelectron</span> <span class="o">+=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_charge</span><span class="p">(</span><span class="n">ia</span><span class="p">)</span>
+    <span class="n">nelectron</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_charges</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="n">mol</span><span class="o">.</span><span class="n">charge</span>
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">nelectron</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="copy"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.copy">[docs]</a><span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
@@ -833,12 +843,19 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
 </div>
-<div class="viewcode-block" id="npgto_nr"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.npgto_nr">[docs]</a><span class="k">def</span> <span class="nf">npgto_nr</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
+<div class="viewcode-block" id="npgto_nr"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.npgto_nr">[docs]</a><span class="k">def</span> <span class="nf">npgto_nr</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">cart</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Total number of primitive spherical GTOs for the given :class:`Mole` object&#39;&#39;&#39;</span>
-    <span class="k">return</span> <span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">ANG_OF</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">NPRIM_OF</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
-<div class="viewcode-block" id="nao_nr"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.nao_nr">[docs]</a><span class="k">def</span> <span class="nf">nao_nr</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">ANG_OF</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">cart</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">NPRIM_OF</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">l</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">NPRIM_OF</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
+<div class="viewcode-block" id="nao_nr"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.nao_nr">[docs]</a><span class="k">def</span> <span class="nf">nao_nr</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">cart</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Total number of contracted spherical GTOs for the given :class:`Mole` object&#39;&#39;&#39;</span>
-    <span class="k">return</span> <span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">ANG_OF</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">NCTR_OF</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
+    <span class="k">if</span> <span class="n">cart</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">nao_cart</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">ANG_OF</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">NCTR_OF</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
 <div class="viewcode-block" id="nao_cart"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.nao_cart">[docs]</a><span class="k">def</span> <span class="nf">nao_cart</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Total number of contracted cartesian GTOs for the given :class:`Mole` object&#39;&#39;&#39;</span>
     <span class="n">l</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">ANG_OF</span><span class="p">]</span>
@@ -866,14 +883,19 @@
 <span class="sd">    &gt;&gt;&gt; gto.nao_nr_range(mol, 2, 4)</span>
 <span class="sd">    (2, 6)</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">nao_id0</span> <span class="o">=</span> <span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:</span><span class="n">bas_id0</span><span class="p">,</span><span class="n">ANG_OF</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:</span><span class="n">bas_id0</span><span class="p">,</span><span class="n">NCTR_OF</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[</span><span class="n">bas_id0</span><span class="p">:</span><span class="n">bas_id1</span><span class="p">,</span><span class="n">ANG_OF</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[</span><span class="n">bas_id0</span><span class="p">:</span><span class="n">bas_id1</span><span class="p">,</span><span class="n">NCTR_OF</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">nao_id0</span><span class="p">,</span> <span class="n">nao_id0</span><span class="o">+</span><span class="n">n</span>
+    <span class="n">ao_loc</span> <span class="o">=</span> <span class="n">moleintor</span><span class="o">.</span><span class="n">make_loc</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:</span><span class="n">bas_id1</span><span class="p">],</span> <span class="s">&#39;sph&#39;</span><span class="p">)</span>
+    <span class="n">nao_id0</span> <span class="o">=</span> <span class="n">ao_loc</span><span class="p">[</span><span class="n">bas_id0</span><span class="p">]</span>
+    <span class="n">nao_id1</span> <span class="o">=</span> <span class="n">ao_loc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">nao_id0</span><span class="p">,</span> <span class="n">nao_id1</span>
 </div>
 <div class="viewcode-block" id="nao_2c"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.nao_2c">[docs]</a><span class="k">def</span> <span class="nf">nao_2c</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Total number of contracted spinor GTOs for the given :class:`Mole` object&#39;&#39;&#39;</span>
-    <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="n">mol</span><span class="o">.</span><span class="n">bas_len_spinor</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_nctr</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> \
-                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">))])</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">ANG_OF</span><span class="p">]</span>
+    <span class="n">kappa</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">KAPPA_OF</span><span class="p">]</span>
+    <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="n">l</span><span class="o">*</span><span class="mi">4</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">NCTR_OF</span><span class="p">]</span>
+    <span class="n">dims</span><span class="p">[</span><span class="n">kappa</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">l</span><span class="p">[</span><span class="n">kappa</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span>
+    <span class="n">dims</span><span class="p">[</span><span class="n">kappa</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">l</span><span class="p">[</span><span class="n">kappa</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">dims</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
 <span class="c"># nao_id0:nao_id1 corresponding to bas_id0:bas_id1</span></div>
 <div class="viewcode-block" id="nao_2c_range"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.nao_2c_range">[docs]</a><span class="k">def</span> <span class="nf">nao_2c_range</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">bas_id0</span><span class="p">,</span> <span class="n">bas_id1</span><span class="p">):</span>
@@ -897,11 +919,10 @@
 <span class="sd">    &gt;&gt;&gt; gto.nao_2c_range(mol, 2, 4)</span>
 <span class="sd">    (4, 12)</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">nao_id0</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">mol</span><span class="o">.</span><span class="n">bas_len_spinor</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_nctr</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> \
-                   <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bas_id0</span><span class="p">)])</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">mol</span><span class="o">.</span><span class="n">bas_len_spinor</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_nctr</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> \
-             <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bas_id0</span><span class="p">,</span> <span class="n">bas_id1</span><span class="p">)])</span>
-    <span class="k">return</span> <span class="n">nao_id0</span><span class="p">,</span> <span class="n">nao_id0</span><span class="o">+</span><span class="n">n</span>
+    <span class="n">ao_loc</span> <span class="o">=</span> <span class="n">moleintor</span><span class="o">.</span><span class="n">make_loc</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:</span><span class="n">bas_id1</span><span class="p">],</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">nao_id0</span> <span class="o">=</span> <span class="n">ao_loc</span><span class="p">[</span><span class="n">bas_id0</span><span class="p">]</span>
+    <span class="n">nao_id1</span> <span class="o">=</span> <span class="n">ao_loc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">nao_id0</span><span class="p">,</span> <span class="n">nao_id1</span>
 </div>
 <div class="viewcode-block" id="ao_loc_nr"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.ao_loc_nr">[docs]</a><span class="k">def</span> <span class="nf">ao_loc_nr</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">cart</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Offset of every shell in the spherical basis function spectrum</span>
@@ -916,14 +937,9 @@
 <span class="sd">    [0, 1, 2, 3, 6, 9, 10, 11, 12, 15, 18]</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">if</span> <span class="n">cart</span><span class="p">:</span>
-        <span class="n">l</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">ANG_OF</span><span class="p">]</span>
-        <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">NCTR_OF</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">moleintor</span><span class="o">.</span><span class="n">make_loc</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="s">&#39;cart&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">ANG_OF</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">[:,</span><span class="n">NCTR_OF</span><span class="p">]</span>
-    <span class="n">ao_loc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-    <span class="n">ao_loc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">dims</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">ao_loc</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-    <span class="k">return</span> <span class="n">ao_loc</span>
+        <span class="k">return</span> <span class="n">moleintor</span><span class="o">.</span><span class="n">make_loc</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="s">&#39;sph&#39;</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="ao_loc_2c"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.ao_loc_2c">[docs]</a><span class="k">def</span> <span class="nf">ao_loc_2c</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Offset of every shell in the spinor basis function spectrum</span>
@@ -937,13 +953,7 @@
 <span class="sd">    &gt;&gt;&gt; gto.ao_loc_2c(mol)</span>
 <span class="sd">    [0, 2, 4, 6, 12, 18, 20, 22, 24, 30, 36]</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">off</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">ao_loc</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">)):</span>
-        <span class="n">ao_loc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">off</span><span class="p">)</span>
-        <span class="n">off</span> <span class="o">+=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_len_spinor</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_nctr</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-    <span class="n">ao_loc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">off</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">ao_loc</span>
+    <span class="k">return</span> <span class="n">moleintor</span><span class="o">.</span><span class="n">make_loc</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="s">&#39;spinor&#39;</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="time_reversal_map"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.time_reversal_map">[docs]</a><span class="k">def</span> <span class="nf">time_reversal_map</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
     <span class="sd">r&#39;&#39;&#39;The index to map the spinor functions and its time reversal counterpart.</span>
@@ -996,8 +1006,8 @@
     <span class="c">#        r1 = coords[i]</span>
     <span class="c">#        r = numpy.linalg.norm(r1-r2)</span>
     <span class="c">#        e += q1 * q2 / r</span>
-    <span class="n">chargs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_charge</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_atom</span><span class="p">))])</span>
-    <span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_coord</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_atom</span><span class="p">))])</span>
+    <span class="n">chargs</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_charges</span><span class="p">()</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">()</span>
     <span class="n">rr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
     <span class="n">rd</span> <span class="o">=</span> <span class="n">rr</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span>
     <span class="n">rr</span> <span class="o">=</span> <span class="n">rd</span><span class="p">[:,</span><span class="bp">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">rd</span> <span class="o">-</span> <span class="n">rr</span><span class="o">*</span><span class="mi">2</span>
@@ -1208,6 +1218,11 @@
     <span class="k">if</span> <span class="n">mol1</span><span class="o">.</span><span class="n">_atom</span><span class="o">.</span><span class="n">__len__</span><span class="p">()</span> <span class="o">!=</span> <span class="n">mol2</span><span class="o">.</span><span class="n">_atom</span><span class="o">.</span><span class="n">__len__</span><span class="p">():</span>
         <span class="k">return</span> <span class="bp">False</span>
 
+    <span class="n">chg1</span> <span class="o">=</span> <span class="n">mol1</span><span class="o">.</span><span class="n">_atm</span><span class="p">[:,</span><span class="n">CHARGE_OF</span><span class="p">]</span>
+    <span class="n">chg2</span> <span class="o">=</span> <span class="n">mol2</span><span class="o">.</span><span class="n">_atm</span><span class="p">[:,</span><span class="n">CHARGE_OF</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">chg1</span><span class="p">)</span> <span class="o">==</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">chg2</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
     <span class="k">if</span> <span class="n">cmp_basis</span><span class="p">:</span>
         <span class="n">atomtypes1</span> <span class="o">=</span> <span class="n">atom_types</span><span class="p">(</span><span class="n">mol1</span><span class="o">.</span><span class="n">_atom</span><span class="p">,</span> <span class="n">mol1</span><span class="o">.</span><span class="n">_basis</span><span class="p">)</span>
         <span class="n">atomtypes2</span> <span class="o">=</span> <span class="n">atom_types</span><span class="p">(</span><span class="n">mol2</span><span class="o">.</span><span class="n">_atom</span><span class="p">,</span> <span class="n">mol2</span><span class="o">.</span><span class="n">_basis</span><span class="p">)</span>
@@ -1229,10 +1244,8 @@
         <span class="n">r</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">coord</span><span class="o">-</span><span class="n">center</span><span class="p">,</span> <span class="n">axes</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">r</span>
 
-    <span class="n">chg1</span> <span class="o">=</span> <span class="n">mol1</span><span class="o">.</span><span class="n">_atm</span><span class="p">[:,</span><span class="n">CHARGE_OF</span><span class="p">]</span>
-    <span class="n">chg2</span> <span class="o">=</span> <span class="n">mol2</span><span class="o">.</span><span class="n">_atm</span><span class="p">[:,</span><span class="n">CHARGE_OF</span><span class="p">]</span>
-    <span class="n">coord1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mol1</span><span class="o">.</span><span class="n">atom_coord</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol1</span><span class="o">.</span><span class="n">natm</span><span class="p">)])</span>
-    <span class="n">coord2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mol2</span><span class="o">.</span><span class="n">atom_coord</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol2</span><span class="o">.</span><span class="n">natm</span><span class="p">)])</span>
+    <span class="n">coord1</span> <span class="o">=</span> <span class="n">mol1</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">()</span>
+    <span class="n">coord2</span> <span class="o">=</span> <span class="n">mol2</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">()</span>
     <span class="n">w1</span><span class="p">,</span> <span class="n">r1</span> <span class="o">=</span> <span class="n">finger</span><span class="p">(</span><span class="n">mol1</span><span class="p">,</span> <span class="n">chg1</span><span class="p">,</span> <span class="n">coord1</span><span class="p">)</span>
     <span class="n">w2</span><span class="p">,</span> <span class="n">r2</span> <span class="o">=</span> <span class="n">finger</span><span class="p">(</span><span class="n">mol2</span><span class="p">,</span> <span class="n">chg2</span><span class="p">,</span> <span class="n">coord2</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">w1</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">)):</span>
@@ -1300,7 +1313,18 @@
     <span class="n">mass</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">param</span><span class="o">.</span><span class="n">ELEMENTS</span><span class="p">[</span><span class="n">_charge</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">])][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">charge_center</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">mass</span><span class="p">)</span>
 
+<div class="viewcode-block" id="condense_to_shell"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.condense_to_shell">[docs]</a><span class="k">def</span> <span class="nf">condense_to_shell</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mat</span><span class="p">,</span> <span class="n">compressor</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;The given matrix is first partitioned to blocks, based on AO shell as</span>
+<span class="sd">    delimiter.  Then call compressor function to abstract each block.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">ao_loc</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">ao_loc_nr</span><span class="p">()</span>
+    <span class="n">abstract</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">,</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">i0</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ao_loc</span><span class="p">[:</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">j0</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ao_loc</span><span class="p">[:</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">]):</span>
+            <span class="n">abstract</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">compressor</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span><span class="n">ao_loc</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="n">j0</span><span class="p">:</span><span class="n">ao_loc</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">return</span> <span class="n">abstract</span>
 
+</div>
 <span class="k">def</span> <span class="nf">check_sanity</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">keysref</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">):</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;Function pyscg.gto.mole.check_sanity will be removed in PySCF-1.1. &#39;</span>
                      <span class="s">&#39;It is replaced by pyscg.lib.check_sanity</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
@@ -1434,7 +1458,7 @@
 
 <span class="sd">    Examples:</span>
 
-<span class="sd">    &gt;&gt;&gt; mol = Mole(atom=&#39;H^2 0 0 0; H 0 0 1.1&#39;, basis=&#39;sto3g&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; mol = Mole(atom=&#39;H^2 0 0 0; H 0 0 1.1&#39;, basis=&#39;sto3g&#39;).build()</span>
 <span class="sd">    &gt;&gt;&gt; print(mol.atom_symbol(0))</span>
 <span class="sd">    H^2</span>
 <span class="sd">    &gt;&gt;&gt; print(mol.atom_pure_symbol(0))</span>
@@ -1474,9 +1498,7 @@
 <span class="c">##################################################</span>
 <span class="c"># don&#39;t modify the following private variables, they are not input options</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_atm</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">natm</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_bas</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nbas</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_env</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">PTR_ENV_START</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ecpbas</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -1494,6 +1516,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_built</span> <span class="o">=</span> <span class="bp">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">natm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_atm</span><span class="p">)</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nbas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bas</span><span class="p">)</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nelec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nelectron</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nelectron</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
 
 <span class="c"># need &quot;deepcopy&quot; here because in shallow copy, _env may get new elements but</span>
 <span class="c"># with ptr_env unchanged</span>
@@ -1522,11 +1554,11 @@
         <span class="k">return</span> <span class="bp">self</span>
 
 <span class="c">#TODO: remove kwarg mass=None.  Here to keep compatibility to old chkfile format</span>
-<div class="viewcode-block" id="Mole.build_"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.build_">[docs]</a>    <span class="k">def</span> <span class="nf">build_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dump_input</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">parse_arg</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-               <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_memory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-               <span class="n">atom</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nucmod</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ecp</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-               <span class="n">charge</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-               <span class="n">symmetry_subgroup</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">light_speed</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mass</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Mole.build"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dump_input</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">parse_arg</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+              <span class="n">verbose</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_memory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+              <span class="n">atom</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nucmod</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ecp</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+              <span class="n">charge</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+              <span class="n">symmetry_subgroup</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">light_speed</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mass</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Setup moleclue and initialize some control parameters.  Whenever you</span>
 <span class="sd">        change the value of the attributes of :class:`Mole`, you need call</span>
 <span class="sd">        this function to refresh the internal data of Mole.</span>
@@ -1595,12 +1627,7 @@
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="c"># specify global basis for whole molecule</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;unc&#39;</span><span class="p">):</span>
-                <span class="n">cbas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_basis</span><span class="p">(</span><span class="nb">dict</span><span class="p">([(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">[</span><span class="mi">3</span><span class="p">:])</span>
-                                                  <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">uniq_atoms</span><span class="p">]))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">a</span><span class="p">,</span><span class="n">uncontract</span><span class="p">(</span><span class="n">cbas</span><span class="p">[</span><span class="n">a</span><span class="p">]))</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">cbas</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_basis</span><span class="p">(</span><span class="nb">dict</span><span class="p">([(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_basis</span><span class="p">(</span><span class="nb">dict</span><span class="p">([(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">)</span>
                                                   <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">uniq_atoms</span><span class="p">]))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_basis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">)</span>
@@ -1651,8 +1678,6 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">make_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_atom</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nucmod</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ecpbas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env</span> <span class="o">=</span> \
                 <span class="bp">self</span><span class="o">.</span><span class="n">make_ecp_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ecp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">natm</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_atm</span><span class="p">)</span> <span class="c"># == len(self._atom)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nbas</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bas</span><span class="p">)</span> <span class="c"># == len(self._basis)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nelectron</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tot_electrons</span><span class="p">()</span>
         <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nelectron</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&#39;Electron number </span><span class="si">%d</span><span class="s"> and spin </span><span class="si">%d</span><span class="s"> are not consistent</span><span class="se">\n</span><span class="s">&#39;</span>
@@ -1682,12 +1707,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_built</span> <span class="o">=</span> <span class="bp">True</span>
         <span class="k">return</span> <span class="bp">self</span></div>
-<div class="viewcode-block" id="Mole.kernel"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.kernel">[docs]</a>    <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-<div class="viewcode-block" id="Mole.build"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-    <span class="n">kernel</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="n">build_</span><span class="o">.</span><span class="n">__doc__</span>
-    <span class="n">build</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="n">build_</span><span class="o">.</span><span class="n">__doc__</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">build</span>
 
     <span class="nd">@pyscf.lib.with_doc</span><span class="p">(</span><span class="n">format_atom</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
 <div class="viewcode-block" id="Mole.format_atom"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.format_atom">[docs]</a>    <span class="k">def</span> <span class="nf">format_atom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&#39;Ang&#39;</span><span class="p">):</span>
@@ -1751,14 +1771,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;Date: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">())</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">pyscfdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">__file__</span><span class="p">,</span> <span class="s">&#39;..&#39;</span><span class="p">,</span> <span class="s">&#39;..&#39;</span><span class="p">))</span>
-            <span class="n">head</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pyscfdir</span><span class="p">,</span> <span class="s">&#39;.git&#39;</span><span class="p">,</span> <span class="s">&#39;HEAD&#39;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;PySCF path  </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">pyscfdir</span><span class="p">)</span>
+            <span class="n">head</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pyscfdir</span><span class="p">,</span> <span class="s">&#39;.git&#39;</span><span class="p">,</span> <span class="s">&#39;HEAD&#39;</span><span class="p">)</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">branch</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">head</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
             <span class="c"># or command(git log -1 --pretty=%H)</span>
-            <span class="n">head</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pyscfdir</span><span class="p">,</span> <span class="s">&#39;.git&#39;</span><span class="p">,</span> <span class="s">&#39;refs&#39;</span><span class="p">,</span> <span class="s">&#39;heads&#39;</span><span class="p">,</span> <span class="n">branch</span><span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;GIT </span><span class="si">%s</span><span class="s"> branch  </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">branch</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()))</span>
+            <span class="k">if</span> <span class="n">head</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;ref:&#39;</span><span class="p">):</span>
+                <span class="n">branch</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
+                <span class="n">head</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pyscfdir</span><span class="p">,</span> <span class="s">&#39;.git&#39;</span><span class="p">,</span> <span class="n">head</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;GIT </span><span class="si">%s</span><span class="s"> branch  </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">branch</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;GIT HEAD </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">head</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
             <span class="k">pass</span>
@@ -1825,40 +1849,44 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;CPU time: </span><span class="si">%12.2f</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">())</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-<div class="viewcode-block" id="Mole.set_common_origin_"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.set_common_origin_">[docs]</a>    <span class="k">def</span> <span class="nf">set_common_origin_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">):</span>
+<div class="viewcode-block" id="Mole.set_common_orig"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.set_common_orig">[docs]</a>    <span class="k">def</span> <span class="nf">set_common_orig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Update common origin which held in :class`Mole`._env.  **Note** the unit is Bohr</span>
 
 <span class="sd">        Examples:</span>
 
-<span class="sd">        &gt;&gt;&gt; mol.set_common_orig_(0)</span>
-<span class="sd">        &gt;&gt;&gt; mol.set_common_orig_((1,0,0))</span>
+<span class="sd">        &gt;&gt;&gt; mol.set_common_orig(0)</span>
+<span class="sd">        &gt;&gt;&gt; mol.set_common_orig((1,0,0))</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">[</span><span class="n">PTR_COMMON_ORIG</span><span class="p">:</span><span class="n">PTR_COMMON_ORIG</span><span class="o">+</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">coord</span>
         <span class="k">return</span> <span class="bp">self</span></div>
-    <span class="k">def</span> <span class="nf">set_common_orig_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_common_origin_</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span>
+    <span class="n">set_common_origin</span> <span class="o">=</span> <span class="n">set_common_orig</span>
+    <span class="n">set_common_orig_</span> <span class="o">=</span> <span class="n">set_common_orig</span>    <span class="c"># for backward compatibility</span>
+    <span class="n">set_common_origin_</span> <span class="o">=</span> <span class="n">set_common_orig</span>  <span class="c"># for backward compatibility</span>
 
-<div class="viewcode-block" id="Mole.set_rinv_origin_"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.set_rinv_origin_">[docs]</a>    <span class="k">def</span> <span class="nf">set_rinv_origin_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">):</span>
+<div class="viewcode-block" id="Mole.set_rinv_orig"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.set_rinv_orig">[docs]</a>    <span class="k">def</span> <span class="nf">set_rinv_orig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">):</span>
         <span class="sd">r&#39;&#39;&#39;Update origin for operator :math:`\frac{1}{|r-R_O|}`.  **Note** the unit is Bohr</span>
 
 <span class="sd">        Examples:</span>
 
-<span class="sd">        &gt;&gt;&gt; mol.set_rinv_orig_(0)</span>
-<span class="sd">        &gt;&gt;&gt; mol.set_rinv_orig_((0,1,0))</span>
+<span class="sd">        &gt;&gt;&gt; mol.set_rinv_orig(0)</span>
+<span class="sd">        &gt;&gt;&gt; mol.set_rinv_orig((0,1,0))</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">[</span><span class="n">PTR_RINV_ORIG</span><span class="p">:</span><span class="n">PTR_RINV_ORIG</span><span class="o">+</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">coord</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span></div>
-    <span class="k">def</span> <span class="nf">set_rinv_orig_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_rinv_origin_</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span>
+    <span class="n">set_rinv_origin</span> <span class="o">=</span> <span class="n">set_rinv_orig</span>
+    <span class="n">set_rinv_orig_</span> <span class="o">=</span> <span class="n">set_rinv_orig</span>    <span class="c"># for backward compatibility</span>
+    <span class="n">set_rinv_origin_</span> <span class="o">=</span> <span class="n">set_rinv_orig</span>  <span class="c"># for backward compatibility</span>
 
-<div class="viewcode-block" id="Mole.set_range_coulomb_"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.set_range_coulomb_">[docs]</a>    <span class="k">def</span> <span class="nf">set_range_coulomb_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+<div class="viewcode-block" id="Mole.set_range_coulomb"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.set_range_coulomb">[docs]</a>    <span class="k">def</span> <span class="nf">set_range_coulomb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Apply the long range part of range-separated Coulomb operator for</span>
 <span class="sd">        **all** 2e integrals</span>
 <span class="sd">        erf(omega r12) / r12</span>
+<span class="sd">        set omega to 0 to siwtch off the range-separated Coulomb</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">[</span><span class="n">PTR_RANGE_OMEGA</span><span class="p">]</span> <span class="o">=</span> <span class="n">omega</span>
-</div>
-<div class="viewcode-block" id="Mole.set_nuc_mod_"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.set_nuc_mod_">[docs]</a>    <span class="k">def</span> <span class="nf">set_nuc_mod_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atm_id</span><span class="p">,</span> <span class="n">zeta</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">[</span><span class="n">PTR_RANGE_OMEGA</span><span class="p">]</span> <span class="o">=</span> <span class="n">omega</span></div>
+    <span class="n">set_range_coulomb_</span> <span class="o">=</span> <span class="n">set_range_coulomb</span>  <span class="c"># for backward compatibility</span>
+
+<div class="viewcode-block" id="Mole.set_nuc_mod"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.set_nuc_mod">[docs]</a>    <span class="k">def</span> <span class="nf">set_nuc_mod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atm_id</span><span class="p">,</span> <span class="n">zeta</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Change the nuclear charge distribution of the given atom ID.  The charge</span>
 <span class="sd">        distribution is defined as: rho(r) = nuc_charge * Norm * exp(-zeta * r^2).</span>
 <span class="sd">        This function can **only** be called after .build() method is executed.</span>
@@ -1867,24 +1895,26 @@
 
 <span class="sd">        &gt;&gt;&gt; for ia in range(mol.natm):</span>
 <span class="sd">        ...     zeta = gto.filatov_nuc_mod(mol.atom_charge(ia))</span>
-<span class="sd">        ...     mol.set_nuc_mod_(ia, zeta)</span>
+<span class="sd">        ...     mol.set_nuc_mod(ia, zeta)</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">ptr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atm</span><span class="p">[</span><span class="n">atm_id</span><span class="p">,</span><span class="n">PTR_ZETA</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">[</span><span class="n">ptr</span><span class="p">]</span> <span class="o">=</span> <span class="n">zeta</span>
-        <span class="k">return</span> <span class="bp">self</span>
-</div>
-<div class="viewcode-block" id="Mole.set_rinv_zeta_"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.set_rinv_zeta_">[docs]</a>    <span class="k">def</span> <span class="nf">set_rinv_zeta_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zeta</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+    <span class="n">set_nuc_mod_</span> <span class="o">=</span> <span class="n">set_nuc_mod</span>  <span class="c"># for backward compatibility</span>
+
+<div class="viewcode-block" id="Mole.set_rinv_zeta"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.set_rinv_zeta">[docs]</a>    <span class="k">def</span> <span class="nf">set_rinv_zeta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zeta</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Assume the charge distribution on the &quot;rinv_orig&quot;.  zeta is the parameter</span>
 <span class="sd">        to control the charge distribution: rho(r) = Norm * exp(-zeta * r^2).</span>
 <span class="sd">        **Be careful** when call this function. It affects the behavior of</span>
 <span class="sd">        cint1e_rinv_* functions.  Make sure to set it back to 0 after using it!</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">[</span><span class="n">PTR_RINV_ZETA</span><span class="p">]</span> <span class="o">=</span> <span class="n">zeta</span>
-        <span class="k">return</span> <span class="bp">self</span>
-</div>
-    <span class="k">def</span> <span class="nf">update_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_from_chk_</span><span class="p">(</span><span class="n">chkfile</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">update_from_chk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+    <span class="n">set_rinv_zeta_</span> <span class="o">=</span> <span class="n">set_rinv_zeta</span>  <span class="c"># for backward compatibility</span>
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_from_chk</span><span class="p">(</span><span class="n">chkfile</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">update_from_chk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">):</span>
         <span class="kn">import</span> <span class="nn">h5py</span>
         <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
             <span class="n">moldic</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
@@ -1941,6 +1971,10 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atm</span><span class="p">[</span><span class="n">atm_id</span><span class="p">,</span><span class="n">CHARGE_OF</span><span class="p">]</span>
 </div>
+<div class="viewcode-block" id="Mole.atom_charges"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.atom_charges">[docs]</a>    <span class="k">def</span> <span class="nf">atom_charges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;np.asarray([mol.atom_charge(i) for i in range(mol.natm)])&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atm</span><span class="p">[:,</span><span class="n">CHARGE_OF</span><span class="p">]</span>
+</div>
 <div class="viewcode-block" id="Mole.atom_nelec_core"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.atom_nelec_core">[docs]</a>    <span class="k">def</span> <span class="nf">atom_nelec_core</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atm_id</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Number of core electrons for pseudo potential.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -1961,6 +1995,11 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">ptr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atm</span><span class="p">[</span><span class="n">atm_id</span><span class="p">,</span><span class="n">PTR_COORD</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">[</span><span class="n">ptr</span><span class="p">:</span><span class="n">ptr</span><span class="o">+</span><span class="mi">3</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Mole.atom_coords"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.atom_coords">[docs]</a>    <span class="k">def</span> <span class="nf">atom_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;np.asarray([mol.atom_coords(i) for i in range(mol.natm)])&#39;&#39;&#39;</span>
+        <span class="n">ptr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atm</span><span class="p">[:,</span><span class="n">PTR_COORD</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">ptr</span><span class="p">,</span><span class="n">ptr</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">ptr</span><span class="o">+</span><span class="mi">2</span><span class="p">))]</span><span class="o">.</span><span class="n">T</span>
 </div>
 <div class="viewcode-block" id="Mole.atom_nshells"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.atom_nshells">[docs]</a>    <span class="k">def</span> <span class="nf">atom_nshells</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atm_id</span><span class="p">):</span>
         <span class="sd">r&#39;&#39;&#39;Number of basis/shells of the given atom</span>
@@ -2296,6 +2335,8 @@
     <span class="nd">@pyscf.lib.with_doc</span><span class="p">(</span><span class="n">spinor_labels</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">spinor_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">spinor_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="n">condense_to_shell</span> <span class="o">=</span> <span class="n">condense_to_shell</span>
 </div>
 <span class="n">_ELEMENTDIC</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">param</span><span class="o">.</span><span class="n">ELEMENTS_PROTON</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
 
@@ -2535,7 +2576,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

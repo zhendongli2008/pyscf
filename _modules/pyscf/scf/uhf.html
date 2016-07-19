@@ -196,8 +196,8 @@
     <span class="n">vhf</span> <span class="o">=</span> <span class="n">_makevhf</span><span class="p">(</span><span class="n">vj</span><span class="p">,</span> <span class="n">vk</span><span class="p">,</span> <span class="n">nset</span><span class="p">)</span> <span class="o">+</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vhf_last</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">vhf</span>
 </div>
-<span class="k">def</span> <span class="nf">get_fock_</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">h1e</span><span class="p">,</span> <span class="n">s1e</span><span class="p">,</span> <span class="n">vhf</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">cycle</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">adiis</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-              <span class="n">diis_start_cycle</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">level_shift_factor</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">damp_factor</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_fock</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">h1e</span><span class="p">,</span> <span class="n">s1e</span><span class="p">,</span> <span class="n">vhf</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">cycle</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">adiis</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">diis_start_cycle</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">level_shift_factor</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">damp_factor</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">diis_start_cycle</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">diis_start_cycle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">diis_start_cycle</span>
     <span class="k">if</span> <span class="n">level_shift_factor</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -412,8 +412,9 @@
 </div>
 <div class="viewcode-block" id="analyze"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.uhf.analyze">[docs]</a><span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">logger</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Analyze the given SCF object:  print orbital energies, occupancies;</span>
-<span class="sd">    print orbital coefficients; Mulliken population analysis</span>
+<span class="sd">    print orbital coefficients; Mulliken population analysis; Dipole moment</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">pyscf.lo</span> <span class="kn">import</span> <span class="n">orth</span>
     <span class="kn">from</span> <span class="nn">pyscf.tools</span> <span class="kn">import</span> <span class="n">dump_mat</span>
     <span class="n">mo_energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_energy</span>
     <span class="n">mo_occ</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_occ</span>
@@ -432,15 +433,19 @@
         <span class="n">log</span><span class="o">.</span><span class="n">note</span><span class="p">(</span><span class="s">&#39;MO #</span><span class="si">%-3d</span><span class="s"> energy= </span><span class="si">%-18.15g</span><span class="s"> | </span><span class="si">%-18.15g</span><span class="s"> occ= </span><span class="si">%g</span><span class="s"> | </span><span class="si">%g</span><span class="s">&#39;</span><span class="p">,</span>
                  <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">mo_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">mo_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">],</span>
                  <span class="n">mo_occ</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">mo_occ</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">ovlp_ao</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39; ** MO coefficients for alpha spin **&#39;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39; ** MO coefficients (expansion on meta-Lowdin AOs) for alpha spin **&#39;</span><span class="p">)</span>
         <span class="n">label</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">spheric_labels</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
-        <span class="n">dump_mat</span><span class="o">.</span><span class="n">dump_rec</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39; ** MO coefficients for beta spin **&#39;</span><span class="p">)</span>
-        <span class="n">dump_mat</span><span class="o">.</span><span class="n">dump_rec</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">label</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">orth_coeff</span> <span class="o">=</span> <span class="n">orth</span><span class="o">.</span><span class="n">orth_ao</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;meta_lowdin&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">ovlp_ao</span><span class="p">)</span>
+        <span class="n">c_inv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">orth_coeff</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">ovlp_ao</span><span class="p">)</span>
+        <span class="n">dump_mat</span><span class="o">.</span><span class="n">dump_rec</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">c_inv</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">label</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39; ** MO coefficients (expansion on meta-Lowdin AOs) for beta spin **&#39;</span><span class="p">)</span>
+        <span class="n">dump_mat</span><span class="o">.</span><span class="n">dump_rec</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">c_inv</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">label</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="n">dm</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">mf</span><span class="o">.</span><span class="n">mulliken_meta</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mulliken_meta</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">ovlp_ao</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">log</span><span class="p">),</span>
+            <span class="n">mf</span><span class="o">.</span><span class="n">dip_moment</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">log</span><span class="p">))</span>
 </div>
 <div class="viewcode-block" id="mulliken_pop"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.uhf.mulliken_pop">[docs]</a><span class="k">def</span> <span class="nf">mulliken_pop</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">logger</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Mulliken population analysis</span>
@@ -495,15 +500,10 @@
     <span class="k">return</span> <span class="n">mulliken_pop</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="p">(</span><span class="n">dm_a</span><span class="p">,</span><span class="n">dm_b</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">orth_coeff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">log</span><span class="p">)</span></div>
 <span class="n">mulliken_pop_meta_lowdin_ao</span> <span class="o">=</span> <span class="n">mulliken_meta</span>
 
-<div class="viewcode-block" id="map_rhf_to_uhf"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.uhf.map_rhf_to_uhf">[docs]</a><span class="k">def</span> <span class="nf">map_rhf_to_uhf</span><span class="p">(</span><span class="n">rhf</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Take the settings from RHF object&#39;&#39;&#39;</span>
-    <span class="k">assert</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">rhf</span><span class="p">,</span> <span class="n">hf</span><span class="o">.</span><span class="n">RHF</span><span class="p">))</span>
-    <span class="n">uhf</span> <span class="o">=</span> <span class="n">UHF</span><span class="p">(</span><span class="n">rhf</span><span class="o">.</span><span class="n">mol</span><span class="p">)</span>
-    <span class="n">uhf</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">rhf</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
-    <span class="n">uhf</span><span class="o">.</span><span class="n">mo_energy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">rhf</span><span class="o">.</span><span class="n">mo_energy</span><span class="p">,</span><span class="n">rhf</span><span class="o">.</span><span class="n">mo_energy</span><span class="p">))</span>
-    <span class="n">uhf</span><span class="o">.</span><span class="n">mo_coeff</span>  <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">rhf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">,</span><span class="n">rhf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">))</span>
-    <span class="n">uhf</span><span class="o">.</span><span class="n">mo_occ</span>    <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">rhf</span><span class="o">.</span><span class="n">mo_occ</span><span class="p">,</span><span class="n">rhf</span><span class="o">.</span><span class="n">mo_occ</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">uhf</span>
+<div class="viewcode-block" id="map_rhf_to_uhf"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.uhf.map_rhf_to_uhf">[docs]</a><span class="k">def</span> <span class="nf">map_rhf_to_uhf</span><span class="p">(</span><span class="n">mf</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Create UHF object based on the RHF object&#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="kn">import</span> <span class="n">addons</span>
+    <span class="k">return</span> <span class="n">addons</span><span class="o">.</span><span class="n">convert_to_uhf</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="canonicalize"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.uhf.canonicalize">[docs]</a><span class="k">def</span> <span class="nf">canonicalize</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">,</span> <span class="n">fock</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Canonicalization diagonalizes the UHF Fock matrix within occupied,</span>
@@ -539,7 +539,7 @@
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        S_{12} = \langle \Psi_A | Psi_B \rangle</span>
+<span class="sd">        S_{12} = \langle \Psi_A | \Psi_B \rangle</span>
 <span class="sd">        = (\mathrm{det}\mathbf{U}) (\mathrm{det}\mathbf{V^\dagger})\prod\limits_{i=1}\limits^{2N} \lambda_{ii}</span>
 
 <span class="sd">    where :math:`\mathbf{U}, \mathbf{V}, \lambda` are unitary matrices and single</span>
@@ -612,6 +612,32 @@
     <span class="n">dm_b</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mo1_b</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mo2_b</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()))</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">dm_a</span><span class="p">,</span> <span class="n">dm_b</span><span class="p">))</span>
 </div>
+<div class="viewcode-block" id="dip_moment"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.uhf.dip_moment">[docs]</a><span class="k">def</span> <span class="nf">dip_moment</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">unit_symbol</span><span class="o">=</span><span class="s">&#39;Debye&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">logger</span><span class="o">.</span><span class="n">NOTE</span><span class="p">):</span>
+    <span class="sd">r&#39;&#39;&#39; Dipole moment calculation</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \mu_x = -\sum_{\mu}\sum_{\nu} P_{\mu\nu}(\nu|x|\mu) + \sum_A Z_A X_A</span>
+<span class="sd">        \mu_y = -\sum_{\mu}\sum_{\nu} P_{\mu\nu}(\nu|y|\mu) + \sum_A Z_A Y_A</span>
+<span class="sd">        \mu_z = -\sum_{\mu}\sum_{\nu} P_{\mu\nu}(\nu|z|\mu) + \sum_A Z_A Z_A</span>
+
+<span class="sd">    where :math:`\mu_x, \mu_y, \mu_z` are the x, y and z components of dipole</span>
+<span class="sd">    moment</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">         mol: an instance of :class:`Mole`</span>
+
+<span class="sd">         dm : a list of 2D ndarrays</span>
+<span class="sd">              a list of density matrices</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        A list: the dipole moment on x, y and z component</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dm</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">hf</span><span class="o">.</span><span class="n">dip_moment</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">unit_symbol</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">hf</span><span class="o">.</span><span class="n">dip_moment</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">unit_symbol</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+</div>
 <div class="viewcode-block" id="UHF"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.uhf.UHF">[docs]</a><span class="k">class</span> <span class="nc">UHF</span><span class="p">(</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">):</span>
     <span class="n">__doc__</span> <span class="o">=</span> <span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">+</span> <span class="s">&#39;&#39;&#39;</span>
 <span class="s">    Attributes for UHF:</span>
@@ -654,7 +680,7 @@
         <span class="n">e_b</span><span class="p">,</span> <span class="n">c_b</span> <span class="o">=</span> <span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fock</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">e_a</span><span class="p">,</span><span class="n">e_b</span><span class="p">)),</span> <span class="p">(</span><span class="n">c_a</span><span class="p">,</span><span class="n">c_b</span><span class="p">)</span>
 
-    <span class="n">get_fock_</span> <span class="o">=</span> <span class="n">get_fock_</span>
+    <span class="n">get_fock</span> <span class="o">=</span> <span class="n">get_fock</span>
 
     <span class="n">get_occ</span> <span class="o">=</span> <span class="n">get_occ</span>
 
@@ -691,7 +717,7 @@
         <span class="k">if</span> <span class="n">chkfile</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">chkfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chkfile</span>
         <span class="k">return</span> <span class="n">init_guess_by_chkfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_jk_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_jk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
         <span class="k">if</span> <span class="n">dm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
         <span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span>
@@ -761,6 +787,13 @@
     <span class="nd">@pyscf.lib.with_doc</span><span class="p">(</span><span class="n">make_asym_dm</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
 <div class="viewcode-block" id="UHF.make_asym_dm"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.uhf.UHF.make_asym_dm">[docs]</a>    <span class="k">def</span> <span class="nf">make_asym_dm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo1</span><span class="p">,</span> <span class="n">mo2</span><span class="p">,</span> <span class="n">occ1</span><span class="p">,</span> <span class="n">occ2</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">make_asym_dm</span><span class="p">(</span><span class="n">mo1</span><span class="p">,</span> <span class="n">mo2</span><span class="p">,</span> <span class="n">occ1</span><span class="p">,</span> <span class="n">occ2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+</div>
+    <span class="nd">@pyscf.lib.with_doc</span><span class="p">(</span><span class="n">dip_moment</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
+<div class="viewcode-block" id="UHF.dip_moment"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.uhf.UHF.dip_moment">[docs]</a>    <span class="k">def</span> <span class="nf">dip_moment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">unit_symbol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">logger</span><span class="o">.</span><span class="n">NOTE</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
+        <span class="k">if</span> <span class="n">dm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">dm</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">unit_symbol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">unit_symbol</span><span class="o">=</span><span class="s">&#39;Debye&#39;</span>
+        <span class="k">return</span> <span class="n">dip_moment</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">unit_symbol</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 </div></div>
 <span class="k">def</span> <span class="nf">_makevhf</span><span class="p">(</span><span class="n">vj</span><span class="p">,</span> <span class="n">vk</span><span class="p">,</span> <span class="n">nset</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">nset</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -811,7 +844,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

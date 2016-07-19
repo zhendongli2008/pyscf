@@ -114,10 +114,11 @@
             <span class="k">if</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;orbitals </span><span class="si">%s</span><span class="s"> not symmetrized, norm = </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
                              <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">norm</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;orbitals </span><span class="si">%s</span><span class="s"> not symmetrized&#39;</span> <span class="o">%</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;orbitals </span><span class="si">%s</span><span class="s"> not symmetrized&#39;</span> <span class="o">%</span>
+                                 <span class="n">numpy</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;orbitals </span><span class="si">%s</span><span class="s"> not strictly symmetrized.&#39;</span><span class="p">,</span>
-                            <span class="n">orbidx</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                            <span class="n">numpy</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">orbidx</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;They can be symmetrized with &#39;</span>
                             <span class="s">&#39;pyscf.symm.symmetrize_orb function.&#39;</span><span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;norm = </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="p">[</span><span class="n">orbidx</span><span class="p">])</span>
@@ -304,7 +305,24 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">orbsym</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="n">orbsym</span> <span class="o">=</span> <span class="n">orbsym</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">riter</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">orbsym</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="eigh"><a class="viewcode-back" href="../../../symm.html#pyscf.symm.addons.eigh">[docs]</a><span class="k">def</span> <span class="nf">eigh</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">orbsym</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Solve eigenvalue problem based on the symmetry information for basis.</span>
+<span class="sd">    See also pyscf/lib/linalg_helper.py :func:`eigh_by_blocks`</span>
 
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyscf import gto, symm</span>
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;H 0 0 0; H 0 0 1&#39;, basis=&#39;ccpvdz&#39;, symmetry=True)</span>
+<span class="sd">    &gt;&gt;&gt; c = numpy.hstack(mol.symm_orb)</span>
+<span class="sd">    &gt;&gt;&gt; vnuc_so = reduce(numpy.dot, (c.T, mol.intor(&#39;cint1e_nuc_sph&#39;), c))</span>
+<span class="sd">    &gt;&gt;&gt; orbsym = symm.label_orb_symm(mol, mol.irrep_name, mol.symm_orb, c)</span>
+<span class="sd">    &gt;&gt;&gt; symm.eigh(vnuc_so, orbsym)</span>
+<span class="sd">    (array([-4.50766885, -1.80666351, -1.7808565 , -1.7808565 , -1.74189134,</span>
+<span class="sd">            -0.98998583, -0.98998583, -0.40322226, -0.30242374, -0.07608981]),</span>
+<span class="sd">     ...)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">eigh_by_blocks</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">orbsym</span><span class="p">)</span>
 </div>
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
@@ -368,7 +386,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

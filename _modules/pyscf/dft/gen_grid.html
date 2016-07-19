@@ -418,7 +418,7 @@
 <span class="sd">        &gt;&gt;&gt; mol = gto.M(atom=&#39;H 0 0 0; H 0 0 1.1&#39;)</span>
 <span class="sd">        &gt;&gt;&gt; grids = dft.gen_grid.Grids(mol)</span>
 <span class="sd">        &gt;&gt;&gt; grids.level = 4</span>
-<span class="sd">        &gt;&gt;&gt; grids.build_()</span>
+<span class="sd">        &gt;&gt;&gt; grids.build()</span>
 <span class="sd">        &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mol</span> <span class="o">=</span> <span class="n">mol</span>
@@ -459,8 +459,6 @@
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">build_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">WARN</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">check_sanity</span><span class="p">()</span>
@@ -473,12 +471,17 @@
                                    <span class="bp">self</span><span class="o">.</span><span class="n">becke_scheme</span><span class="p">)</span>
         <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;tot grids = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span>
-    <span class="n">setup_grids</span> <span class="o">=</span> <span class="n">build</span>
-    <span class="n">setup_grids_</span> <span class="o">=</span> <span class="n">build</span>
+    <span class="k">def</span> <span class="nf">setup_grids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">warnings</span>
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s">&quot;once&quot;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;API updates: setup_grids method is depercated &#39;</span>
+                          <span class="s">&#39;and will be removed in future release.</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 
     <span class="nd">@pyscf.lib.with_doc</span><span class="p">(</span><span class="n">gen_atomic_grids</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
 <div class="viewcode-block" id="Grids.gen_atomic_grids"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.gen_grid.Grids.gen_atomic_grids">[docs]</a>    <span class="k">def</span> <span class="nf">gen_atomic_grids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">atom_grid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">radi_method</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
@@ -562,7 +565,7 @@
     <span class="kn">import</span> <span class="nn">time</span>
     <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span>
     <span class="n">g</span> <span class="o">=</span> <span class="n">Grids</span><span class="p">(</span><span class="n">h2o</span><span class="p">)</span>
-    <span class="n">g</span><span class="o">.</span><span class="n">setup_grids</span><span class="p">()</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
     <span class="k">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="k">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span>
 </pre></div>
@@ -604,7 +607,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>
