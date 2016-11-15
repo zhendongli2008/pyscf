@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Mixing PBC and molecular modules &mdash; PySCF 1.3 alpha documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.3 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 1.3 alpha documentation" href="../index.html" />
+    <link rel="up" title="pbc — Periodic boundary condition" href="../pbc.html" />
+    <link rel="next" title="lo — Orbital localization" href="../lo.html" />
+    <link rel="prev" title="pbc.tools — PBC tools" href="tools.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../lo.html" title="lo — Orbital localization"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tools.html" title="pbc.tools — PBC tools"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
+          <li><a href="../pbc.html" accesskey="U"><tt class="docutils literal"><span class="pre">pbc</span></tt> &#8212; Periodic boundary condition</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mixing-pbc-and-molecular-modules">
+<span id="mix-mol"></span><h1>Mixing PBC and molecular modules<a class="headerlink" href="#mixing-pbc-and-molecular-modules" title="Permalink to this headline">¶</a></h1>
+<p>The post-HF methods, as a standalone numerical solver, do not require the
+knowledge of the boundary condition.  The calculations of finite-size systems
+and extend systems are distinguished by the boundary condition of integrals (and
+basis).  The same post-HF solver can be used for both the finite-size problem
+and the periodic boundary problem if they have the similar Hamiltonian
+structure.</p>
+<p>In PySCF, many molecular post-HF solvers has two implementations: incore and
+outcore versions.  They are differed by the treatments on the 2-electron
+integrals.  The incore solver takes the <tt class="xref py py-attr docutils literal"><span class="pre">_eri</span></tt> (or <tt class="xref py py-attr docutils literal"><span class="pre">with_df</span></tt>, see
+<a class="reference internal" href="../df.html#mol-df"><em>df &#8212; density fitting</em></a>) from the underlying mean-field object as the two-electron
+interaction part of the Hamiltonian while the outcore solver generates the
+2-electron integrals (with free boundary condition) on the fly.
+To use the molecular post-HF solvers in PBC code, we need ensure the incore
+version solver being called.</p>
+<p>Generating <tt class="xref py py-attr docutils literal"><span class="pre">_eri</span></tt> in mean-filed object is the straightforward way to
+trigger the incore post-HF solver.  If the allowed memory is big enough to
+hold the entire 2-electron integral array, the gamma point HF solver always
+generates and holds this array.  A second choice is to set <tt class="xref py py-attr docutils literal"><span class="pre">incore_anyway</span></tt>
+in <tt class="docutils literal"><span class="pre">cell</span></tt> which forces the program generating and holding <tt class="xref py py-attr docutils literal"><span class="pre">_eri</span></tt> in
+mean-field object.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the problem is big, <tt class="xref py py-attr docutils literal"><span class="pre">incore_anyway</span></tt> may overflow the available
+physical memory.</p>
+</div>
+<p>Holding the full integral array <tt class="xref py py-attr docutils literal"><span class="pre">_eri</span></tt> in memory limits the problem size
+one can treat.  Using the density fitting object <tt class="xref py py-attr docutils literal"><span class="pre">with_df</span></tt> to hold the
+integrals can overcome this problem.  This architecture has been bound to PBC
+and molecular mean-field modules.  But the relevant post-HF density fitting
+solvers are still in development thus this feature is not available in PySCF 1.2
+or older.</p>
+<p>Aside from the 2-electron integrals, there are some attributes and methods
+required by the post-HF solver.  They are <tt class="xref py py-meth docutils literal"><span class="pre">get_hcore()</span></tt>, and
+<tt class="xref py py-meth docutils literal"><span class="pre">get_ovlp()</span></tt> for 1-electron integrals, <tt class="xref py py-attr docutils literal"><span class="pre">_numint</span></tt>, <tt class="xref py py-attr docutils literal"><span class="pre">grids</span></tt> for
+the numerical integration of DFT exchange-correlation functionals.  They are all
+overloaded in PBC mean-field object to produce the PBC integrals.</p>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Gamma point post-HF calculation needs only real integrals.</span>
+<span class="sd">Methods implemented in finite-size system can be directly used here without</span>
+<span class="sd">any modification.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
+<span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">df</span>
+
+<span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span><span class="p">,</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;C     0.      0.      0.    </span>
+<span class="s">              C     0.8917  0.8917  0.8917</span>
+<span class="s">              C     1.7834  1.7834  0.    </span>
+<span class="s">              C     2.6751  2.6751  0.8917</span>
+<span class="s">              C     1.7834  0.      1.7834</span>
+<span class="s">              C     2.6751  0.8917  2.6751</span>
+<span class="s">              C     0.      1.7834  1.7834</span>
+<span class="s">              C     0.8917  2.6751  2.6751&#39;&#39;&#39;</span><span class="p">,</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;6-31g&#39;</span><span class="p">,</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c">#</span>
+<span class="c"># Switch on incore_anyway flag to ensure that all 2e-integrals are held in</span>
+<span class="c"># memory.  These integrals are needed by the post-HF methods.</span>
+<span class="c">#</span>
+<span class="c"># Note the &quot;incore&quot; version of molecule code is applied here. This limits the</span>
+<span class="c"># system size.</span>
+<span class="c">#</span>
+<span class="n">cell</span><span class="o">.</span><span class="n">incore_anyway</span> <span class="o">=</span> <span class="bp">True</span>
+
+<span class="n">mydf</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">MDF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+<span class="n">mydf</span><span class="o">.</span><span class="n">auxbasis</span> <span class="o">=</span> <span class="s">&#39;weigend&#39;</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">with_df</span> <span class="o">=</span> <span class="n">mydf</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="c">#</span>
+<span class="c"># Import CC, TDDFT moduel from the molecular implementations</span>
+<span class="c">#</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">cc</span><span class="p">,</span> <span class="n">tddft</span>
+<span class="n">mycc</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">CCSD</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+<span class="n">mycc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="n">mytd</span> <span class="o">=</span> <span class="n">tddft</span><span class="o">.</span><span class="n">TDHF</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+<span class="n">mytd</span><span class="o">.</span><span class="n">nstates</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">mytd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Mixing PBC and molecular modules</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tools.html"
+                        title="previous chapter">pbc.tools &#8212; PBC tools</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../lo.html"
+                        title="next chapter">lo &#8212; Orbital localization</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/pbc/mix_mol.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../lo.html" title="lo — Orbital localization"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tools.html" title="pbc.tools — PBC tools"
+             >previous</a> |</li>
+        <li><a href="../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
+          <li><a href="../pbc.html" ><tt class="docutils literal"><span class="pre">pbc</span></tt> &#8212; Periodic boundary condition</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

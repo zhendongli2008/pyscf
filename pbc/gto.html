@@ -1,0 +1,853 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pbc.gto — Crystal cell structure &mdash; PySCF 1.3 alpha documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.3 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 1.3 alpha documentation" href="../index.html" />
+    <link rel="up" title="pbc — Periodic boundary condition" href="../pbc.html" />
+    <link rel="next" title="pbc.scf — Mean-field with periodic boundary condition" href="scf.html" />
+    <link rel="prev" title="pbc — Periodic boundary condition" href="../pbc.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scf.html" title="pbc.scf — Mean-field with periodic boundary condition"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../pbc.html" title="pbc — Periodic boundary condition"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
+          <li><a href="../pbc.html" accesskey="U"><tt class="docutils literal"><span class="pre">pbc</span></tt> &#8212; Periodic boundary condition</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pbc-gto-crystal-cell-structure">
+<span id="pbc-gto"></span><h1>pbc.gto &#8212; Crystal cell structure<a class="headerlink" href="#pbc-gto-crystal-cell-structure" title="Permalink to this headline">¶</a></h1>
+<p>This module provides functions to setup the basic information of PBC
+calculation.  It is an analogy to the molecule basic module <a class="reference internal" href="../gto.html#module-pyscf.gto" title="pyscf.gto"><tt class="xref py py-mod docutils literal"><span class="pre">pyscf.gto</span></tt></a>.
+The basic <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> class for crystal structure are defined in this module.
+Basis set, pseudo potentials are parsed in this module.</p>
+<div class="section" id="cell-class">
+<h2><tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> class<a class="headerlink" href="#cell-class" title="Permalink to this headline">¶</a></h2>
+<p>We defined in this module the <a class="reference internal" href="#pyscf.pbc.gto.Cell" title="pyscf.pbc.gto.Cell"><tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt></a> class as an extension of molecular
+<a class="reference internal" href="../gto.html#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">pyscf.gto.mole.Mole</span></tt></a> class.  The <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object offers the same
+functionality as the <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> object.  One can use <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object to
+access the structure, the basis functions, pseudo potentials, certain analytical
+periodic integrals.</p>
+<p>Similar to the input in molecule calculation, one need first create a
+<tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object, after assigning the crystal parameters, one need call
+<tt class="xref py py-func docutils literal"><span class="pre">build()</span></tt> to initialize the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object.  A shortcut function
+<tt class="xref py py-func docutils literal"><span class="pre">M()</span></tt> is available as module level to simplify the input.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">pyscf.lib</span>
+<span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">gto</span>
+
+<span class="c">#</span>
+<span class="c"># Simliar to the initialization of &quot;Mole&quot; object, here we need create a &quot;Cell&quot;</span>
+<span class="c"># object for periodic boundary systems.</span>
+<span class="c">#</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
+<span class="n">cell</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;C     0.      0.      0.    </span>
+<span class="s">              C     0.8917  0.8917  0.8917</span>
+<span class="s">              C     1.7834  1.7834  0.    </span>
+<span class="s">              C     2.6751  2.6751  0.8917</span>
+<span class="s">              C     1.7834  0.      1.7834</span>
+<span class="s">              C     2.6751  0.8917  2.6751</span>
+<span class="s">              C     0.      1.7834  1.7834</span>
+<span class="s">              C     0.8917  2.6751  2.6751&#39;&#39;&#39;</span>
+<span class="n">cell</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;gth-szv&#39;</span>
+<span class="n">cell</span><span class="o">.</span><span class="n">pseudo</span> <span class="o">=</span> <span class="s">&#39;gth-pade&#39;</span>
+<span class="c">#</span>
+<span class="c"># Note two extra attributes &quot;.h&quot;, &quot;.gs&quot; for in the &quot;cell&quot; initialization.</span>
+<span class="c"># .h is a matrix for lattice vectors.  Note each column of .h denotes a direction</span>
+<span class="c">#</span>
+<span class="n">cell</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span>
+<span class="n">cell</span><span class="o">.</span><span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span>  <span class="c"># 10 grids on postive x direction, =&gt; 21^3 grids in total</span>
+<span class="n">cell</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c">#</span>
+<span class="c"># pbc.gto module provided a shortcut initialization function &quot;gto.M&quot;, like the</span>
+<span class="c"># one of finite size problem</span>
+<span class="c">#</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;C     0.      0.      0.    </span>
+<span class="s">              C     0.8917  0.8917  0.8917</span>
+<span class="s">              C     1.7834  1.7834  0.    </span>
+<span class="s">              C     2.6751  2.6751  0.8917</span>
+<span class="s">              C     1.7834  0.      1.7834</span>
+<span class="s">              C     2.6751  0.8917  2.6751</span>
+<span class="s">              C     0.      1.7834  1.7834</span>
+<span class="s">              C     0.8917  2.6751  2.6751&#39;&#39;&#39;</span><span class="p">,</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;gth-szv&#39;</span><span class="p">,</span>
+    <span class="n">pseudo</span> <span class="o">=</span> <span class="s">&#39;gth-pade&#39;</span><span class="p">,</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span><span class="p">,</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Addition to the basic parameters <tt class="xref py py-attr docutils literal"><span class="pre">atom</span></tt>, <tt class="xref py py-attr docutils literal"><span class="pre">basis</span></tt>, you need at least
+set the lattice parameter <tt class="xref py py-attr docutils literal"><span class="pre">h</span></tt>, the dense of FFT-mesh <tt class="xref py py-attr docutils literal"><span class="pre">gs</span></tt> to
+describe the cell.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The lattice vector .h is a 3x3 array. Each column of .h array is a real space
+primitive vector.</p>
+</div>
+<p>In certain systems, it is convenient to choose the FFT-mesh based on the kinetic
+energy cutoff.  The <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> class offers an alternative attribute
+<tt class="xref py py-attr docutils literal"><span class="pre">ke_cutoff</span></tt> to set the FFT-mesh.  If <tt class="xref py py-attr docutils literal"><span class="pre">ke_cutoff</span></tt> was set and
+<tt class="xref py py-attr docutils literal"><span class="pre">gs</span></tt> is blank,  <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> initialization function will convert the
+<tt class="xref py py-attr docutils literal"><span class="pre">ke_cutoff</span></tt> to the FFT-mesh and overwrite the <tt class="xref py py-attr docutils literal"><span class="pre">gs</span></tt> attribute in
+terms of the relation <span class="math">\(\mathbf{g} = \frac{\sqrt{2k_{cut}}}{2\pi}\mathbf{h}\)</span>.
+Aside from these parameters, the pseudo potential <tt class="xref py py-attr docutils literal"><span class="pre">pseudo</span></tt> is another
+attribute commonly required by many calculations (see also <a class="reference internal" href="#pseudo"><em>Pseudo potential</em></a>).</p>
+<p>The input parameters <tt class="docutils literal"><span class="pre">.h</span></tt> and <tt class="docutils literal"><span class="pre">.pseudo</span></tt> are immutable in the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt>
+object.  The input format might be different to the internal format required
+by the program.  Similar to the convention in <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt>, the internal Python
+data layer is created to hold the formatted <tt class="docutils literal"><span class="pre">.h</span></tt> and <tt class="docutils literal"><span class="pre">.pseudo</span></tt> parameters.</p>
+<dl class="docutils">
+<dt>_h</dt>
+<dd>Lattice vectors in atomic unit.</dd>
+<dt>_pseudo</dt>
+<dd>The internal format to hold PBC pseudo potential parameters.  It is
+represented with nested Python lists only.</dd>
+</dl>
+<p>There are some attributes of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> relevant to the calculation accuracy.
+They are <tt class="xref py py-attr docutils literal"><span class="pre">nimgs</span></tt> the number of repeated images in the real space lattice
+summation, <tt class="xref py py-attr docutils literal"><span class="pre">ew_eta</span></tt> and <tt class="xref py py-attr docutils literal"><span class="pre">ew_cut</span></tt> the model charge and the energy
+cutoff to control the accuracy of Ewald summation.  Generally, we don&#8217;t have to
+manually set them in the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> initialization procedure.
+They are generated by the initialization function based on the attribute
+<tt class="xref py py-attr docutils literal"><span class="pre">precision</span></tt> which is a raw parameter to control the effective accuracy of
+the calculation.  Nevertheless, we have to adjust these attributes in some
+systems, especially when the diffused basis functions are employed.  For
+example, in the following primitive cell of Diamond crystal, the default
+<tt class="xref py py-attr docutils literal"><span class="pre">nimgs</span></tt> (5,5,5) is not able to produce enough accuracy to guarantee
+the periodicity.  It breaks the positive definition of the overlap matrix:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">gto</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">C 0.000000000000  0.000000000000  0.000000000000</span>
+<span class="s">C 1.685068664391  1.685068664391  1.685068664391&#39;&#39;&#39;</span><span class="p">,</span>
+<span class="n">unit</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">,</span>
+<span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;gth-dzvp&#39;</span><span class="p">,</span>
+<span class="n">pseudo</span> <span class="o">=</span> <span class="s">&#39;gth-pade&#39;</span><span class="p">,</span>
+<span class="n">h</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">0.000000000  3.370137329  3.370137329</span>
+<span class="s">3.370137329  0.000000000  3.370137329</span>
+<span class="s">3.370137329  3.370137329  0.000000000&#39;&#39;&#39;</span><span class="p">,</span>
+<span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">])</span>
+<span class="n">kpts</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">make_kpts</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">sk</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">pbc_intor</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">,</span> <span class="n">kpts</span><span class="o">=</span><span class="n">kpts</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">nimgs</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">s</span><span class="p">)[</span><span class="mi">3</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>  <span class="c"># not positive-definite</span>
+
+<span class="n">cell</span><span class="o">.</span><span class="n">nimgs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span>
+<span class="n">sk</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">pbc_intor</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">,</span> <span class="n">kpts</span><span class="o">=</span><span class="n">kpts</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">s</span><span class="p">)[</span><span class="mi">3</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>  <span class="c"># positive-definite</span>
+</pre></div>
+</div>
+<p>When you got Linear <tt class="docutils literal"><span class="pre">LinAlgError</span></tt> from <tt class="docutils literal"><span class="pre">scipy.linalg.eigh</span></tt> function with the
+<cite>not positive definite</cite> error, it is very likely due to the truncation in the
+real space lattice summation.  Increasing <tt class="xref py py-attr docutils literal"><span class="pre">nimgs</span></tt> can solve this issue in
+most scenario.</p>
+<p>Besides the methods and parameters provided by <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> class (see Chapter
+<a class="reference internal" href="../gto.html#gto"><em>gto &#8212; Molecular structure and GTO basis</em></a>), There are some parameters constantly used in the code to access the
+information of the crystal.</p>
+<dl class="docutils">
+<dt>kpts</dt>
+<dd><p class="first">The scaled or absolute k-points (nkpts x 3 array). This variable is not held as an
+attribute in <cite>Cell</cite> object.  <cite>Cell</cite> object provides functions to generate the
+k-points and convert the k-points between the scaled (fractional) value and
+absolute value:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="c"># Generate k-points</span>
+<span class="n">n_kpts_each_direction</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">abs_kpts</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">make_kpts</span><span class="p">(</span><span class="n">n_kpts_each_direction</span><span class="p">)</span>
+
+<span class="c"># Convert k-points between two convention, the scaled and the absoulte values</span>
+<span class="n">scaled_kpts</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get_scaled_kpts</span><span class="p">(</span><span class="n">abs_kpts</span><span class="p">)</span>
+<span class="n">abs_kpts</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get_abs_kpts</span><span class="p">(</span><span class="n">scaled_kpts</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt>Gv</dt>
+<dd>The (N x 3) array of plane waves associated to <tt class="xref py py-attr docutils literal"><span class="pre">gs</span></tt>.  <tt class="xref py py-attr docutils literal"><span class="pre">gs</span></tt> defines
+the number of FFT grids in each direction.  <tt class="xref py py-meth docutils literal"><span class="pre">Cell.Gv()</span></tt> or <tt class="xref py py-meth docutils literal"><span class="pre">get_Gv()</span></tt>
+convert the FFT-mesh to the plane waves.  <tt class="docutils literal"><span class="pre">Gv</span></tt> are the the plane wave bases
+of 3D-FFT transformation.  Given <tt class="docutils literal"><span class="pre">gs</span> <span class="pre">=</span> <span class="pre">[nx,ny,nz]</span></tt>, the number of vectors in
+<tt class="docutils literal"><span class="pre">Gv</span></tt> is <tt class="docutils literal"><span class="pre">(2*nx+1)*(2*ny+1)*(2*nz+1)</span></tt>.</dd>
+<dt>nimgs</dt>
+<dd><tt class="xref py py-attr docutils literal"><span class="pre">nimgs</span></tt> is the number of repeated images in each direction to mimic the
+periodicity.  It is mainly affected by the diffuse functions in the basis set.
+You may need increase the number of repeated images as shown by the above
+example to restore the periodicity.  The range of lattice summation is
+determined by this variable.  <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> provides the function
+<tt class="xref py py-func docutils literal"><span class="pre">get_lattice_Ls()</span></tt> to convert the number of repeated images to the
+translation vectors of lattice summation.  This function is widely used in
+both the analytical and the numerical PBC integration.</dd>
+<dt>vol</dt>
+<dd><tt class="xref py py-attr docutils literal"><span class="pre">Cell.vol</span></tt> gives the volume of the unit cell (in atomic unit).</dd>
+<dt>energy_nuc</dt>
+<dd>Similar to the <tt class="xref py py-func docutils literal"><span class="pre">energy_nuc()</span></tt> provided by <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> class, this
+function also return the energy associated to the nuclear repulsion.  The
+nuclear repulsion energy is computed with Ewald summation technique.  The
+background contribution is removed from the nuclear repulsion energy otherwise
+this term is divergent.</dd>
+<dt>pbc_intor</dt>
+<dd>PBC analytic integral driver.  It allows user to compute the PBC integral
+array in bulk, for given integral descriptor <tt class="docutils literal"><span class="pre">intor</span></tt> (see also
+<tt class="xref py py-meth docutils literal"><span class="pre">Mole.intor()</span></tt> function <a class="reference internal" href="../gto.html#gto-moleintor"><em>moleintor</em></a>).  In the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object,
+we didn&#8217;t overload the <tt class="xref py py-meth docutils literal"><span class="pre">intor()</span></tt> method.  So one can access both the
+periodic integrals and free-boundary integrals within the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt>
+object.  It allows you to input the cell object into the molecule program to
+run the free-boundary calculation (see <a class="reference internal" href="#cell-to-mol"><em>Connection to Mole class</em></a>).</dd>
+</dl>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><tt class="xref py py-meth docutils literal"><span class="pre">pbc_intor()</span></tt> does not support Coulomb type integrals.  Calling pbc_intor
+with Coulomb type integral descriptor such as <tt class="docutils literal"><span class="pre">cint1e_nuc_sph</span></tt> leads to
+divergent integrals.  The Coulomb type PBC integrals should be evaluated with
+density fitting technique (see Chapter <a class="reference internal" href="tools.html#pbc-df"><em>pbc.tools &#8212; PBC tools</em></a>).</p>
+</div>
+<div class="section" id="attributes-and-methods">
+<h3>Attributes and methods<a class="headerlink" href="#attributes-and-methods" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="pyscf.pbc.gto.Cell">
+<em class="property">class </em><tt class="descclassname">pyscf.pbc.gto.</tt><tt class="descname">Cell</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Cell object holds the basic information of a crystal.</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first docutils">
+<dt>h <span class="classifier-delimiter">:</span> <span class="classifier">(3,3) ndarray</span></dt>
+<dd>The real-space unit cell lattice vectors, a &#8220;three-column&#8221; array [a1|a2|a3]
+(Note a1 = h[:,0]; a2 = h[:,1]; a2 = h[:,2]).  See defs. in MH Sec. 3.1
+Convert from relative or &#8220;scaled&#8221; coordinates <cite>s</cite> to &#8220;absolute&#8221;
+cartesian coordinates <cite>r</cite> via <cite>r = np.dot(_h, s)</cite>.
+Reciprocal lattice vectors are given by [b1|b2|b3] = 2 pi inv(_h.T).</dd>
+<dt>a <span class="classifier-delimiter">:</span> <span class="classifier">(3,3) ndarray</span></dt>
+<dd>Lattice primitive vectors. Each row represents a lattice vector</dd>
+<dt>gs <span class="classifier-delimiter">:</span> <span class="classifier">(3,) list of ints</span></dt>
+<dd>The number of <em>positive</em> G-vectors along each direction.</dd>
+<dt>pseudo <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
+<dd>To define pseudopotential.</dd>
+<dt>precision <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>To control Ewald sums and lattice sums accuracy</dd>
+<dt>ke_cutoff <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>If set, defines a spherical cutoff of fourier components, with .5 * G**2 &lt; ke_cutoff</dd>
+</dl>
+<p>** Following attributes (for experts) are automatically generated. **</p>
+<dl class="last docutils">
+<dt>nimgs <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray of ints</span></dt>
+<dd>Number of basis function images in lattice sums, It affects the
+accuracy of integrals.  See <tt class="xref py py-func docutils literal"><span class="pre">get_nimgs()</span></tt>.</dd>
+<dt>ew_eta, ew_cut <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The Ewald &#8216;eta&#8217; and &#8216;cut&#8217; parameters.  See <tt class="xref py py-func docutils literal"><span class="pre">get_ewald_params()</span></tt></dd>
+</dl>
+</dd>
+</dl>
+<p>(See other attributes in <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt>)</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">Mole</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H^2 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cl</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cl</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">h</span><span class="o">=</span><span class="s">&#39;3 0 0; 0 3 0; 0 0 3&#39;</span><span class="p">,</span> <span class="n">gs</span><span class="o">=</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span> <span class="n">atom</span><span class="o">=</span><span class="s">&#39;C 1 1 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">cl</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">C</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">cl</span><span class="o">.</span><span class="n">get_nimgs</span><span class="p">(</span><span class="mf">1e-9</span><span class="p">))</span>
+<span class="go">[3,3,3]</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.build">
+<tt class="descname">build</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>h=None</em>, <em>gs=None</em>, <em>ke_cutoff=None</em>, <em>precision=None</em>, <em>nimgs=None</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em>, <em>pseudo=None</em>, <em>basis=None</em>, <em>dimension=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup Mole molecule and Cell and initialize some control parameters.
+Whenever you change the value of the attributes of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt>,
+you need call this function to refresh the internal data of Cell.</p>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>h <span class="classifier-delimiter">:</span> <span class="classifier">(3,3) ndarray</span></dt>
+<dd>The real-space unit cell lattice vectors, a &#8220;three-column&#8221; array [a1|a2|a3]</dd>
+<dt>gs <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray of ints</span></dt>
+<dd>The number of <em>positive</em> G-vectors along each direction.</dd>
+<dt>pseudo <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
+<dd>To define pseudopotential.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Cell.pseudo</span></tt></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.dumps">
+<tt class="descname">dumps</tt><big>(</big><em>cell</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.dumps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize Cell object to a JSON formatted str.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.energy_nuc">
+<tt class="descname">energy_nuc</tt><big>(</big><em>cell</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.energy_nuc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform real (R) and reciprocal (G) space Ewald sum for the energy.</p>
+<p>Formulation of Martin, App. F2.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float</dt>
+<dd>The Ewald energy consisting of overlap, self, and G-space sum.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd>pyscf.pbc.gto.get_ewald_params</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.ewald">
+<tt class="descname">ewald</tt><big>(</big><em>cell</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.ewald" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform real (R) and reciprocal (G) space Ewald sum for the energy.</p>
+<p>Formulation of Martin, App. F2.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>float</dt>
+<dd>The Ewald energy consisting of overlap, self, and G-space sum.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd>pyscf.pbc.gto.get_ewald_params</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.format_basis">
+<tt class="descname">format_basis</tt><big>(</big><em>basis_tab</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.format_basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">Cell.basis</span></tt> to the internal data format:</p>
+<div class="highlight-python"><div class="highlight"><pre>{ atom: (l, kappa, ((-exp, c_1, c_2, ..), nprim, nctr, ptr-exps, ptr-contraction-coeff)), ... }
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>basis_tab <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Similar to <tt class="xref py py-attr docutils literal"><span class="pre">Cell.basis</span></tt>, it <strong>cannot</strong> be a str</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>Formated <tt class="xref py py-attr docutils literal"><span class="pre">basis</span></tt></dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pbc</span><span class="o">.</span><span class="n">format_basis</span><span class="p">({</span><span class="s">&#39;H&#39;</span><span class="p">:</span><span class="s">&#39;gth-szv&#39;</span><span class="p">})</span>
+<span class="go">{&#39;H&#39;: [[0,</span>
+<span class="go">    (8.3744350009, -0.0283380461),</span>
+<span class="go">    (1.8058681460, -0.1333810052),</span>
+<span class="go">    (0.4852528328, -0.3995676063),</span>
+<span class="go">    (0.1658236932, -0.5531027541)]]}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.format_pseudo">
+<tt class="descname">format_pseudo</tt><big>(</big><em>pseudo_tab</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.format_pseudo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">Cell.pseudo</span></tt> (dict) to the internal data format:</p>
+<div class="highlight-python"><div class="highlight"><pre>{ atom: ( (nelec_s, nele_p, nelec_d, ...),
+         rloc, nexp, (cexp_1, cexp_2, ..., cexp_nexp),
+         nproj_types,
+         (r1, nproj1, ( (hproj1[1,1], hproj1[1,2], ..., hproj1[1,nproj1]),
+                        (hproj1[2,1], hproj1[2,2], ..., hproj1[2,nproj1]),
+                        ...
+                        (hproj1[nproj1,1], hproj1[nproj1,2], ...        ) )),
+         (r2, nproj2, ( (hproj2[1,1], hproj2[1,2], ..., hproj2[1,nproj1]),
+         ... ) )
+         )
+ ... }
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>pseudo_tab <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>Similar to <tt class="xref py py-attr docutils literal"><span class="pre">Cell.pseudo</span></tt> (a dict), it <strong>cannot</strong> be a str</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>Formatted <tt class="xref py py-attr docutils literal"><span class="pre">pseudo</span></tt></dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pbc</span><span class="o">.</span><span class="n">format_pseudo</span><span class="p">({</span><span class="s">&#39;H&#39;</span><span class="p">:</span><span class="s">&#39;gth-blyp&#39;</span><span class="p">,</span> <span class="s">&#39;He&#39;</span><span class="p">:</span> <span class="s">&#39;gth-pade&#39;</span><span class="p">})</span>
+<span class="go">{&#39;H&#39;: [[1],</span>
+<span class="go">    0.2, 2, [-4.19596147, 0.73049821], 0],</span>
+<span class="go"> &#39;He&#39;: [[2],</span>
+<span class="go">    0.2, 2, [-9.1120234, 1.69836797], 0]}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.from_ase">
+<tt class="descname">from_ase</tt><big>(</big><em>ase_atom</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.from_ase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update cell based on given ase atom object</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase.lattice</span> <span class="kn">import</span> <span class="n">bulk</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cell</span><span class="o">.</span><span class="n">from_ase</span><span class="p">(</span><span class="n">bulk</span><span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="s">&#39;diamond&#39;</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">LATTICE_CONST</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.get_Gv">
+<tt class="descname">get_Gv</tt><big>(</big><em>cell</em>, <em>gs=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_Gv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate three-dimensional G-vectors for the cell; see MH (3.8).</p>
+<p>Indices along each direction go as [0...cell.gs, -cell.gs...-1]
+to follow FFT convention. Note that, for each direction, ngs = 2*cell.gs+1.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>cell : instance of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt></dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>Gv <span class="classifier-delimiter">:</span> <span class="classifier">(ngs, 3) ndarray of floats</span></dt>
+<dd>The array of G-vectors.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.get_SI">
+<tt class="descname">get_SI</tt><big>(</big><em>cell</em>, <em>Gv=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_SI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the structure factor for all atoms; see MH (3.34).</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">cell : instance of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt></p>
+<dl class="last docutils">
+<dt>Gv <span class="classifier-delimiter">:</span> <span class="classifier">(N,3) array</span></dt>
+<dd>G vectors</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>SI <span class="classifier-delimiter">:</span> <span class="classifier">(natm, ngs) ndarray, dtype=np.complex128</span></dt>
+<dd>The structure factor for each atom at each G-vector.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.get_abs_kpts">
+<tt class="descname">get_abs_kpts</tt><big>(</big><em>scaled_kpts</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_abs_kpts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get absolute k-points (in 1/Bohr), given &#8220;scaled&#8221; k-points in
+fractions of lattice vectors.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>scaled_kpts : (nkpts, 3) ndarray of floats</dd>
+<dt>Returns:</dt>
+<dd>abs_kpts : (nkpts, 3) ndarray of floats</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.get_bounding_sphere">
+<tt class="descname">get_bounding_sphere</tt><big>(</big><em>cell</em>, <em>rcut</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_bounding_sphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds all the lattice points within a sphere of radius rcut.</p>
+<p>Defines a parallelipiped given by -N_x &lt;= n_x &lt;= N_x, with x in [1,3]
+See Martin p. 85</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>rcut <span class="classifier-delimiter">:</span> <span class="classifier">number</span></dt>
+<dd>real space cut-off for interaction</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>cut : ndarray of 3 ints defining N_x</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.get_ewald_params">
+<tt class="descname">get_ewald_params</tt><big>(</big><em>cell</em>, <em>precision=1e-08</em>, <em>gs=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_ewald_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Choose a reasonable value of Ewald &#8216;eta&#8217; and &#8216;cut&#8217; parameters.</p>
+<p>Choice is based on largest G vector and desired relative precision.</p>
+<p>The relative error in the G-space sum is given by (keeping only
+exponential factors)</p>
+<blockquote>
+<div>precision ~ e^{(-Gmax^2)/(4 eta^2)}</div></blockquote>
+<p>which determines eta. Then, real-space cutoff is determined by (exp.
+factors only)</p>
+<blockquote>
+<div>precision ~ erfc(eta*rcut) / rcut ~ e^{(-eta**2 rcut*2)}</div></blockquote>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>ew_eta, ew_cut <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The Ewald &#8216;eta&#8217; and &#8216;cut&#8217; parameters.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.get_lattice_Ls">
+<tt class="descname">get_lattice_Ls</tt><big>(</big><em>cell</em>, <em>nimgs=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_lattice_Ls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the (Cartesian, unitful) lattice translation vectors for nearby images.
+The translation vectors can be used for the lattice summation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.get_nimgs">
+<tt class="descname">get_nimgs</tt><big>(</big><em>cell</em>, <em>precision=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_nimgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Choose number of basis function images in lattice sums
+to include for given precision in overlap, using</p>
+<p>precision ~ 4 * pi * r^2 * e^{-alpha r^2}</p>
+<p>where alpha is the smallest exponent in the basis. Note
+that assumes an isolated exponent in the middle of the box, so
+it adds one additional lattice vector to be safe.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.get_scaled_kpts">
+<tt class="descname">get_scaled_kpts</tt><big>(</big><em>abs_kpts</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_scaled_kpts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get scaled k-points, given absolute k-points in 1/Bohr.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>abs_kpts : (nkpts, 3) ndarray of floats</dd>
+<dt>Returns:</dt>
+<dd>scaled_kpts : (nkpts, 3) ndarray of floats</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.kernel">
+<tt class="descname">kernel</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>h=None</em>, <em>gs=None</em>, <em>ke_cutoff=None</em>, <em>precision=None</em>, <em>nimgs=None</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em>, <em>pseudo=None</em>, <em>basis=None</em>, <em>dimension=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup Mole molecule and Cell and initialize some control parameters.
+Whenever you change the value of the attributes of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt>,
+you need call this function to refresh the internal data of Cell.</p>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>h <span class="classifier-delimiter">:</span> <span class="classifier">(3,3) ndarray</span></dt>
+<dd>The real-space unit cell lattice vectors, a &#8220;three-column&#8221; array [a1|a2|a3]</dd>
+<dt>gs <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray of ints</span></dt>
+<dd>The number of <em>positive</em> G-vectors along each direction.</dd>
+<dt>pseudo <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
+<dd>To define pseudopotential.  If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Cell.pseudo</span></tt></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.loads">
+<tt class="descname">loads</tt><big>(</big><em>molstr</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.loads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deserialize a str containing a JSON document to a Cell object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.make_kpts">
+<tt class="descname">make_kpts</tt><big>(</big><em>cell</em>, <em>nks</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.make_kpts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given number of kpoints along x,y,z , generate kpoints</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>nks : (3,) ndarray</dd>
+<dt>Returns:</dt>
+<dd>kpts in absolute value (unit 1/Bohr).  Gamma point is placed at the
+first place in the k-points list</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">cell</span><span class="o">.</span><span class="n">make_kpts</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.pack">
+<tt class="descname">pack</tt><big>(</big><em>cell</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.pack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pack the input args of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> to a dict, which can be serialized
+with <tt class="xref py py-mod docutils literal"><span class="pre">pickle</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.pbc_intor">
+<tt class="descname">pbc_intor</tt><big>(</big><em>intor</em>, <em>comp=1</em>, <em>hermi=0</em>, <em>kpts=None</em>, <em>kpt=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.pbc_intor" title="Permalink to this definition">¶</a></dt>
+<dd><p>One-electron integrals with PBC. See also Mole.intor</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.to_mol">
+<tt class="descname">to_mol</tt><big>(</big><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.to_mol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a Mole object using the same atoms and basis functions as
+the Cell object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.unpack">
+<tt class="descname">unpack</tt><big>(</big><em>moldic</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.unpack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the packed dict to a <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object, to generate the
+input arguments for <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="connection-to-mole-class">
+<span id="cell-to-mol"></span><h3>Connection to <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> class<a class="headerlink" href="#connection-to-mole-class" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="#pyscf.pbc.gto.Cell" title="pyscf.pbc.gto.Cell"><tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt></a> class is compatible with the molecule
+<a class="reference internal" href="../gto.html#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">pyscf.gto.mole.Mole</span></tt></a> class.  They shared most data structure and
+methods.  It gives the freedom to mix the finite size calculation and the PBC
+calculation.  If you feed the cell object to molecule module/functions, the
+molecule program will not check whether the given <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> object is the
+true <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> or not.  It simply treats the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object as the
+<tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> object and run the finite size calculations.  Because the same
+module names were used in PBC program and molecule program, you should be
+careful with the imported modules since no error message will be raised if you
+by mistake input the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object into the molecule program.</p>
+<p>Although we reserve the flexibility to mix the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> and <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt>
+objects in the same code, it should be noted that the serialization methods of
+the two objects are not completely compatible.  When you dumps/loads the cell
+object in the molecule program, informations of the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object or the
+faked <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> object may be lost.</p>
+</div>
+<div class="section" id="serialization">
+<h3>Serialization<a class="headerlink" href="#serialization" title="Permalink to this headline">¶</a></h3>
+<p><tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> class has two set of functions to serialize Cell object in
+different formats.</p>
+<ul class="simple">
+<li>JSON format is the default serialization format used by <a class="reference internal" href="../lib.html#module-pyscf.lib.chkfile" title="pyscf.lib.chkfile"><tt class="xref py py-mod docutils literal"><span class="pre">pyscf.lib.chkfile</span></tt></a>
+module.  It can be serialized by <tt class="xref py py-func docutils literal"><span class="pre">Cell.dumps()</span></tt> function and deserialized
+by <tt class="xref py py-func docutils literal"><span class="pre">Cell.loads()</span></tt> function.</li>
+<li>In the old version, <tt class="xref py py-func docutils literal"><span class="pre">Mole.pack()</span></tt> and <tt class="xref py py-func docutils literal"><span class="pre">Mole.unpack()</span></tt> functions are
+used to convert the <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> object to and from Python dict.  The Python
+dict is then serialized by pickle module.  This serialization method is not
+used anymore in the new PySCF code.  To keep the backward compatibility, the
+two methods are defined in <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> class.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="basis-set">
+<h2>Basis set<a class="headerlink" href="#basis-set" title="Permalink to this headline">¶</a></h2>
+<p>The pbc module supports all-electron calculation.  The all-electron basis sets
+developed by quantum chemistry community can be directly used in the pbc
+calculation.  The <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> class supports to mix the QC all-electron basis
+and PBC basis in the same calculation.</p>
+<div class="highlight-python"><div class="highlight"><pre>#!/usr/bin/env python
+
+&#39;&#39;&#39;
+Basis can be input the same way as the finite-size system.
+&#39;&#39;&#39;
+
+#
+# Note pbc.gto.parse does not support NWChem format.  To parse NWChem format
+# basis string, you need the molecule gto.parse function.
+#
+
+import numpy
+from pyscf import gto
+from pyscf.pbc import gto as pgto
+cell = pgto.M(
+    atom = &#39;&#39;&#39;C     0.      0.      0.    
+              C     0.8917  0.8917  0.8917
+              C     1.7834  1.7834  0.    
+              C     2.6751  2.6751  0.8917
+              C     1.7834  0.      1.7834
+              C     2.6751  0.8917  2.6751
+              C     0.      1.7834  1.7834
+              C     0.8917  2.6751  2.6751&#39;&#39;&#39;,
+    basis = {&#39;C&#39;: gto.parse(&#39;&#39;&#39;
+# Parse NWChem format basis string (see https://bse.pnl.gov/bse/portal).
+# Comment lines are ignored
+#BASIS SET: (6s,3p) -&gt; [2s,1p]
+O    S
+    130.7093200              0.15432897       
+     23.8088610              0.53532814       
+      6.4436083              0.44463454       
+O    SP
+      5.0331513             -0.09996723             0.15591627       
+      1.1695961              0.39951283             0.60768372       
+      0.3803890              0.70011547             0.39195739       
+                                &#39;&#39;&#39;),}
+    pseudo = &#39;gth-pade&#39;,
+    h = numpy.eye(3)*3.5668,
+    gs = [10]*3)
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The default PBC Coulomb type integrals are computed using FFT transformation.
+If the all-electron basis are used, you might need very high energy cutoff to
+converge the integrals.  It is recommended to use mixed density fitting
+technique (<a class="reference internal" href="tools.html#pbc-df"><em>pbc.tools &#8212; PBC tools</em></a>) to handle the all-electron calculations.</p>
+</div>
+</div>
+<div class="section" id="pseudo-potential">
+<span id="pseudo"></span><h2>Pseudo potential<a class="headerlink" href="#pseudo-potential" title="Permalink to this headline">¶</a></h2>
+<p>Quantum chemistry community developed a wide range of pseudo potentials (which
+are called ECP, effective core potential) for heavy elements.  ECP works quite
+successful in finite system.  It has high flexibility to choose different core
+size and relevant basis sets to satisfy different requirements on accuracy,
+efficiency in different simulation scenario.  Extending ECP to PBC code enriches
+the pseudo potential database.  PySCF PBC program supports both the PBC
+conventional pseudo potential and ECP and the mix of the two kinds of potentials
+in the same calculation.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Input pseudo potential using functions pbc.gto.pseudo.parse and pbc.gto.pseudo.load</span>
+
+<span class="sd">It is allowed to mix the Quantum chemistry effective core potentail (ECP) with</span>
+<span class="sd">crystal pseudo potential (PP).  Input ECP with .ecp attribute and PP with</span>
+<span class="sd">.pseudo attribute.</span>
+
+<span class="sd">See also</span>
+<span class="sd">pyscf/pbc/gto/pseudo/GTH_POTENTIALS for the GTH-potential format</span>
+<span class="sd">pyscf/examples/gto/05-input_ecp.py for quantum chemistry ECP format</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">gto</span>
+
+<span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">Si1 0 0 0</span>
+<span class="s">Si2 1 1 1&#39;&#39;&#39;</span><span class="p">,</span>
+             <span class="n">h</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;3    0    0</span>
+<span class="s">                    0    3    0</span>
+<span class="s">                    0    0    3&#39;&#39;&#39;</span><span class="p">,</span>
+             <span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span>
+             <span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Si1&#39;</span><span class="p">:</span> <span class="s">&#39;gth-szv&#39;</span><span class="p">,</span>  <span class="c"># Goedecker, Teter and Hutter single zeta basis</span>
+                      <span class="s">&#39;Si2&#39;</span><span class="p">:</span> <span class="s">&#39;lanl2dz&#39;</span><span class="p">},</span>
+             <span class="n">pseudo</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Si1&#39;</span><span class="p">:</span> <span class="n">gto</span><span class="o">.</span><span class="n">pseudo</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">Si</span>
+<span class="s">    2    2</span>
+<span class="s">     0.44000000    1    -6.25958674</span>
+<span class="s">    2</span>
+<span class="s">     0.44465247    2     8.31460936    -2.33277947</span>
+<span class="s">                                        3.01160535</span>
+<span class="s">     0.50279207    1     2.33241791</span>
+<span class="s">&#39;&#39;&#39;</span><span class="p">)},</span>
+             <span class="n">ecp</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Si2&#39;</span><span class="p">:</span> <span class="s">&#39;lanl2dz&#39;</span><span class="p">},</span>  <span class="c"># ECP for second Si atom</span>
+            <span class="p">)</span>
+
+
+<span class="c">#</span>
+<span class="c"># Allow mixing quantum chemistry ECP and crystal PP in the same calculation.</span>
+<span class="c">#</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;3    0    0</span>
+<span class="s">           0    3    0</span>
+<span class="s">           0    0    3&#39;&#39;&#39;</span><span class="p">,</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;Cu 0 0 1; Na 0 1 0&#39;</span><span class="p">,</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;na&#39;</span><span class="p">:</span> <span class="s">&#39;lan2ldz&#39;</span><span class="p">,</span> <span class="s">&#39;Cu&#39;</span><span class="p">:</span> <span class="s">&#39;gth-szv&#39;</span><span class="p">},</span>
+    <span class="n">ecp</span> <span class="o">=</span> <span class="s">&#39;lanl2dz&#39;</span><span class="p">,</span>
+    <span class="n">pseudo</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Cu&#39;</span><span class="p">:</span> <span class="s">&#39;gthbp&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">pbc.gto &#8212; Crystal cell structure</a><ul>
+<li><a class="reference internal" href="#cell-class"><tt class="docutils literal"><span class="pre">Cell</span></tt> class</a><ul>
+<li><a class="reference internal" href="#attributes-and-methods">Attributes and methods</a></li>
+<li><a class="reference internal" href="#connection-to-mole-class">Connection to <tt class="docutils literal"><span class="pre">Mole</span></tt> class</a></li>
+<li><a class="reference internal" href="#serialization">Serialization</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#basis-set">Basis set</a></li>
+<li><a class="reference internal" href="#pseudo-potential">Pseudo potential</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../pbc.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pbc</span></tt> &#8212; Periodic boundary condition</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="scf.html"
+                        title="next chapter">pbc.scf &#8212; Mean-field with periodic boundary condition</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/pbc/gto.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scf.html" title="pbc.scf — Mean-field with periodic boundary condition"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../pbc.html" title="pbc — Periodic boundary condition"
+             >previous</a> |</li>
+        <li><a href="../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
+          <li><a href="../pbc.html" ><tt class="docutils literal"><span class="pre">pbc</span></tt> &#8212; Periodic boundary condition</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

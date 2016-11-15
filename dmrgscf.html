@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>dmrgscf &mdash; PySCF 1.1 documentation</title>
+    <title>dmrgscf &mdash; PySCF 1.3 alpha documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1',
+        VERSION:     '1.3 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 documentation" href="index.html" /> 
+    <link rel="top" title="PySCF 1.3 alpha documentation" href="index.html" />
+    <link rel="next" title="fciqmcscf" href="fciqmcscf.html" />
+    <link rel="prev" title="ci — Configuration interaction" href="ci.html" /> 
   </head>
   <body>
     <div class="related">
@@ -36,7 +38,13 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">PySCF 1.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="fciqmcscf.html" title="fciqmcscf"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ci.html" title="ci — Configuration interaction"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PySCF 1.3 alpha documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -45,8 +53,95 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="dmrgscf">
-<h1>dmrgscf<a class="headerlink" href="#dmrgscf" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pyscf.future.dmrgscf">
+<span id="dmrgscf"></span><h1>dmrgscf<a class="headerlink" href="#module-pyscf.future.dmrgscf" title="Permalink to this headline">¶</a></h1>
+<p>DMRG program interface.</p>
+<p>There are two DMRG program interfaces available:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="https://github.com/sanshar/Block">Block</a> interface provided the
+features including the DMRG-CASCI, the 1-step and 2-step DMRG-CASSCF, second
+order pertubation for dynamic correlation.  1-, 2- and 3-particle density
+matrices.</li>
+<li><a class="reference external" href="https://github.com/SebWouters/CheMPS2">CheMPS2</a> interface provided the
+DMRG-CASCI and 2-step DMRG-CASSCF.</li>
+</ul>
+</div></blockquote>
+<p>Simple usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span><span class="p">,</span> <span class="n">dmrgscf</span><span class="p">,</span> <span class="n">mrpt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;C 0 0 0; C 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;631g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">-75.3374492511669</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">compress_approx</span><span class="p">()</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">-0.10474250075684</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">CheMPS2</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">-75.3374492511669</span>
+</pre></div>
+</div>
+<p>Note a few configurations in <tt class="docutils literal"><span class="pre">/path/to/dmrgscf/settings.py</span></tt> needs to be made
+before using the DMRG interface code.</p>
+<div class="section" id="id1">
+<h2>Block<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p><tt class="xref py py-class docutils literal"><span class="pre">DMRGCI</span></tt> is the main object to hold Block input parameters and results.
+<tt class="xref py py-func docutils literal"><span class="pre">DMRGSCF()</span></tt> is a shortcut function quickly setup DMRG-CASSCF calculation.
+<tt class="xref py py-func docutils literal"><span class="pre">compress_approx()</span></tt> initializes the compressed MPS perturber for NEVPT2
+calculation.</p>
+<p>In DMRGCI object, you can set the following attributes to control Block program:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>outputlevel <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Noise level for Block program output.</dd>
+<dt>maxIter <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Max DMRG sweeps</dd>
+<dt>approx_maxIter <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>To control the DMRG-CASSCF approximate DMRG solver accuracy.</dd>
+<dt>twodot_to_onedot <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>When to switch from two-dot algroithm to one-dot algroithm.</dd>
+<dt>nroots <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of states in the same irreducible representation to compute.</dd>
+<dt>weights <span class="classifier-delimiter">:</span> <span class="classifier">list of floats</span></dt>
+<dd>Use this attribute with &#8220;nroots&#8221; attribute to set state-average calculation.</dd>
+<dt>restart <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>To control whether to restart a DMRG calculation.</dd>
+<dt>tol <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>DMRG convergence tolerence</dd>
+<dt>maxM <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Bond dimension</dd>
+<dt>scheduleSweeps, scheduleMaxMs, scheduleTols, scheduleNoises <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>DMRG sweep scheduler.  See also Block documentation</dd>
+<dt>wfnsym <span class="classifier-delimiter">:</span> <span class="classifier">str or int</span></dt>
+<dd>Wave function irrep label or irrep ID</dd>
+<dt>orbsym <span class="classifier-delimiter">:</span> <span class="classifier">list of int</span></dt>
+<dd>irrep IDs of each orbital</dd>
+<dt>groupname <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>groupname, orbsym together can control whether to employ symmetry in
+the calculation.  &#8220;groupname = None and orbsym = []&#8221; requires the
+Block program using C1 symmetry.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="id2">
+<h2>CheMPS2<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>In <tt class="xref py py-class docutils literal"><span class="pre">CheMPS2</span></tt>, DMRG calculation can be controlled by:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line">wfn_irrep</div>
+<div class="line">dmrg_states</div>
+<div class="line">dmrg_noise</div>
+<div class="line">dmrg_e_convergence</div>
+<div class="line">dmrg_noise_factor</div>
+<div class="line">dmrg_maxiter_noise</div>
+<div class="line">dmrg_maxiter_silent</div>
+</div>
+</div></blockquote>
+<p>See <a class="reference external" href="http://sebwouters.github.io/CheMPS2/index.html">http://sebwouters.github.io/CheMPS2/index.html</a> for more detail usages of
+these keywords.</p>
+</div>
 </div>
 
 
@@ -55,6 +150,21 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">dmrgscf</a><ul>
+<li><a class="reference internal" href="#id1">Block</a></li>
+<li><a class="reference internal" href="#id2">CheMPS2</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ci.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">ci</span></tt> &#8212; Configuration interaction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="fciqmcscf.html"
+                        title="next chapter">fciqmcscf</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/dmrgscf.txt"
@@ -86,7 +196,13 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">PySCF 1.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="fciqmcscf.html" title="fciqmcscf"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ci.html" title="ci — Configuration interaction"
+             >previous</a> |</li>
+        <li><a href="index.html">PySCF 1.3 alpha documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

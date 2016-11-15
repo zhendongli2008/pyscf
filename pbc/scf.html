@@ -1,0 +1,886 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pbc.scf — Mean-field with periodic boundary condition &mdash; PySCF 1.3 alpha documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.3 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 1.3 alpha documentation" href="../index.html" />
+    <link rel="up" title="pbc — Periodic boundary condition" href="../pbc.html" />
+    <link rel="next" title="pbc.dft" href="dft.html" />
+    <link rel="prev" title="pbc.gto — Crystal cell structure" href="gto.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dft.html" title="pbc.dft"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gto.html" title="pbc.gto — Crystal cell structure"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
+          <li><a href="../pbc.html" accesskey="U"><tt class="docutils literal"><span class="pre">pbc</span></tt> &#8212; Periodic boundary condition</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pbc-scf-mean-field-with-periodic-boundary-condition">
+<span id="pbc-scf"></span><h1>pbc.scf &#8212; Mean-field with periodic boundary condition<a class="headerlink" href="#pbc-scf-mean-field-with-periodic-boundary-condition" title="Permalink to this headline">¶</a></h1>
+<p>This module is an analogy to molecular <a class="reference internal" href="../scf.html#module-pyscf.scf" title="pyscf.scf"><tt class="xref py py-mod docutils literal"><span class="pre">pyscf.scf</span></tt></a> module to handle
+mean-filed calculation with periodic boundary condition.</p>
+<div class="section" id="gamma-point-and-single-k-point-calculation">
+<h2>Gamma point and single k-point calculation<a class="headerlink" href="#gamma-point-and-single-k-point-calculation" title="Permalink to this headline">¶</a></h2>
+<p>The usage of gamma point Hartree-Fock program is very close to that of the
+molecular program.  In the PBC gamma point calculation, one needs intialize
+<tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object and the corresponding <a class="reference internal" href="#pyscf.pbc.scf.hf.RHF" title="pyscf.pbc.scf.hf.RHF"><tt class="xref py py-class docutils literal"><span class="pre">pyscf.pbc.scf.hf.RHF</span></tt></a> class:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;H     0.      0.      0.</span>
+<span class="s">              H     0.8917  0.8917  0.8917&#39;&#39;&#39;</span><span class="p">,</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;sto3g&#39;</span><span class="p">,</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">    0       1.7834  1.7834</span>
+<span class="s">    1.7834  0       1.7834</span>
+<span class="s">    1.7834  1.7834  0     &#39;&#39;&#39;</span><span class="p">,</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Comparing to the <a class="reference internal" href="../scf.html#pyscf.scf.hf.RHF" title="pyscf.scf.hf.RHF"><tt class="xref py py-class docutils literal"><span class="pre">pyscf.scf.hf.RHF</span></tt></a> object for molecular calculation,
+the PBC-HF calculation with <a class="reference internal" href="#pyscf.pbc.scf.hf.RHF" title="pyscf.pbc.scf.hf.RHF"><tt class="xref py py-class docutils literal"><span class="pre">pyscf.pbc.scf.hf.RHF</span></tt></a> or
+<a class="reference internal" href="#pyscf.pbc.scf.uhf.UHF" title="pyscf.pbc.scf.uhf.UHF"><tt class="xref py py-class docutils literal"><span class="pre">pyscf.pbc.scf.uhf.UHF</span></tt></a> has three differences</p>
+<ul>
+<li><p class="first"><tt class="xref py py-class docutils literal"><span class="pre">psycf.pbc.scf.hf.RHF</span></tt> is the single k-point PBC HF class.  By default,
+it creates the gamma point calculation.  You can change to other k-point by
+setting the <tt class="xref py py-attr docutils literal"><span class="pre">kpt</span></tt> attribute:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kpt</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get_abs_kpts</span><span class="p">([</span><span class="o">.</span><span class="mi">25</span><span class="p">,</span><span class="o">.</span><span class="mi">25</span><span class="p">,</span><span class="o">.</span><span class="mi">25</span><span class="p">])</span>  <span class="c"># convert from scaled kpts</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">The exchange integrals of the PBC Hartree-Fock method has slow convergence
+with respect to the number of k-points.  Proper treatments for the divergent
+part of exchange integrals can effectively improve the convergence.  Attribute
+<tt class="xref py py-mod docutils literal"><span class="pre">exxdive</span></tt> is used to control the method to handle exchange divergent
+term.  The default <tt class="docutils literal"><span class="pre">exxdiv='ewald'</span></tt> is favored in most scenario.  However,
+if the molecular post-HF methods was mixed with the gamma point HF method (see
+<a class="reference internal" href="#mix-to-mol"><em>Mixing with molecular program for post-HF methods</em></a>, you might need set <tt class="docutils literal"><span class="pre">exxdiv=None</span></tt> to get consistent total
+energy (see <a class="reference internal" href="#exxdiv"><em>Exchange divergence treatment</em></a>).</p>
+</li>
+<li><p class="first">In the finite-size system, one can obtain right answer without considering the
+model to evaluate 2-electron integrals.  But the integral scheme might need to
+be updated in the PBC calculations.  The default integral scheme is accurate
+for pseudo-potential.  In the all-electron calculation, you may need change
+the <tt class="xref py py-attr docutils literal"><span class="pre">with_df</span></tt> attribute to mixed density fitting (MDF) method for better
+accuracy (see <a class="reference internal" href="#with-df"><em>with_df for density fitting</em></a>).  Here is an example to update <tt class="xref py py-attr docutils literal"><span class="pre">with_df</span></tt></p>
+</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Gamma point Hartree-Fock/DFT for all-electron calculation</span>
+
+<span class="sd">The default FFT-based 2-electron integrals may not be accurate enough for</span>
+<span class="sd">all-electron calculation.  It&#39;s recommended to use MDF (mixed density fitting)</span>
+<span class="sd">technique to improve the accuracy.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">dft</span>
+<span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">df</span>
+
+<span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span><span class="p">,</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;C     0.      0.      0.    </span>
+<span class="s">              C     0.8917  0.8917  0.8917</span>
+<span class="s">              C     1.7834  1.7834  0.    </span>
+<span class="s">              C     2.6751  2.6751  0.8917</span>
+<span class="s">              C     1.7834  0.      1.7834</span>
+<span class="s">              C     2.6751  0.8917  2.6751</span>
+<span class="s">              C     0.      1.7834  1.7834</span>
+<span class="s">              C     0.8917  2.6751  2.6751&#39;&#39;&#39;</span><span class="p">,</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;6-31g&#39;</span><span class="p">,</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">mydf</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">MDF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+<span class="n">mydf</span><span class="o">.</span><span class="n">auxbasis</span> <span class="o">=</span> <span class="s">&#39;weigend&#39;</span>
+
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">with_df</span> <span class="o">=</span> <span class="n">mydf</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">RKS</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">with_df</span> <span class="o">=</span> <span class="n">mydf</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s">&#39;bp86&#39;</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="section" id="mixing-with-molecular-program-for-post-hf-methods">
+<span id="mix-to-mol"></span><h3>Mixing with molecular program for post-HF methods<a class="headerlink" href="#mixing-with-molecular-program-for-post-hf-methods" title="Permalink to this headline">¶</a></h3>
+<p>The gamma point HF code adopts the same code structure, the function and
+method names and the arguments&#8217; convention as the molecule SCF code.
+This desgin allows one mixing PBC HF object with the existed molecular post-HF
+code for PBC electron correlation problems.  A typical molecular post-HF
+calculation starts from the finite-size HF method with the <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt>
+object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">cc</span>
+<span class="n">cc</span><span class="o">.</span><span class="n">CCSD</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The PBC gamma point post-HF calculation requires the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> object and
+PBC HF object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; H 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span>
+             <span class="n">h</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">gs</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">])</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">cc</span>
+<span class="n">cc</span><span class="o">.</span><span class="n">CCSD</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The differences are the the <tt class="docutils literal"><span class="pre">mol</span></tt> or <tt class="docutils literal"><span class="pre">cell</span></tt> object to create and the
+<tt class="docutils literal"><span class="pre">scf</span></tt> module to import.  With the system-specific mean-field object, one
+can carray out various post-HF methods (MP2, Coupled cluster, CISD, TDHF,
+TDDFT, ...) using the same code for finite-size and extended systems.
+See <a class="reference internal" href="mix_mol.html#mix-mol"><em>Mixing PBC and molecular modules</em></a> for more details of the interface between PBC and molecular
+modules.</p>
+</div>
+</div>
+<div class="section" id="k-point-sampling">
+<h2>k-point sampling<a class="headerlink" href="#k-point-sampling" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="newton-solver">
+<h3>Newton solver<a class="headerlink" href="#newton-solver" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="smearing">
+<h3>Smearing<a class="headerlink" href="#smearing" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="exchange-divergence-treatment">
+<span id="exxdiv"></span><h2>Exchange divergence treatment<a class="headerlink" href="#exchange-divergence-treatment" title="Permalink to this headline">¶</a></h2>
+<p>The PBC Hartree-Fock has slow convergence of exchange integral with respect to
+the number of k-points.  In the single k-point calculation,
+Generally, exxdiv leads to a shift in the total energy and the spectrum of
+orbital energy.  It should not affect the following correlation energy in the
+post-HF calculation.  In practice, when the gamma-point calculation is mixed
+with molecular program eg the FCI solver, the exxdiv attribute may leads to
+inconsistency in the total energy.</p>
+</div>
+<div class="section" id="with-df-for-density-fitting">
+<span id="with-df"></span><h2><tt class="xref py py-attr docutils literal"><span class="pre">with_df</span></tt> for density fitting<a class="headerlink" href="#with-df-for-density-fitting" title="Permalink to this headline">¶</a></h2>
+<p>Placing the <tt class="xref py py-attr docutils literal"><span class="pre">with_df</span></tt> attribute in SCF object to get the compatibility to
+molecule DF-SCF methods.</p>
+</div>
+<div class="section" id="module-pyscf.pbc.scf.hf">
+<span id="module-functions"></span><h2>Module functions<a class="headerlink" href="#module-pyscf.pbc.scf.hf" title="Permalink to this headline">¶</a></h2>
+<p>Hartree-Fock for periodic systems at a single k-point</p>
+<dl class="docutils">
+<dt>See Also:</dt>
+<dd>pyscf.pbc.scf.khf.py : Hartree-Fock for periodic systems with k-point sampling</dd>
+</dl>
+<dl class="class">
+<dt id="pyscf.pbc.scf.hf.RHF">
+<em class="property">class </em><tt class="descclassname">pyscf.pbc.scf.hf.</tt><tt class="descname">RHF</tt><big>(</big><em>cell</em>, <em>kpt=array([ 0.</em>, <em>0.</em>, <em>0.])</em>, <em>exxdiv='ewald'</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#RHF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.RHF" title="Permalink to this definition">¶</a></dt>
+<dd><p>RHF class adapted for PBCs.</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first last docutils">
+<dt>kpt <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
+<dd>The AO k-point in Cartesian coordinates, in units of 1/Bohr.</dd>
+<dt>exxdiv <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first">Exchange divergence treatment, can be one of</p>
+<div class="last line-block">
+<div class="line">None : ignore G=0 contribution in exchange integral</div>
+<div class="line">&#8216;ewald&#8217; : Ewald summation for G=0 in exchange integral</div>
+</div>
+</dd>
+<dt>with_df <span class="classifier-delimiter">:</span> <span class="classifier">density fitting object</span></dt>
+<dd>Default is the FFT based DF model. For all-electron calculation,
+MDF model is favored for better accuracy.  See also <a class="reference internal" href="df.html#module-pyscf.pbc.df" title="pyscf.pbc.df"><tt class="xref py py-mod docutils literal"><span class="pre">pyscf.pbc.df</span></tt></a>.</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt id="pyscf.pbc.scf.hf.RHF.get_bands">
+<tt class="descname">get_bands</tt><big>(</big><em>mf</em>, <em>kpt_band</em>, <em>cell=None</em>, <em>dm=None</em>, <em>kpt=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.hf.RHF.get_bands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get energy bands at a given (arbitrary) &#8216;band&#8217; k-point.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>mo_energy <span class="classifier-delimiter">:</span> <span class="classifier">(nao,) ndarray</span></dt>
+<dd>Bands energies E_n(k)</dd>
+<dt>mo_coeff <span class="classifier-delimiter">:</span> <span class="classifier">(nao, nao) ndarray</span></dt>
+<dd>Band orbitals psi_n(k)</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.hf.RHF.get_j">
+<tt class="descname">get_j</tt><big>(</big><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>kpt=None</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#RHF.get_j"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.RHF.get_j" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute J matrix for the given density matrix.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.hf.RHF.get_jk">
+<tt class="descname">get_jk</tt><big>(</big><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>kpt=None</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#RHF.get_jk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.RHF.get_jk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get Coulomb (J) and exchange (K) following <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.RHF.get_jk_()</span></tt>.</p>
+<p>Note the incore version, which initializes an _eri array in memory.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.hf.RHF.get_jk_incore">
+<tt class="descname">get_jk_incore</tt><big>(</big><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>verbose=5</em>, <em>kpt=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#RHF.get_jk_incore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.RHF.get_jk_incore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get Coulomb (J) and exchange (K) following <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.RHF.get_jk_()</span></tt>.</p>
+<p><em>Incore</em> version of Coulomb and exchange build only.
+Currently RHF always uses PBC AO integrals (unlike RKS), since
+exchange is currently computed by building PBC AO integrals.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.hf.RHF.get_k">
+<tt class="descname">get_k</tt><big>(</big><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>kpt=None</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#RHF.get_k"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.RHF.get_k" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute K matrix for the given density matrix.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.hf.RHF.get_veff">
+<tt class="descname">get_veff</tt><big>(</big><em>cell=None</em>, <em>dm=None</em>, <em>dm_last=0</em>, <em>vhf_last=0</em>, <em>hermi=1</em>, <em>kpt=None</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#RHF.get_veff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.RHF.get_veff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hartree-Fock potential matrix for the given density matrix.
+See <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.get_veff()</span></tt> and <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.RHF.get_veff()</span></tt></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.hf.dot_eri_dm">
+<tt class="descclassname">pyscf.pbc.scf.hf.</tt><tt class="descname">dot_eri_dm</tt><big>(</big><em>eri</em>, <em>dm</em>, <em>hermi=0</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#dot_eri_dm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.dot_eri_dm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute J, K matrices in terms of the given 2-electron integrals and
+density matrix. eri or dm can be complex.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>eri <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>complex integral array with N^4 elements (N is the number of orbitals)</dd>
+<dt>dm <span class="classifier-delimiter">:</span> <span class="classifier">ndarray or list of ndarrays</span></dt>
+<dd>A density matrix or a list of density matrices</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>hermi <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first">Whether J, K matrix is hermitian</p>
+<div class="last line-block">
+<div class="line">0 : no hermitian or symmetric</div>
+<div class="line">1 : hermitian</div>
+<div class="line">2 : anti-hermitian</div>
+</div>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>Depending on the given dm, the function returns one J and one K matrix,
+or a list of J matrices and a list of K matrices, corresponding to the
+input density matrices.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.hf.get_bands">
+<tt class="descclassname">pyscf.pbc.scf.hf.</tt><tt class="descname">get_bands</tt><big>(</big><em>mf</em>, <em>kpt_band</em>, <em>cell=None</em>, <em>dm=None</em>, <em>kpt=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#get_bands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.get_bands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get energy bands at a given (arbitrary) &#8216;band&#8217; k-point.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>mo_energy <span class="classifier-delimiter">:</span> <span class="classifier">(nao,) ndarray</span></dt>
+<dd>Bands energies E_n(k)</dd>
+<dt>mo_coeff <span class="classifier-delimiter">:</span> <span class="classifier">(nao, nao) ndarray</span></dt>
+<dd>Band orbitals psi_n(k)</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.hf.get_hcore">
+<tt class="descclassname">pyscf.pbc.scf.hf.</tt><tt class="descname">get_hcore</tt><big>(</big><em>cell</em>, <em>kpt=array([ 0.</em>, <em>0.</em>, <em>0.])</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#get_hcore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.get_hcore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the core Hamiltonian AO matrix.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.hf.get_j">
+<tt class="descclassname">pyscf.pbc.scf.hf.</tt><tt class="descname">get_j</tt><big>(</big><em>cell</em>, <em>dm</em>, <em>hermi=1</em>, <em>vhfopt=None</em>, <em>kpt=array([ 0.</em>, <em>0.</em>, <em>0.])</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#get_j"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.get_j" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Coulomb (J) AO matrix for the given density matrix.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>dm <span class="classifier-delimiter">:</span> <span class="classifier">ndarray or list of ndarrays</span></dt>
+<dd>A density matrix or a list of density matrices</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>hermi <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Whether J, K matrix is hermitian
+| 0 : no hermitian or symmetric
+| 1 : hermitian
+| 2 : anti-hermitian</dd>
+<dt>vhfopt :</dt>
+<dd>A class which holds precomputed quantities to optimize the
+computation of J, K matrices</dd>
+<dt>kpt <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
+<dd>The &#8220;inner&#8221; dummy k-point at which the DM was evaluated (or
+sampled).</dd>
+<dt>kpt_band <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
+<dd>The &#8220;outer&#8221; primary k-point at which J and K are evaluated.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>The function returns one J matrix, corresponding to the input
+density matrix (both order and shape).</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.hf.get_jk">
+<tt class="descclassname">pyscf.pbc.scf.hf.</tt><tt class="descname">get_jk</tt><big>(</big><em>mf</em>, <em>cell</em>, <em>dm</em>, <em>hermi=1</em>, <em>vhfopt=None</em>, <em>kpt=array([ 0.</em>, <em>0.</em>, <em>0.])</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#get_jk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.get_jk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Coulomb (J) and exchange (K) AO matrices for the given density matrix.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>dm <span class="classifier-delimiter">:</span> <span class="classifier">ndarray or list of ndarrays</span></dt>
+<dd>A density matrix or a list of density matrices</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>hermi <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Whether J, K matrix is hermitian
+| 0 : no hermitian or symmetric
+| 1 : hermitian
+| 2 : anti-hermitian</dd>
+<dt>vhfopt :</dt>
+<dd>A class which holds precomputed quantities to optimize the
+computation of J, K matrices</dd>
+<dt>kpt <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
+<dd>The &#8220;inner&#8221; dummy k-point at which the DM was evaluated (or
+sampled).</dd>
+<dt>kpt_band <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
+<dd>The &#8220;outer&#8221; primary k-point at which J and K are evaluated.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>The function returns one J and one K matrix, corresponding to the input
+density matrix (both order and shape).</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.hf.get_nuc">
+<tt class="descclassname">pyscf.pbc.scf.hf.</tt><tt class="descname">get_nuc</tt><big>(</big><em>cell</em>, <em>kpt=array([ 0.</em>, <em>0.</em>, <em>0.])</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#get_nuc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.get_nuc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the bare periodic nuc-el AO matrix, with G=0 removed.</p>
+<p>See Martin (12.16)-(12.21).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.hf.get_ovlp">
+<tt class="descclassname">pyscf.pbc.scf.hf.</tt><tt class="descname">get_ovlp</tt><big>(</big><em>cell</em>, <em>kpt=array([ 0.</em>, <em>0.</em>, <em>0.])</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#get_ovlp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.get_ovlp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the overlap AO matrix.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.hf.get_t">
+<tt class="descclassname">pyscf.pbc.scf.hf.</tt><tt class="descname">get_t</tt><big>(</big><em>cell</em>, <em>kpt=array([ 0.</em>, <em>0.</em>, <em>0.])</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#get_t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.get_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the kinetic energy AO matrix.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.hf.init_guess_by_chkfile">
+<tt class="descclassname">pyscf.pbc.scf.hf.</tt><tt class="descname">init_guess_by_chkfile</tt><big>(</big><em>cell</em>, <em>chkfile_name</em>, <em>project=True</em>, <em>kpt=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#init_guess_by_chkfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.init_guess_by_chkfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the HF results from checkpoint file, then project it to the
+basis defined by <tt class="docutils literal"><span class="pre">cell</span></tt></p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>Density matrix, (nao,nao) ndarray</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-pyscf.pbc.scf.uhf"></span><p>Unrestricted Hartree-Fock for periodic systems at a single k-point</p>
+<dl class="docutils">
+<dt>See Also:</dt>
+<dd>pyscf.pbc.scf.khf.py : Hartree-Fock for periodic systems with k-point sampling</dd>
+</dl>
+<dl class="class">
+<dt id="pyscf.pbc.scf.uhf.UHF">
+<em class="property">class </em><tt class="descclassname">pyscf.pbc.scf.uhf.</tt><tt class="descname">UHF</tt><big>(</big><em>cell</em>, <em>kpt=array([ 0.</em>, <em>0.</em>, <em>0.])</em>, <em>exxdiv='ewald'</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/uhf.html#UHF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.uhf.UHF" title="Permalink to this definition">¶</a></dt>
+<dd><p>UHF class for PBCs.</p>
+<dl class="method">
+<dt id="pyscf.pbc.scf.uhf.UHF.energy_tot">
+<tt class="descname">energy_tot</tt><big>(</big><em>mf</em>, <em>dm=None</em>, <em>h1e=None</em>, <em>vhf=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.uhf.UHF.energy_tot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total Hartree-Fock energy, electronic part plus nuclear repulstion
+See <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.energy_elec()</span></tt> for the electron part</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.uhf.UHF.get_bands">
+<tt class="descname">get_bands</tt><big>(</big><em>mf</em>, <em>kpt_band</em>, <em>cell=None</em>, <em>dm=None</em>, <em>kpt=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.uhf.UHF.get_bands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get energy bands at a given (arbitrary) &#8216;band&#8217; k-point.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>mo_energy <span class="classifier-delimiter">:</span> <span class="classifier">(nao,) ndarray</span></dt>
+<dd>Bands energies E_n(k)</dd>
+<dt>mo_coeff <span class="classifier-delimiter">:</span> <span class="classifier">(nao, nao) ndarray</span></dt>
+<dd>Band orbitals psi_n(k)</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.uhf.UHF.get_j">
+<tt class="descname">get_j</tt><big>(</big><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>kpt=None</em>, <em>kpt_band=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.uhf.UHF.get_j" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute J matrix for the given density matrix.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.uhf.UHF.get_jk">
+<tt class="descname">get_jk</tt><big>(</big><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>kpt=None</em>, <em>kpt_band=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.uhf.UHF.get_jk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get Coulomb (J) and exchange (K) following <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.RHF.get_jk_()</span></tt>.</p>
+<p>Note the incore version, which initializes an _eri array in memory.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.uhf.UHF.get_jk_incore">
+<tt class="descname">get_jk_incore</tt><big>(</big><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>verbose=5</em>, <em>kpt=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.uhf.UHF.get_jk_incore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get Coulomb (J) and exchange (K) following <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.RHF.get_jk_()</span></tt>.</p>
+<p><em>Incore</em> version of Coulomb and exchange build only.
+Currently RHF always uses PBC AO integrals (unlike RKS), since
+exchange is currently computed by building PBC AO integrals.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.uhf.UHF.get_k">
+<tt class="descname">get_k</tt><big>(</big><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>kpt=None</em>, <em>kpt_band=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.uhf.UHF.get_k" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute K matrix for the given density matrix.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.uhf.init_guess_by_chkfile">
+<tt class="descclassname">pyscf.pbc.scf.uhf.</tt><tt class="descname">init_guess_by_chkfile</tt><big>(</big><em>cell</em>, <em>chkfile_name</em>, <em>project=True</em>, <em>kpt=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/uhf.html#init_guess_by_chkfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.uhf.init_guess_by_chkfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the HF results from checkpoint file, then project it to the
+basis defined by <tt class="docutils literal"><span class="pre">cell</span></tt></p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>Density matrix, (nao,nao) ndarray</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-pyscf.pbc.scf.khf"></span><p>Hartree-Fock for periodic systems with k-point sampling</p>
+<dl class="docutils">
+<dt>See Also:</dt>
+<dd>hf.py : Hartree-Fock for periodic systems at a single k-point</dd>
+</dl>
+<dl class="class">
+<dt id="pyscf.pbc.scf.khf.KRHF">
+<em class="property">class </em><tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">KRHF</tt><big>(</big><em>cell</em>, <em>kpts=array([[ 0.</em>, <em>0.</em>, <em>0.]])</em>, <em>exxdiv='ewald'</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#KRHF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF" title="Permalink to this definition">¶</a></dt>
+<dd><p>RHF class with k-point sampling.</p>
+<p>Compared to molecular SCF, some members such as mo_coeff, mo_occ
+now have an additional first dimension for the k-points,
+e.g. mo_coeff is (nkpts, nao, nao) ndarray</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd><dl class="first last docutils">
+<dt>kpts <span class="classifier-delimiter">:</span> <span class="classifier">(nks,3) ndarray</span></dt>
+<dd>The sampling k-points in Cartesian coordinates, in units of 1/Bohr.</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt id="pyscf.pbc.scf.khf.KRHF.energy_elec">
+<tt class="descname">energy_elec</tt><big>(</big><em>mf</em>, <em>dm_kpts=None</em>, <em>h1e_kpts=None</em>, <em>vhf_kpts=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF.energy_elec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Following pyscf.scf.hf.energy_elec()</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.khf.KRHF.get_bands">
+<tt class="descname">get_bands</tt><big>(</big><em>kpt_band</em>, <em>cell=None</em>, <em>dm_kpts=None</em>, <em>kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#KRHF.get_bands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF.get_bands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get energy bands at a given (arbitrary) &#8216;band&#8217; k-point.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>mo_energy <span class="classifier-delimiter">:</span> <span class="classifier">(nao,) ndarray</span></dt>
+<dd>Bands energies E_n(k)</dd>
+<dt>mo_coeff <span class="classifier-delimiter">:</span> <span class="classifier">(nao, nao) ndarray</span></dt>
+<dd>Band orbitals psi_n(k)</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.khf.KRHF.get_grad">
+<tt class="descname">get_grad</tt><big>(</big><em>mo_coeff_kpts</em>, <em>mo_occ_kpts</em>, <em>fock=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#KRHF.get_grad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF.get_grad" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns 1D array of gradients, like non K-pt version
+note that occ and virt indices of different k pts now occur
+in sequential patches of the 1D array</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.khf.KRHF.get_occ">
+<tt class="descname">get_occ</tt><big>(</big><em>mf</em>, <em>mo_energy_kpts=None</em>, <em>mo_coeff_kpts=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF.get_occ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Label the occupancies for each orbital for sampled k-points.</p>
+<p>This is a k-point version of scf.hf.SCF.get_occ</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.khf.KRHF.get_ovlp">
+<tt class="descname">get_ovlp</tt><big>(</big><em>mf</em>, <em>cell=None</em>, <em>kpts=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF.get_ovlp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the overlap AO matrices at sampled k-points.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>kpts : (nkpts, 3) ndarray</dd>
+<dt>Returns:</dt>
+<dd>ovlp_kpts : (nkpts, nao, nao) ndarray</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.khf.KRHF.get_veff">
+<tt class="descname">get_veff</tt><big>(</big><em>cell=None</em>, <em>dm_kpts=None</em>, <em>dm_last=0</em>, <em>vhf_last=0</em>, <em>hermi=1</em>, <em>kpts=None</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#KRHF.get_veff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF.get_veff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hartree-Fock potential matrix for the given density matrix.
+See <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.get_veff()</span></tt> and <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.RHF.get_veff()</span></tt></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.khf.energy_elec">
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">energy_elec</tt><big>(</big><em>mf</em>, <em>dm_kpts=None</em>, <em>h1e_kpts=None</em>, <em>vhf_kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#energy_elec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.energy_elec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Following pyscf.scf.hf.energy_elec()</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.khf.get_hcore">
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">get_hcore</tt><big>(</big><em>mf</em>, <em>cell=None</em>, <em>kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#get_hcore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.get_hcore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the core Hamiltonian AO matrices at sampled k-points.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>kpts : (nkpts, 3) ndarray</dd>
+<dt>Returns:</dt>
+<dd>hcore : (nkpts, nao, nao) ndarray</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.khf.get_j">
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">get_j</tt><big>(</big><em>mf</em>, <em>cell</em>, <em>dm_kpts</em>, <em>kpts</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#get_j"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.get_j" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Coulomb (J) AO matrix at sampled k-points.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>dm_kpts <span class="classifier-delimiter">:</span> <span class="classifier">(nkpts, nao, nao) ndarray or a list of (nkpts,nao,nao) ndarray</span></dt>
+<dd>Density matrix at each k-point.  If a list of k-point DMs, eg,
+UHF alpha and beta DM, the alpha and beta DMs are contracted
+separately.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>kpt_band <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
+<dd>An arbitrary &#8220;band&#8221; k-point at which to evalute the matrix.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>vj : (nkpts, nao, nao) ndarray
+or list of vj if the input dm_kpts is a list of DMs</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.khf.get_jk">
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">get_jk</tt><big>(</big><em>mf</em>, <em>cell</em>, <em>dm_kpts</em>, <em>kpts</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#get_jk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.get_jk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Coulomb (J) and exchange (K) AO matrices at sampled k-points.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>dm_kpts <span class="classifier-delimiter">:</span> <span class="classifier">(nkpts, nao, nao) ndarray</span></dt>
+<dd>Density matrix at each k-point</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>kpt_band <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
+<dd>An arbitrary &#8220;band&#8221; k-point at which to evalute the matrix.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>vj : (nkpts, nao, nao) ndarray
+vk : (nkpts, nao, nao) ndarray
+or list of vj and vk if the input dm_kpts is a list of DMs</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.khf.get_occ">
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">get_occ</tt><big>(</big><em>mf</em>, <em>mo_energy_kpts=None</em>, <em>mo_coeff_kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#get_occ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.get_occ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Label the occupancies for each orbital for sampled k-points.</p>
+<p>This is a k-point version of scf.hf.SCF.get_occ</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.khf.get_ovlp">
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">get_ovlp</tt><big>(</big><em>mf</em>, <em>cell=None</em>, <em>kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#get_ovlp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.get_ovlp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the overlap AO matrices at sampled k-points.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>kpts : (nkpts, 3) ndarray</dd>
+<dt>Returns:</dt>
+<dd>ovlp_kpts : (nkpts, nao, nao) ndarray</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.khf.init_guess_by_chkfile">
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">init_guess_by_chkfile</tt><big>(</big><em>cell</em>, <em>chkfile_name</em>, <em>project=True</em>, <em>kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#init_guess_by_chkfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.init_guess_by_chkfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the KHF results from checkpoint file, then project it to the
+basis defined by <tt class="docutils literal"><span class="pre">cell</span></tt></p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>Density matrix, 3D ndarray</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.khf.make_rdm1">
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">make_rdm1</tt><big>(</big><em>mo_coeff_kpts</em>, <em>mo_occ_kpts</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#make_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.make_rdm1" title="Permalink to this definition">¶</a></dt>
+<dd><p>One particle density matrices for all k-points.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>dm_kpts : (nkpts, nao, nao) ndarray</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-pyscf.pbc.scf.kuhf"></span><p>Hartree-Fock for periodic systems with k-point sampling</p>
+<dl class="docutils">
+<dt>See Also:</dt>
+<dd>hf.py : Hartree-Fock for periodic systems at a single k-point</dd>
+</dl>
+<dl class="class">
+<dt id="pyscf.pbc.scf.kuhf.KUHF">
+<em class="property">class </em><tt class="descclassname">pyscf.pbc.scf.kuhf.</tt><tt class="descname">KUHF</tt><big>(</big><em>cell</em>, <em>kpts=array([[ 0.</em>, <em>0.</em>, <em>0.]])</em>, <em>exxdiv='ewald'</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#KUHF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.KUHF" title="Permalink to this definition">¶</a></dt>
+<dd><p>UHF class with k-point sampling.</p>
+<dl class="method">
+<dt id="pyscf.pbc.scf.kuhf.KUHF.canonicalize">
+<tt class="descname">canonicalize</tt><big>(</big><em>mf</em>, <em>mo_coeff_kpts</em>, <em>mo_occ_kpts</em>, <em>fock=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.kuhf.KUHF.canonicalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Canonicalization diagonalizes the UHF Fock matrix within occupied,
+virtual subspaces separatedly (without change occupancy).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.kuhf.KUHF.energy_elec">
+<tt class="descname">energy_elec</tt><big>(</big><em>mf</em>, <em>dm_kpts=None</em>, <em>h1e_kpts=None</em>, <em>vhf_kpts=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.kuhf.KUHF.energy_elec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Following pyscf.scf.hf.energy_elec()</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.kuhf.KUHF.get_bands">
+<tt class="descname">get_bands</tt><big>(</big><em>kpt_band</em>, <em>cell=None</em>, <em>dm_kpts=None</em>, <em>kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#KUHF.get_bands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.KUHF.get_bands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get energy bands at a given (arbitrary) &#8216;band&#8217; k-point.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>mo_energy <span class="classifier-delimiter">:</span> <span class="classifier">(nao,) ndarray</span></dt>
+<dd>Bands energies E_n(k)</dd>
+<dt>mo_coeff <span class="classifier-delimiter">:</span> <span class="classifier">(nao, nao) ndarray</span></dt>
+<dd>Band orbitals psi_n(k)</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.kuhf.KUHF.get_occ">
+<tt class="descname">get_occ</tt><big>(</big><em>mf</em>, <em>mo_energy_kpts=None</em>, <em>mo_coeff_kpts=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.kuhf.KUHF.get_occ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Label the occupancies for each orbital for sampled k-points.</p>
+<p>This is a k-point version of scf.hf.SCF.get_occ</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.kuhf.KUHF.get_ovlp">
+<tt class="descname">get_ovlp</tt><big>(</big><em>mf</em>, <em>cell=None</em>, <em>kpts=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.kuhf.KUHF.get_ovlp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the overlap AO matrices at sampled k-points.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>kpts : (nkpts, 3) ndarray</dd>
+<dt>Returns:</dt>
+<dd>ovlp_kpts : (nkpts, nao, nao) ndarray</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.kuhf.canonicalize">
+<tt class="descclassname">pyscf.pbc.scf.kuhf.</tt><tt class="descname">canonicalize</tt><big>(</big><em>mf</em>, <em>mo_coeff_kpts</em>, <em>mo_occ_kpts</em>, <em>fock=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#canonicalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.canonicalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Canonicalization diagonalizes the UHF Fock matrix within occupied,
+virtual subspaces separatedly (without change occupancy).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.kuhf.energy_elec">
+<tt class="descclassname">pyscf.pbc.scf.kuhf.</tt><tt class="descname">energy_elec</tt><big>(</big><em>mf</em>, <em>dm_kpts=None</em>, <em>h1e_kpts=None</em>, <em>vhf_kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#energy_elec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.energy_elec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Following pyscf.scf.hf.energy_elec()</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.kuhf.get_occ">
+<tt class="descclassname">pyscf.pbc.scf.kuhf.</tt><tt class="descname">get_occ</tt><big>(</big><em>mf</em>, <em>mo_energy_kpts=None</em>, <em>mo_coeff_kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#get_occ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.get_occ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Label the occupancies for each orbital for sampled k-points.</p>
+<p>This is a k-point version of scf.hf.SCF.get_occ</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.kuhf.init_guess_by_chkfile">
+<tt class="descclassname">pyscf.pbc.scf.kuhf.</tt><tt class="descname">init_guess_by_chkfile</tt><big>(</big><em>cell</em>, <em>chkfile_name</em>, <em>project=True</em>, <em>kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#init_guess_by_chkfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.init_guess_by_chkfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the KHF results from checkpoint file, then project it to the
+basis defined by <tt class="docutils literal"><span class="pre">cell</span></tt></p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>Density matrix, 3D ndarray</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.kuhf.make_rdm1">
+<tt class="descclassname">pyscf.pbc.scf.kuhf.</tt><tt class="descname">make_rdm1</tt><big>(</big><em>mo_coeff_kpts</em>, <em>mo_occ_kpts</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#make_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.make_rdm1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alpha and beta spin one particle density matrices for all k-points.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>dm_kpts : (2, nkpts, nao, nao) ndarray</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">pbc.scf &#8212; Mean-field with periodic boundary condition</a><ul>
+<li><a class="reference internal" href="#gamma-point-and-single-k-point-calculation">Gamma point and single k-point calculation</a><ul>
+<li><a class="reference internal" href="#mixing-with-molecular-program-for-post-hf-methods">Mixing with molecular program for post-HF methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#k-point-sampling">k-point sampling</a><ul>
+<li><a class="reference internal" href="#newton-solver">Newton solver</a></li>
+<li><a class="reference internal" href="#smearing">Smearing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#exchange-divergence-treatment">Exchange divergence treatment</a></li>
+<li><a class="reference internal" href="#with-df-for-density-fitting"><tt class="docutils literal"><span class="pre">with_df</span></tt> for density fitting</a></li>
+<li><a class="reference internal" href="#module-pyscf.pbc.scf.hf">Module functions</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gto.html"
+                        title="previous chapter">pbc.gto &#8212; Crystal cell structure</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dft.html"
+                        title="next chapter">pbc.dft</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/pbc/scf.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dft.html" title="pbc.dft"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gto.html" title="pbc.gto — Crystal cell structure"
+             >previous</a> |</li>
+        <li><a href="../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
+          <li><a href="../pbc.html" ><tt class="docutils literal"><span class="pre">pbc</span></tt> &#8212; Periodic boundary condition</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

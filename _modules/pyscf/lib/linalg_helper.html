@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyscf.lib.linalg_helper &mdash; PySCF 1.1 documentation</title>
+    <title>pyscf.lib.linalg_helper &mdash; PySCF 1.3 alpha documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.1',
+        VERSION:     '1.3 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 documentation" href="../../../index.html" />
+    <link rel="top" title="PySCF 1.3 alpha documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -63,8 +63,9 @@
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">scipy.linalg</span>
 <span class="kn">import</span> <span class="nn">h5py</span>
-<span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span>
-<span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">numpy_helper</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">parameters</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">numpy_helper</span>
 
 <div class="viewcode-block" id="safe_eigh"><a class="viewcode-back" href="../../../lib.html#pyscf.lib.linalg_helper.safe_eigh">[docs]</a><span class="k">def</span> <span class="nf">safe_eigh</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">lindep</span><span class="o">=</span><span class="mf">1e-15</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Solve generalized eigenvalue problem  h v = w s v.</span>
@@ -243,7 +244,7 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">e</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">davidson1</span><span class="p">(</span><span class="k">lambda</span> <span class="n">xs</span><span class="p">:</span> <span class="p">[</span><span class="n">aop</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">],</span>
                      <span class="n">x0</span><span class="p">,</span> <span class="n">precond</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">max_cycle</span><span class="p">,</span> <span class="n">max_space</span><span class="p">,</span> <span class="n">lindep</span><span class="p">,</span>
-                     <span class="n">max_memory</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="n">nroots</span><span class="p">,</span> <span class="n">lessio</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+                     <span class="n">max_memory</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="n">nroots</span><span class="p">,</span> <span class="n">lessio</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
     <span class="k">if</span> <span class="n">nroots</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
@@ -297,6 +298,8 @@
 <span class="sd">            second method can be considered.</span>
 
 <span class="sd">    Returns:</span>
+<span class="sd">        conv : bool</span>
+<span class="sd">            Converged or not</span>
 <span class="sd">        e : list of floats</span>
 <span class="sd">            The lowest :attr:`nroots` eigenvalues.</span>
 <span class="sd">        c : list of 1D arrays</span>
@@ -323,17 +326,19 @@
         <span class="c">#q, r = numpy.linalg.qr(numpy.asarray(xs).T)</span>
         <span class="c">#q = [qi/numpy_helper.norm(qi)</span>
         <span class="c">#     for i, qi in enumerate(q.T) if r[i,i] &gt; 1e-7]</span>
-        <span class="n">qs</span> <span class="o">=</span> <span class="p">[</span><span class="n">xs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">numpy_helper</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">xs</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">qs</span> <span class="o">=</span> <span class="p">[</span><span class="n">xs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">norm</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)):</span>
             <span class="n">xi</span> <span class="o">=</span> <span class="n">xs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">qs</span><span class="p">)):</span>
-                <span class="n">xi</span> <span class="o">-=</span> <span class="n">qs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">qs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">xi</span><span class="p">)</span>
-            <span class="n">norm</span> <span class="o">=</span> <span class="n">numpy_helper</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+                <span class="n">xi</span> <span class="o">-=</span> <span class="n">qs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">dot</span><span class="p">(</span><span class="n">qs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">xi</span><span class="p">)</span>
+            <span class="n">norm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">xi</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">xi</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">norm</span> <span class="o">&gt;</span> <span class="mf">1e-7</span><span class="p">:</span>
                 <span class="n">qs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xi</span><span class="o">/</span><span class="n">norm</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">qs</span>
 
-    <span class="n">toloose</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tol</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-2</span>
+    <span class="n">toloose</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tol</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="s">&#39;tol </span><span class="si">%g</span><span class="s">  toloose </span><span class="si">%g</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">toloose</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="p">[</span><span class="n">x0</span><span class="p">]</span>
@@ -341,8 +346,11 @@
     <span class="n">max_space</span> <span class="o">=</span> <span class="n">max_space</span> <span class="o">+</span> <span class="n">nroots</span> <span class="o">*</span> <span class="mi">2</span>
     <span class="c"># max_space*2 for holding ax and xs, nroots*2 for holding axt and xt</span>
     <span class="n">_incore</span> <span class="o">=</span> <span class="n">max_memory</span><span class="o">*</span><span class="mf">1e6</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">&gt;</span> <span class="n">max_space</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="n">nroots</span><span class="o">*</span><span class="mi">2</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="s">&#39;max_cycle </span><span class="si">%d</span><span class="s">  max_space </span><span class="si">%d</span><span class="s">  max_memory </span><span class="si">%d</span><span class="s">  incore </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+               <span class="n">max_cycle</span><span class="p">,</span> <span class="n">max_space</span><span class="p">,</span> <span class="n">max_memory</span><span class="p">,</span> <span class="n">_incore</span><span class="p">)</span>
     <span class="n">heff</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="n">fresh_start</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">conv</span> <span class="o">=</span> <span class="bp">False</span>
 
     <span class="k">for</span> <span class="n">icyc</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_cycle</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">fresh_start</span><span class="p">:</span>
@@ -412,39 +420,36 @@
                     <span class="n">ax0</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">axi</span>
 
         <span class="n">ide</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">de</span><span class="p">))</span>
-        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">de</span><span class="p">[</span><span class="n">ide</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;converge </span><span class="si">%d</span><span class="s"> </span><span class="si">%d</span><span class="s">  e= </span><span class="si">%s</span><span class="s">  max|de|= </span><span class="si">%4.3g</span><span class="s">&#39;</span><span class="p">,</span>
-                      <span class="n">icyc</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">de</span><span class="p">[</span><span class="n">ide</span><span class="p">])</span>
-            <span class="k">break</span>
 
         <span class="n">dx_norm</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">xt</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">ek</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
             <span class="n">dxtmp</span> <span class="o">=</span> <span class="n">ax0</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="n">ek</span> <span class="o">*</span> <span class="n">x0</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
             <span class="n">xt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dxtmp</span><span class="p">)</span>
-            <span class="n">dx_norm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy_helper</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">dxtmp</span><span class="p">))</span>
+            <span class="n">dx_norm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">dxtmp</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">dxtmp</span><span class="p">)))</span>
 
-        <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">dx_norm</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">toloose</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">de</span><span class="p">[</span><span class="n">ide</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">tol</span> <span class="ow">and</span> <span class="nb">max</span><span class="p">(</span><span class="n">dx_norm</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">toloose</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;converge </span><span class="si">%d</span><span class="s"> </span><span class="si">%d</span><span class="s">  |r|= </span><span class="si">%4.3g</span><span class="s">  e= </span><span class="si">%s</span><span class="s">  max|de|= </span><span class="si">%4.3g</span><span class="s">&#39;</span><span class="p">,</span>
                       <span class="n">icyc</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">dx_norm</span><span class="p">),</span> <span class="n">e</span><span class="p">,</span> <span class="n">de</span><span class="p">[</span><span class="n">ide</span><span class="p">])</span>
+            <span class="n">conv</span> <span class="o">=</span> <span class="bp">True</span>
             <span class="k">break</span>
 
         <span class="c"># remove subspace linear dependency</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">ek</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">dx_norm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">toloose</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dx_norm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">&gt;</span> <span class="n">lindep</span><span class="p">:</span>
                 <span class="n">xt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">precond</span><span class="p">(</span><span class="n">xt</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x0</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
-                <span class="n">xt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span><span class="o">/</span><span class="n">numpy_helper</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">xt</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+                <span class="n">xt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">xt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">xt</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">xt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="n">xt</span> <span class="o">=</span> <span class="p">[</span><span class="n">xi</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">xt</span> <span class="k">if</span> <span class="n">xi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">space</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">xt</span><span class="p">:</span>
                 <span class="n">xsi</span> <span class="o">=</span> <span class="n">xs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="n">xi</span> <span class="o">-=</span> <span class="n">xsi</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xsi</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">xi</span><span class="p">)</span>
+                <span class="n">xi</span> <span class="o">-=</span> <span class="n">xsi</span> <span class="o">*</span> <span class="n">dot</span><span class="p">(</span><span class="n">xsi</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">xi</span><span class="p">)</span>
         <span class="n">norm_min</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">xi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">xt</span><span class="p">):</span>
-            <span class="n">norm</span> <span class="o">=</span> <span class="n">numpy_helper</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">norm</span> <span class="o">&gt;</span> <span class="n">toloose</span><span class="p">:</span>
+            <span class="n">norm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">xi</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">xi</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">norm</span><span class="o">**</span><span class="mi">2</span> <span class="o">&gt;</span> <span class="n">lindep</span><span class="p">:</span>
                 <span class="n">xt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span><span class="o">/</span><span class="n">norm</span>
                 <span class="n">norm_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">norm_min</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -456,13 +461,12 @@
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;davidson </span><span class="si">%d</span><span class="s"> </span><span class="si">%d</span><span class="s">  |r|= </span><span class="si">%4.3g</span><span class="s">  e= </span><span class="si">%s</span><span class="s">  max|de|= </span><span class="si">%4.3g</span><span class="s">  lindep= </span><span class="si">%4.3g</span><span class="s">&#39;</span><span class="p">,</span>
                   <span class="n">icyc</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">dx_norm</span><span class="p">),</span> <span class="n">e</span><span class="p">,</span> <span class="n">de</span><span class="p">[</span><span class="n">ide</span><span class="p">],</span> <span class="n">norm_min</span><span class="p">)</span>
 
-        <span class="n">fresh_start</span> <span class="o">=</span> <span class="p">(</span><span class="n">icyc</span><span class="o">+</span><span class="n">nroots</span> <span class="o">&lt;</span> <span class="n">max_cycle</span> <span class="ow">and</span>
-                       <span class="p">(</span><span class="n">fresh_start</span> <span class="ow">or</span> <span class="n">space</span><span class="o">+</span><span class="n">nroots</span> <span class="o">&gt;</span> <span class="n">max_space</span><span class="p">))</span>
+        <span class="n">fresh_start</span> <span class="o">=</span> <span class="n">fresh_start</span> <span class="ow">or</span> <span class="n">space</span><span class="o">+</span><span class="n">nroots</span> <span class="o">&gt;</span> <span class="n">max_space</span>
 
         <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">callback</span><span class="p">):</span>
             <span class="n">callback</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
 
-    <span class="k">return</span> <span class="n">e</span><span class="p">,</span> <span class="n">x0</span>
+    <span class="k">return</span> <span class="n">conv</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">x0</span>
 </div>
 <span class="k">def</span> <span class="nf">eigh</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
@@ -627,11 +631,12 @@
 </div>
 <span class="k">class</span> <span class="nc">_Xlist</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fd</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">scr_h5</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fd</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fd</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scr_h5</span> <span class="o">=</span> <span class="n">scr_h5</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fd</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">__del__</span><span class="p">():</span>
+            <span class="n">scr_h5</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scr_h5</span><span class="o">.</span><span class="n">__del__</span> <span class="o">=</span> <span class="n">__del__</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">scr_h5</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
@@ -755,13 +760,13 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

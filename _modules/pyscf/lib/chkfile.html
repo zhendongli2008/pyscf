@@ -1,0 +1,246 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyscf.lib.chkfile &mdash; PySCF 1.3 alpha documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.3 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 1.3 alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyscf.lib.chkfile</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">pyscf.gto</span>
+
+<span class="k">def</span> <span class="nf">load_chkfile_key</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">load</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../../lib.html#pyscf.lib.chkfile.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Load array(s) from chkfile</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        chkfile : str</span>
+<span class="sd">            Name of chkfile. The chkfile needs to be saved in HDF5 format.</span>
+<span class="sd">        key : str</span>
+<span class="sd">            HDF5.dataset name or group name.  If key is the HDF5 group name,</span>
+<span class="sd">            the group will be loaded into an Python dict, recursively</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        whatever read from chkfile</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyscf import gto, scf, lib</span>
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;He 0 0 0&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; mf = scf.RHF(mol)</span>
+<span class="sd">    &gt;&gt;&gt; mf.chkfile = &#39;He.chk&#39;</span>
+<span class="sd">    &gt;&gt;&gt; mf.kernel()</span>
+<span class="sd">    &gt;&gt;&gt; mo_coeff = lib.chkfile.load(&#39;He.chk&#39;, &#39;scf/mo_coeff&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; mo_coeff.shape</span>
+<span class="sd">    (1, 1)</span>
+<span class="sd">    &gt;&gt;&gt; scfdat = lib.chkfile.load(&#39;He.chk&#39;, &#39;scf&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; scfdat.keys()</span>
+<span class="sd">    [&#39;e_tot&#39;, &#39;mo_occ&#39;, &#39;mo_energy&#39;, &#39;mo_coeff&#39;]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">loadasdic</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">group</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span> <span class="n">loadasdic</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">val</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">loadasdic</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">fh5</span><span class="p">)</span>
+</div>
+<span class="k">def</span> <span class="nf">dump_chkfile_key</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="n">dump</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="n">dump</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+<div class="viewcode-block" id="dump"><a class="viewcode-back" href="../../../lib.html#pyscf.lib.chkfile.dump">[docs]</a><span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Save array(s) in chkfile</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        chkfile : str</span>
+<span class="sd">            Name of chkfile.</span>
+<span class="sd">        key : str</span>
+
+<span class="sd">        value : array, vector ... or dict</span>
+<span class="sd">            If value is a python dict, the key/value of the dict will be saved</span>
+<span class="sd">            recursively as the HDF5 group/dataset</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        No return value</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; import h5py</span>
+<span class="sd">    &gt;&gt;&gt; from pyscf import lib</span>
+<span class="sd">    &gt;&gt;&gt; ci = {&#39;Ci&#39; : {&#39;op&#39;: (&#39;E&#39;, &#39;i&#39;), &#39;irrep&#39;: (&#39;Ag&#39;, &#39;Au&#39;)}}</span>
+<span class="sd">    &gt;&gt;&gt; lib.chkfile.save(&#39;symm.chk&#39;, &#39;symm&#39;, ci)</span>
+<span class="sd">    &gt;&gt;&gt; f = h5py.File(&#39;symm.chk&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; f.keys()</span>
+<span class="sd">    [&#39;symm&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; f[&#39;symm&#39;].keys()</span>
+<span class="sd">    [&#39;Ci&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; f[&#39;symm/Ci&#39;].keys()</span>
+<span class="sd">    [&#39;op&#39;, &#39;irrep&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; f[&#39;symm/Ci/op&#39;]</span>
+<span class="sd">    &lt;HDF5 dataset &quot;op&quot;: shape (2,), type &quot;|S1&quot;&gt;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">saveasgroup</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">root1</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">saveasgroup</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">root1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">root</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">if</span> <span class="n">h5py</span><span class="o">.</span><span class="n">is_hdf5</span><span class="p">(</span><span class="n">chkfile</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fh5</span><span class="p">:</span>
+                <span class="k">del</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="n">saveasgroup</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">fh5</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
+            <span class="n">saveasgroup</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">fh5</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="load_mol"><a class="viewcode-back" href="../../../lib.html#pyscf.lib.chkfile.load_mol">[docs]</a><span class="k">def</span> <span class="nf">load_mol</span><span class="p">(</span><span class="n">chkfile</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Load Mole object from chkfile.</span>
+<span class="sd">    The save_mol/load_mol operation can be used a serialization method for Mole object.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        chkfile : str</span>
+<span class="sd">            Name of chkfile.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A (initialized/built) Mole object</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyscf import gto, lib</span>
+<span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;He 0 0 0&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; lib.chkfile.save_mol(mol, &#39;He.chk&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; lib.chkfile.load_mol(&#39;He.chk&#39;)</span>
+<span class="sd">    &lt;pyscf.gto.mole.Mole object at 0x7fdcd94d7f50&gt;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
+            <span class="n">mol</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+<span class="c"># Compatibility to the old serialization format</span>
+<span class="c"># TODO: remove it in future release</span>
+        <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
+            <span class="n">mol</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+            <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">mol</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s">&#39;/dev/null&#39;</span>
+            <span class="n">moldic</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="s">&#39;mol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;mass&#39;</span><span class="p">,</span> <span class="s">&#39;grids&#39;</span><span class="p">,</span> <span class="s">&#39;light_speed&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">moldic</span><span class="p">:</span>
+                    <span class="k">del</span><span class="p">(</span><span class="n">moldic</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="bp">False</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">moldic</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mol</span>
+</div>
+<div class="viewcode-block" id="save_mol"><a class="viewcode-back" href="../../../lib.html#pyscf.lib.chkfile.save_mol">[docs]</a><span class="k">def</span> <span class="nf">save_mol</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Save Mole object in chkfile</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mol : an instance of :class:`Mole`.</span>
+
+<span class="sd">        chkfile : str</span>
+<span class="sd">            Name of chkfile.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        No return value</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">dump</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s">&#39;mol&#39;</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">dumps</span><span class="p">())</span></div>
+<span class="n">dump_mol</span> <span class="o">=</span> <span class="n">save_mol</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

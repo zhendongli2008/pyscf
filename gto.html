@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>gto — Molecular structure and GTO basis &mdash; PySCF 1.1 documentation</title>
+    <title>gto — Molecular structure and GTO basis &mdash; PySCF 1.3 alpha documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1',
+        VERSION:     '1.3 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 documentation" href="index.html" />
+    <link rel="top" title="PySCF 1.3 alpha documentation" href="index.html" />
     <link rel="next" title="lib" href="lib.html" />
     <link rel="prev" title="Installation" href="install.html" /> 
   </head>
@@ -44,7 +44,7 @@
         <li class="right" >
           <a href="install.html" title="Installation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PySCF 1.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.3 alpha documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -60,9 +60,20 @@ the molecular geometry and format the basic functions for <cite>libcint</cite>
 integral library.  In <tt class="file docutils literal"><span class="pre">mole</span></tt>, a basic class <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> is
 defined to hold the global parameters, which will be used throughout the
 package.</p>
-<span class="target" id="module-pyscf.gto"></span><div class="section" id="module-pyscf.gto.mole">
-<span id="mole"></span><h2>mole<a class="headerlink" href="#module-pyscf.gto.mole" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<span class="target" id="module-pyscf.gto"></span><div class="section" id="mole">
+<h2>mole<a class="headerlink" href="#mole" title="Permalink to this headline">¶</a></h2>
+<p><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> class handles three layers: input, internal format, libcint arguments.
+The relationship of the three layers are:</p>
+<div class="highlight-python"><div class="highlight"><pre>.atom (input)  &lt;=&gt;  ._atom (for python) &lt;=&gt; ._atm (for libcint)
+.basis (input) &lt;=&gt; ._basis (for python) &lt;=&gt; ._bas (for libcint)
+</pre></div>
+</div>
+<p>input layer does not talk to libcint directly.  Data are held in python
+internal fomrat layer.  Most of methods defined in this class only operates
+on the internal format.  Exceptions are make_env, make_atm_env, make_bas_env,
+<tt class="xref py py-func docutils literal"><span class="pre">set_common_orig_()</span></tt>, <tt class="xref py py-func docutils literal"><span class="pre">set_rinv_orig_()</span></tt> which are used to
+manipulate the libcint arguments.</p>
+<span class="target" id="module-pyscf.gto.mole"></span><dl class="function">
 <dt id="pyscf.gto.mole.M">
 <tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">M</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#M"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.M" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a shortcut to build up Mole object.</p>
@@ -87,8 +98,6 @@ package.</p>
 <dd>Output file, default is None which dumps msg to sys.stdout</dd>
 <dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">int, float</span></dt>
 <dd>Allowed memory in MB</dd>
-<dt>light_speed :</dt>
-<dd>Default is set in lib.parameters.LIGHTSPEED</dd>
 <dt>charge <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
 <dd>Charge of molecule. It affects the electron numbers</dd>
 <dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
@@ -329,7 +338,7 @@ Number of electrons screened by ECP can be obtained by _charge(atom_symbol)-atom
 </dl>
 <p>Examples:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_nshells</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_shell_ids</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="go">[3, 4, 5, 6, 7]</span>
 </pre></div>
 </div>
@@ -428,11 +437,11 @@ Number of electrons screened by ECP can be obtained by _charge(atom_symbol)-atom
 </dd>
 </dl>
 <p>Examples:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_ctr_coeff</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="go">[[ 0.34068924]</span>
-<span class="go"> [ 0.57789106]</span>
-<span class="go"> [ 0.65774031]]</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_ctr_coeff</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">[[ 10.03400444]</span>
+<span class="go"> [  4.1188704 ]</span>
+<span class="go"> [  1.53971186]]</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -532,7 +541,7 @@ If kappa is 0, return 4l+2</p>
 
 <dl class="method">
 <dt id="pyscf.gto.mole.Mole.build">
-<tt class="descname">build</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>verbose=None</em>, <em>output=None</em>, <em>max_memory=None</em>, <em>atom=None</em>, <em>basis=None</em>, <em>unit=None</em>, <em>nucmod=None</em>, <em>ecp=None</em>, <em>charge=None</em>, <em>spin=None</em>, <em>symmetry=None</em>, <em>symmetry_subgroup=None</em>, <em>light_speed=None</em>, <em>mass=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.build" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">build</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>verbose=None</em>, <em>output=None</em>, <em>max_memory=None</em>, <em>atom=None</em>, <em>basis=None</em>, <em>unit=None</em>, <em>nucmod=None</em>, <em>ecp=None</em>, <em>charge=None</em>, <em>spin=None</em>, <em>symmetry=None</em>, <em>symmetry_subgroup=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup moleclue and initialize some control parameters.  Whenever you
 change the value of the attributes of <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a>, you need call
 this function to refresh the internal data of Mole.</p>
@@ -564,8 +573,6 @@ If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pr
 <dt>symmetry <span class="classifier-delimiter">:</span> <span class="classifier">bool or str</span></dt>
 <dd>Whether to use symmetry.  If given a string of point group
 name, the given point group symmetry will be used.</dd>
-<dt>light_speed :</dt>
-<dd>If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.light_speed</span></tt></dd>
 </dl>
 </dd>
 </dl>
@@ -582,14 +589,14 @@ if fmt is boolean, it controls whether to format the labels and the
 default format is &#8220;%d%3s %s%-4s&#8221;.  if fmt is string, the string will
 be used as the print format.</dd>
 <dt>Returns:</dt>
-<dd>List of [(atom-id, symbol-str, nl-str, str-of-real-spheric-notation]
+<dd>List of [(atom-id, symbol-str, nl-str, str-of-real-spheric-notation)]
 or formatted strings based on the argument &#8220;fmt&#8221;</dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyscf.gto.mole.Mole.condense_to_shell">
-<tt class="descname">condense_to_shell</tt><big>(</big><em>mol</em>, <em>mat</em>, <em>compressor=&lt;function amax at 0x2b936389d320&gt;</em><big>)</big><a class="headerlink" href="#pyscf.gto.mole.Mole.condense_to_shell" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">condense_to_shell</tt><big>(</big><em>mol</em>, <em>mat</em>, <em>compressor=&lt;function amax at 0x2af7c00df2a8&gt;</em><big>)</big><a class="headerlink" href="#pyscf.gto.mole.Mole.condense_to_shell" title="Permalink to this definition">¶</a></dt>
 <dd><p>The given matrix is first partitioned to blocks, based on AO shell as
 delimiter.  Then call compressor function to abstract each block.</p>
 </dd></dl>
@@ -598,6 +605,23 @@ delimiter.  Then call compressor function to abstract each block.</p>
 <dt id="pyscf.gto.mole.Mole.dumps">
 <tt class="descname">dumps</tt><big>(</big><em>mol</em><big>)</big><a class="headerlink" href="#pyscf.gto.mole.Mole.dumps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Serialize Mole object to a JSON formatted str.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.etbs">
+<tt class="descname">etbs</tt><big>(</big><em>etbs</em><big>)</big><a class="headerlink" href="#pyscf.gto.mole.Mole.etbs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate even tempered basis.  See also <a class="reference internal" href="#pyscf.gto.mole.expand_etb" title="pyscf.gto.mole.expand_etb"><tt class="xref py py-func docutils literal"><span class="pre">expand_etb()</span></tt></a></p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>etbs = [(l, n, alpha, beta), (l, n, alpha, beta),...]</dd>
+<dt>Returns:</dt>
+<dd>Formated <tt class="xref py py-attr docutils literal"><span class="pre">basis</span></tt></dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">expand_etbs</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">2.</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">2.</span><span class="p">)])</span>
+<span class="go">[[0, [6.0, 1]], [0, [3.0, 1]], [1, [1., 1]], [1, [2., 1]]]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -610,9 +634,9 @@ delimiter.  Then call compressor function to abstract each block.</p>
 <blockquote>
 <div><table border="1" class="docutils">
 <colgroup>
-<col width="46%" />
+<col width="45%" />
 <col width="16%" />
-<col width="39%" />
+<col width="40%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Function</th>
@@ -738,7 +762,7 @@ array can be obtained by calling <tt class="xref py py-func docutils literal"><s
 
 <dl class="method">
 <dt id="pyscf.gto.mole.Mole.format_atom">
-<tt class="descname">format_atom</tt><big>(</big><em>atom</em>, <em>origin=0</em>, <em>axes=1</em>, <em>unit='Ang'</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.format_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.format_atom" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">format_atom</tt><big>(</big><em>atom</em>, <em>origin=0</em>, <em>axes=None</em>, <em>unit='Ang'</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.format_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.format_atom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">Mole.atom</span></tt> to the internal data format.
 Including, changing the nuclear charge to atom symbol, converting the
 coordinates to AU, rotate and shift the molecule.
@@ -782,8 +806,15 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <dt id="pyscf.gto.mole.Mole.format_basis">
 <tt class="descname">format_basis</tt><big>(</big><em>basis_tab</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.format_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.format_basis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt> to the internal data format.</p>
-<p><tt class="docutils literal"><span class="pre">{</span> <span class="pre">atom:</span> <span class="pre">(l,</span> <span class="pre">kappa,</span> <span class="pre">((-exp,</span> <span class="pre">c_1,</span> <span class="pre">c_2,</span> <span class="pre">..),</span> <span class="pre">nprim,</span> <span class="pre">nctr,</span> <span class="pre">ptr-exps,</span> <span class="pre">ptr-contraction-coeff)),</span> <span class="pre">...</span> <span class="pre">}</span></tt></p>
 <dl class="docutils">
+<dt><a href="#id13"><span class="problematic" id="id14">``</span></a>{ atom: [(l, ((-exp, c_1, c_2, ..),</dt>
+<dd><blockquote class="first">
+<div>(-exp, c_1, c_2, ..))),</div></blockquote>
+<dl class="last docutils">
+<dt>(l, ((-exp, c_1, c_2, ..),</dt>
+<dd>(-exp, c_1, c_2, ..)))], ... }``</dd>
+</dl>
+</dd>
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
 <dt>basis_tab <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
@@ -805,6 +836,38 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <span class="go">    [0, [0.18319199999999999, 1.0]]]}</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.format_ecp">
+<tt class="descname">format_ecp</tt><big>(</big><em>ecp_tab</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.format_ecp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.format_ecp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">ecp</span></tt> (dict) to the internal data format:</p>
+<div class="highlight-python"><div class="highlight"><pre>{ atom: (nelec,  # core electrons
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><dl class="docutils">
+<dt>((l,  # l=-1 for UL, l&gt;=0 for Ul to indicate <a href="#id31"><span class="problematic" id="id32">|l&gt;&lt;l|</span></a></dt>
+<dd><dl class="first last docutils">
+<dt>(((exp_1, c_1),  # for r^0</dt>
+<dd><blockquote class="first">
+<div>(exp_2, c_2),
+...),</div></blockquote>
+<dl class="last docutils">
+<dt>((exp_1, c_1),  # for r^1</dt>
+<dd>(exp_2, c_2),
+...),</dd>
+<dt>((exp_1, c_1),  # for r^2</dt>
+<dd>...))))),</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p>...}</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="method">
@@ -1488,7 +1551,7 @@ complete list of available 1-electron integral names</dd>
 
 <dl class="method">
 <dt id="pyscf.gto.mole.Mole.kernel">
-<tt class="descname">kernel</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>verbose=None</em>, <em>output=None</em>, <em>max_memory=None</em>, <em>atom=None</em>, <em>basis=None</em>, <em>unit=None</em>, <em>nucmod=None</em>, <em>ecp=None</em>, <em>charge=None</em>, <em>spin=None</em>, <em>symmetry=None</em>, <em>symmetry_subgroup=None</em>, <em>light_speed=None</em>, <em>mass=None</em><big>)</big><a class="headerlink" href="#pyscf.gto.mole.Mole.kernel" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">kernel</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>verbose=None</em>, <em>output=None</em>, <em>max_memory=None</em>, <em>atom=None</em>, <em>basis=None</em>, <em>unit=None</em>, <em>nucmod=None</em>, <em>ecp=None</em>, <em>charge=None</em>, <em>spin=None</em>, <em>symmetry=None</em>, <em>symmetry_subgroup=None</em><big>)</big><a class="headerlink" href="#pyscf.gto.mole.Mole.kernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup moleclue and initialize some control parameters.  Whenever you
 change the value of the attributes of <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a>, you need call
 this function to refresh the internal data of Mole.</p>
@@ -1520,8 +1583,6 @@ If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pr
 <dt>symmetry <span class="classifier-delimiter">:</span> <span class="classifier">bool or str</span></dt>
 <dd>Whether to use symmetry.  If given a string of point group
 name, the given point group symmetry will be used.</dd>
-<dt>light_speed :</dt>
-<dd>If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.light_speed</span></tt></dd>
 </dl>
 </dd>
 </dl>
@@ -1609,6 +1670,13 @@ with the given shell range</p>
 <dt id="pyscf.gto.mole.Mole.npgto_nr">
 <tt class="descname">npgto_nr</tt><big>(</big><em>mol</em>, <em>cart=False</em><big>)</big><a class="headerlink" href="#pyscf.gto.mole.Mole.npgto_nr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Total number of primitive spherical GTOs for the given <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.offset_2c_by_atom">
+<tt class="descname">offset_2c_by_atom</tt><big>(</big><em>mol</em><big>)</big><a class="headerlink" href="#pyscf.gto.mole.Mole.offset_2c_by_atom" title="Permalink to this definition">¶</a></dt>
+<dd><p>2-component AO offset for each atom.  Return a list, each item
+of the list gives (start-shell-id, stop-shell-id, start-AO-id, stop-AO-id)</p>
 </dd></dl>
 
 <dl class="method">
@@ -1949,7 +2017,7 @@ if fmt is boolean, it controls whether to format the labels and the
 default format is &#8220;%d%3s %s%-4s&#8221;.  if fmt is string, the string will
 be used as the print format.</dd>
 <dt>Returns:</dt>
-<dd>List of [(atom-id, symbol-str, nl-str, str-of-real-spheric-notation]
+<dd>List of [(atom-id, symbol-str, nl-str, str-of-real-spheric-notation)]
 or formatted strings based on the argument &#8220;fmt&#8221;</dd>
 </dl>
 </dd></dl>
@@ -1993,7 +2061,7 @@ to construct the environment for cross integrals like</p>
 
 <dl class="function">
 <dt id="pyscf.gto.mole.condense_to_shell">
-<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">condense_to_shell</tt><big>(</big><em>mol</em>, <em>mat</em>, <em>compressor=&lt;function amax at 0x2b936389d320&gt;</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#condense_to_shell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.condense_to_shell" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">condense_to_shell</tt><big>(</big><em>mol</em>, <em>mat</em>, <em>compressor=&lt;function amax at 0x2af7c00df2a8&gt;</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#condense_to_shell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.condense_to_shell" title="Permalink to this definition">¶</a></dt>
 <dd><p>The given matrix is first partitioned to blocks, based on AO shell as
 delimiter.  Then call compressor function to abstract each block.</p>
 </dd></dl>
@@ -2012,7 +2080,7 @@ delimiter.  Then call compressor function to abstract each block.</p>
 
 <dl class="function">
 <dt id="pyscf.gto.mole.dyall_nuc_mod">
-<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">dyall_nuc_mod</tt><big>(</big><em>mass</em>, <em>c=137.0359895</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#dyall_nuc_mod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.dyall_nuc_mod" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">dyall_nuc_mod</tt><big>(</big><em>mass</em>, <em>c=137.03599967994</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#dyall_nuc_mod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.dyall_nuc_mod" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate the nuclear charge distribution parameter zeta
 rho(r) = nuc_charge * Norm * exp(-zeta * r^2)</p>
 <p>Ref. L. Visscher and K. Dyall, At. Data Nucl. Data Tables, 67, 207 (1997)</p>
@@ -2026,6 +2094,23 @@ rho(r) = nuc_charge * Norm * exp(-zeta * r^2)</p>
 <dt>Returns</dt>
 <dd>float</dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.etbs">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">etbs</tt><big>(</big><em>etbs</em><big>)</big><a class="headerlink" href="#pyscf.gto.mole.etbs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate even tempered basis.  See also <a class="reference internal" href="#pyscf.gto.mole.expand_etb" title="pyscf.gto.mole.expand_etb"><tt class="xref py py-func docutils literal"><span class="pre">expand_etb()</span></tt></a></p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>etbs = [(l, n, alpha, beta), (l, n, alpha, beta),...]</dd>
+<dt>Returns:</dt>
+<dd>Formated <tt class="xref py py-attr docutils literal"><span class="pre">basis</span></tt></dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">expand_etbs</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">2.</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">2.</span><span class="p">)])</span>
+<span class="go">[[0, [6.0, 1]], [0, [3.0, 1]], [1, [1., 1]], [1, [2., 1]]]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -2074,7 +2159,7 @@ rho(r) = nuc_charge * Norm * exp(-zeta * r^2)</p>
 
 <dl class="function">
 <dt id="pyscf.gto.mole.filatov_nuc_mod">
-<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">filatov_nuc_mod</tt><big>(</big><em>nuc_charge</em>, <em>c=137.0359895</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#filatov_nuc_mod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.filatov_nuc_mod" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">filatov_nuc_mod</tt><big>(</big><em>nuc_charge</em>, <em>c=137.03599967994</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#filatov_nuc_mod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.filatov_nuc_mod" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate the nuclear charge distribution parameter zeta
 rho(r) = nuc_charge * Norm * exp(-zeta * r^2)</p>
 <dl class="docutils">
@@ -2088,7 +2173,7 @@ rho(r) = nuc_charge * Norm * exp(-zeta * r^2)</p>
 
 <dl class="function">
 <dt id="pyscf.gto.mole.format_atom">
-<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">format_atom</tt><big>(</big><em>atoms</em>, <em>origin=0</em>, <em>axes=1</em>, <em>unit='Ang'</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#format_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.format_atom" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">format_atom</tt><big>(</big><em>atoms</em>, <em>origin=0</em>, <em>axes=None</em>, <em>unit='Ang'</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#format_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.format_atom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">Mole.atom</span></tt> to the internal data format.
 Including, changing the nuclear charge to atom symbol, converting the
 coordinates to AU, rotate and shift the molecule.
@@ -2132,8 +2217,15 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <dt id="pyscf.gto.mole.format_basis">
 <tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">format_basis</tt><big>(</big><em>basis_tab</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#format_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.format_basis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt> to the internal data format.</p>
-<p><tt class="docutils literal"><span class="pre">{</span> <span class="pre">atom:</span> <span class="pre">(l,</span> <span class="pre">kappa,</span> <span class="pre">((-exp,</span> <span class="pre">c_1,</span> <span class="pre">c_2,</span> <span class="pre">..),</span> <span class="pre">nprim,</span> <span class="pre">nctr,</span> <span class="pre">ptr-exps,</span> <span class="pre">ptr-contraction-coeff)),</span> <span class="pre">...</span> <span class="pre">}</span></tt></p>
 <dl class="docutils">
+<dt><a href="#id15"><span class="problematic" id="id16">``</span></a>{ atom: [(l, ((-exp, c_1, c_2, ..),</dt>
+<dd><blockquote class="first">
+<div>(-exp, c_1, c_2, ..))),</div></blockquote>
+<dl class="last docutils">
+<dt>(l, ((-exp, c_1, c_2, ..),</dt>
+<dd>(-exp, c_1, c_2, ..)))], ... }``</dd>
+</dl>
+</dd>
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
 <dt>basis_tab <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
@@ -2155,6 +2247,38 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <span class="go">    [0, [0.18319199999999999, 1.0]]]}</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.format_ecp">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">format_ecp</tt><big>(</big><em>ecp_tab</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#format_ecp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.format_ecp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">ecp</span></tt> (dict) to the internal data format:</p>
+<div class="highlight-python"><div class="highlight"><pre>{ atom: (nelec,  # core electrons
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><dl class="docutils">
+<dt>((l,  # l=-1 for UL, l&gt;=0 for Ul to indicate <a href="#id33"><span class="problematic" id="id34">|l&gt;&lt;l|</span></a></dt>
+<dd><dl class="first last docutils">
+<dt>(((exp_1, c_1),  # for r^0</dt>
+<dd><blockquote class="first">
+<div>(exp_2, c_2),
+...),</div></blockquote>
+<dl class="last docutils">
+<dt>((exp_1, c_1),  # for r^1</dt>
+<dd>(exp_2, c_2),
+...),</dd>
+<dt>((exp_1, c_1),  # for r^2</dt>
+<dd>...))))),</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p>...}</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="function">
@@ -2288,7 +2412,7 @@ by <tt class="docutils literal"><span class="pre">libcint</span></tt> integrals<
 
 <dl class="function">
 <dt id="pyscf.gto.mole.make_env">
-<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">make_env</tt><big>(</big><em>atoms</em>, <em>basis</em>, <em>pre_env=[]</em>, <em>nucmod={}</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#make_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.make_env" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">make_env</tt><big>(</big><em>atoms</em>, <em>basis</em>, <em>pre_env=</em>, <span class="optional">[</span><span class="optional">]</span><em>nucmod={}</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#make_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.make_env" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate the input arguments for <tt class="docutils literal"><span class="pre">libcint</span></tt> library based on internal
 format <tt class="xref py py-attr docutils literal"><span class="pre">Mole._atom</span></tt> and <tt class="xref py py-attr docutils literal"><span class="pre">Mole._basis</span></tt></p>
 </dd></dl>
@@ -2369,6 +2493,13 @@ with the given shell range</p>
 <dt id="pyscf.gto.mole.npgto_nr">
 <tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">npgto_nr</tt><big>(</big><em>mol</em>, <em>cart=False</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#npgto_nr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.npgto_nr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Total number of primitive spherical GTOs for the given <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> object</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.gto.mole.offset_2c_by_atom">
+<tt class="descclassname">pyscf.gto.mole.</tt><tt class="descname">offset_2c_by_atom</tt><big>(</big><em>mol</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#offset_2c_by_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.offset_2c_by_atom" title="Permalink to this definition">¶</a></dt>
+<dd><p>2-component AO offset for each atom.  Return a list, each item
+of the list gives (start-shell-id, stop-shell-id, start-AO-id, stop-AO-id)</p>
 </dd></dl>
 
 <dl class="function">
@@ -2581,8 +2712,6 @@ arguments for <a class="reference internal" href="#pyscf.gto.mole.Mole" title="p
 <dd>Output file, default is None which dumps msg to sys.stdout</dd>
 <dt>max_memory <span class="classifier-delimiter">:</span> <span class="classifier">int, float</span></dt>
 <dd>Allowed memory in MB</dd>
-<dt>light_speed :</dt>
-<dd>Default is set in lib.parameters.LIGHTSPEED</dd>
 <dt>charge <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
 <dd>Charge of molecule. It affects the electron numbers</dd>
 <dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
@@ -2823,7 +2952,7 @@ Number of electrons screened by ECP can be obtained by _charge(atom_symbol)-atom
 </dl>
 <p>Examples:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_nshells</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom_shell_ids</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="go">[3, 4, 5, 6, 7]</span>
 </pre></div>
 </div>
@@ -2922,11 +3051,11 @@ Number of electrons screened by ECP can be obtained by _charge(atom_symbol)-atom
 </dd>
 </dl>
 <p>Examples:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_ctr_coeff</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="go">[[ 0.34068924]</span>
-<span class="go"> [ 0.57789106]</span>
-<span class="go"> [ 0.65774031]]</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H 0 0 0; Cl 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;cc-pvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">bas_ctr_coeff</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">[[ 10.03400444]</span>
+<span class="go"> [  4.1188704 ]</span>
+<span class="go"> [  1.53971186]]</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -3026,7 +3155,7 @@ If kappa is 0, return 4l+2</p>
 
 <dl class="method">
 <dt>
-<tt class="descname">build</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>verbose=None</em>, <em>output=None</em>, <em>max_memory=None</em>, <em>atom=None</em>, <em>basis=None</em>, <em>unit=None</em>, <em>nucmod=None</em>, <em>ecp=None</em>, <em>charge=None</em>, <em>spin=None</em>, <em>symmetry=None</em>, <em>symmetry_subgroup=None</em>, <em>light_speed=None</em>, <em>mass=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.build"><span class="viewcode-link">[source]</span></a></dt>
+<tt class="descname">build</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>verbose=None</em>, <em>output=None</em>, <em>max_memory=None</em>, <em>atom=None</em>, <em>basis=None</em>, <em>unit=None</em>, <em>nucmod=None</em>, <em>ecp=None</em>, <em>charge=None</em>, <em>spin=None</em>, <em>symmetry=None</em>, <em>symmetry_subgroup=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.build"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Setup moleclue and initialize some control parameters.  Whenever you
 change the value of the attributes of <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a>, you need call
 this function to refresh the internal data of Mole.</p>
@@ -3058,8 +3187,6 @@ If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pr
 <dt>symmetry <span class="classifier-delimiter">:</span> <span class="classifier">bool or str</span></dt>
 <dd>Whether to use symmetry.  If given a string of point group
 name, the given point group symmetry will be used.</dd>
-<dt>light_speed :</dt>
-<dd>If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.light_speed</span></tt></dd>
 </dl>
 </dd>
 </dl>
@@ -3076,14 +3203,14 @@ if fmt is boolean, it controls whether to format the labels and the
 default format is &#8220;%d%3s %s%-4s&#8221;.  if fmt is string, the string will
 be used as the print format.</dd>
 <dt>Returns:</dt>
-<dd>List of [(atom-id, symbol-str, nl-str, str-of-real-spheric-notation]
+<dd>List of [(atom-id, symbol-str, nl-str, str-of-real-spheric-notation)]
 or formatted strings based on the argument &#8220;fmt&#8221;</dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt>
-<tt class="descname">condense_to_shell</tt><big>(</big><em>mol</em>, <em>mat</em>, <em>compressor=&lt;function amax at 0x2b936389d320&gt;</em><big>)</big></dt>
+<tt class="descname">condense_to_shell</tt><big>(</big><em>mol</em>, <em>mat</em>, <em>compressor=&lt;function amax at 0x2af7c00df2a8&gt;</em><big>)</big></dt>
 <dd><p>The given matrix is first partitioned to blocks, based on AO shell as
 delimiter.  Then call compressor function to abstract each block.</p>
 </dd></dl>
@@ -3096,6 +3223,23 @@ delimiter.  Then call compressor function to abstract each block.</p>
 
 <dl class="method">
 <dt>
+<tt class="descname">etbs</tt><big>(</big><em>etbs</em><big>)</big></dt>
+<dd><p>Generate even tempered basis.  See also <a class="reference internal" href="#pyscf.gto.mole.expand_etb" title="pyscf.gto.mole.expand_etb"><tt class="xref py py-func docutils literal"><span class="pre">expand_etb()</span></tt></a></p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>etbs = [(l, n, alpha, beta), (l, n, alpha, beta),...]</dd>
+<dt>Returns:</dt>
+<dd>Formated <tt class="xref py py-attr docutils literal"><span class="pre">basis</span></tt></dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">expand_etbs</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">2.</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">2.</span><span class="p">)])</span>
+<span class="go">[[0, [6.0, 1]], [0, [3.0, 1]], [1, [1., 1]], [1, [2., 1]]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <tt class="descname">eval_gto</tt><big>(</big><em>eval_name</em>, <em>coords</em>, <em>comp=1</em>, <em>shls_slice=None</em>, <em>non0tab=None</em>, <em>out=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.eval_gto"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Evaluate AO function value on the given grids,</p>
 <dl class="docutils">
@@ -3104,9 +3248,9 @@ delimiter.  Then call compressor function to abstract each block.</p>
 <blockquote>
 <div><table border="1" class="docutils">
 <colgroup>
-<col width="46%" />
+<col width="45%" />
 <col width="16%" />
-<col width="39%" />
+<col width="40%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Function</th>
@@ -3117,27 +3261,27 @@ delimiter.  Then call compressor function to abstract each block.</p>
 <tbody valign="top">
 <tr class="row-even"><td>&#8220;GTOval_sph&#8221;</td>
 <td>spheric</td>
-<td><a href="#id13"><span class="problematic" id="id14">|</span></a>AO&gt;</td>
+<td><a href="#id17"><span class="problematic" id="id18">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-odd"><td>&#8220;GTOval_ip_sph&#8221;</td>
 <td>spheric</td>
-<td>nabla <a href="#id15"><span class="problematic" id="id16">|</span></a>AO&gt;</td>
+<td>nabla <a href="#id19"><span class="problematic" id="id20">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-even"><td>&#8220;GTOval_ig_sph&#8221;</td>
 <td>spheric</td>
-<td>(#C(0 1) g) <a href="#id17"><span class="problematic" id="id18">|</span></a>AO&gt;</td>
+<td>(#C(0 1) g) <a href="#id21"><span class="problematic" id="id22">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-odd"><td>&#8220;GTOval_ipig_sph&#8221;</td>
 <td>spheric</td>
-<td>(#C(0 1) nabla g) <a href="#id19"><span class="problematic" id="id20">|</span></a>AO&gt;</td>
+<td>(#C(0 1) nabla g) <a href="#id23"><span class="problematic" id="id24">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-even"><td>&#8220;GTOval_cart&#8221;</td>
 <td>cart</td>
-<td><a href="#id21"><span class="problematic" id="id22">|</span></a>AO&gt;</td>
+<td><a href="#id25"><span class="problematic" id="id26">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-odd"><td>&#8220;GTOval_ip_cart&#8221;</td>
 <td>cart</td>
-<td>nabla <a href="#id23"><span class="problematic" id="id24">|</span></a>AO&gt;</td>
+<td>nabla <a href="#id27"><span class="problematic" id="id28">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-even"><td>&#8220;GTOval_ig_cart&#8221;</td>
 <td>cart</td>
@@ -3232,7 +3376,7 @@ array can be obtained by calling <tt class="xref py py-func docutils literal"><s
 
 <dl class="method">
 <dt>
-<tt class="descname">format_atom</tt><big>(</big><em>atom</em>, <em>origin=0</em>, <em>axes=1</em>, <em>unit='Ang'</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.format_atom"><span class="viewcode-link">[source]</span></a></dt>
+<tt class="descname">format_atom</tt><big>(</big><em>atom</em>, <em>origin=0</em>, <em>axes=None</em>, <em>unit='Ang'</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.format_atom"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">Mole.atom</span></tt> to the internal data format.
 Including, changing the nuclear charge to atom symbol, converting the
 coordinates to AU, rotate and shift the molecule.
@@ -3276,8 +3420,15 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <dt>
 <tt class="descname">format_basis</tt><big>(</big><em>basis_tab</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.format_basis"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></tt> to the internal data format.</p>
-<p><tt class="docutils literal"><span class="pre">{</span> <span class="pre">atom:</span> <span class="pre">(l,</span> <span class="pre">kappa,</span> <span class="pre">((-exp,</span> <span class="pre">c_1,</span> <span class="pre">c_2,</span> <span class="pre">..),</span> <span class="pre">nprim,</span> <span class="pre">nctr,</span> <span class="pre">ptr-exps,</span> <span class="pre">ptr-contraction-coeff)),</span> <span class="pre">...</span> <span class="pre">}</span></tt></p>
 <dl class="docutils">
+<dt><a href="#id29"><span class="problematic" id="id30">``</span></a>{ atom: [(l, ((-exp, c_1, c_2, ..),</dt>
+<dd><blockquote class="first">
+<div>(-exp, c_1, c_2, ..))),</div></blockquote>
+<dl class="last docutils">
+<dt>(l, ((-exp, c_1, c_2, ..),</dt>
+<dd>(-exp, c_1, c_2, ..)))], ... }``</dd>
+</dl>
+</dd>
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
 <dt>basis_tab <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
@@ -3299,6 +3450,38 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <span class="go">    [0, [0.18319199999999999, 1.0]]]}</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">format_ecp</tt><big>(</big><em>ecp_tab</em><big>)</big><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.format_ecp"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Convert the input <tt class="xref py py-attr docutils literal"><span class="pre">ecp</span></tt> (dict) to the internal data format:</p>
+<div class="highlight-python"><div class="highlight"><pre>{ atom: (nelec,  # core electrons
+</pre></div>
+</div>
+<blockquote>
+<div><blockquote>
+<div><dl class="docutils">
+<dt>((l,  # l=-1 for UL, l&gt;=0 for Ul to indicate <a href="#id35"><span class="problematic" id="id36">|l&gt;&lt;l|</span></a></dt>
+<dd><dl class="first last docutils">
+<dt>(((exp_1, c_1),  # for r^0</dt>
+<dd><blockquote class="first">
+<div>(exp_2, c_2),
+...),</div></blockquote>
+<dl class="last docutils">
+<dt>((exp_1, c_1),  # for r^1</dt>
+<dd>(exp_2, c_2),
+...),</dd>
+<dt>((exp_1, c_1),  # for r^2</dt>
+<dd>...))))),</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p>...}</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="method">
@@ -3982,7 +4165,7 @@ complete list of available 1-electron integral names</dd>
 
 <dl class="method">
 <dt>
-<tt class="descname">kernel</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>verbose=None</em>, <em>output=None</em>, <em>max_memory=None</em>, <em>atom=None</em>, <em>basis=None</em>, <em>unit=None</em>, <em>nucmod=None</em>, <em>ecp=None</em>, <em>charge=None</em>, <em>spin=None</em>, <em>symmetry=None</em>, <em>symmetry_subgroup=None</em>, <em>light_speed=None</em>, <em>mass=None</em><big>)</big></dt>
+<tt class="descname">kernel</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>verbose=None</em>, <em>output=None</em>, <em>max_memory=None</em>, <em>atom=None</em>, <em>basis=None</em>, <em>unit=None</em>, <em>nucmod=None</em>, <em>ecp=None</em>, <em>charge=None</em>, <em>spin=None</em>, <em>symmetry=None</em>, <em>symmetry_subgroup=None</em><big>)</big></dt>
 <dd><p>Setup moleclue and initialize some control parameters.  Whenever you
 change the value of the attributes of <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a>, you need call
 this function to refresh the internal data of Mole.</p>
@@ -4014,8 +4197,6 @@ If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pr
 <dt>symmetry <span class="classifier-delimiter">:</span> <span class="classifier">bool or str</span></dt>
 <dd>Whether to use symmetry.  If given a string of point group
 name, the given point group symmetry will be used.</dd>
-<dt>light_speed :</dt>
-<dd>If given, overwrite <tt class="xref py py-attr docutils literal"><span class="pre">Mole.light_speed</span></tt></dd>
 </dl>
 </dd>
 </dl>
@@ -4103,6 +4284,13 @@ with the given shell range</p>
 <dt>
 <tt class="descname">npgto_nr</tt><big>(</big><em>mol</em>, <em>cart=False</em><big>)</big></dt>
 <dd><p>Total number of primitive spherical GTOs for the given <a class="reference internal" href="#pyscf.gto.mole.Mole" title="pyscf.gto.mole.Mole"><tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></a> object</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">offset_2c_by_atom</tt><big>(</big><em>mol</em><big>)</big></dt>
+<dd><p>2-component AO offset for each atom.  Return a list, each item
+of the list gives (start-shell-id, stop-shell-id, start-AO-id, stop-AO-id)</p>
 </dd></dl>
 
 <dl class="method">
@@ -5366,6 +5554,9 @@ format which can be assigned to <tt class="xref py py-attr docutils literal"><sp
 </div>
 </dd></dl>
 
+<div class="section" id="optimized-contraction">
+<h3>Optimized contraction<a class="headerlink" href="#optimized-contraction" title="Permalink to this headline">¶</a></h3>
+</div>
 </div>
 </div>
 
@@ -5378,9 +5569,12 @@ format which can be assigned to <tt class="xref py py-attr docutils literal"><sp
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">gto &#8212; Molecular structure and GTO basis</a><ul>
-<li><a class="reference internal" href="#module-pyscf.gto.mole">mole</a></li>
+<li><a class="reference internal" href="#mole">mole</a></li>
 <li><a class="reference internal" href="#module-pyscf.gto.moleintor">moleintor</a></li>
-<li><a class="reference internal" href="#basis">basis</a></li>
+<li><a class="reference internal" href="#basis">basis</a><ul>
+<li><a class="reference internal" href="#optimized-contraction">Optimized contraction</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -5428,12 +5622,12 @@ format which can be assigned to <tt class="xref py py-attr docutils literal"><sp
         <li class="right" >
           <a href="install.html" title="Installation"
              >previous</a> |</li>
-        <li><a href="index.html">PySCF 1.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PySCF 1.3 alpha documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

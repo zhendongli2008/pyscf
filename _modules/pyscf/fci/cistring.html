@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyscf.fci.cistring &mdash; PySCF 1.1 documentation</title>
+    <title>pyscf.fci.cistring &mdash; PySCF 1.3 alpha documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.1',
+        VERSION:     '1.3 alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySCF 1.1 documentation" href="../../../index.html" />
+    <link rel="top" title="PySCF 1.3 alpha documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -53,12 +53,13 @@
 <span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
 <span class="c">#</span>
 
+<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">ctypes</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
-<span class="kn">import</span> <span class="nn">pyscf.lib</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lib</span>
 
-<span class="n">libfci</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">load_library</span><span class="p">(</span><span class="s">&#39;libfci&#39;</span><span class="p">)</span>
+<span class="n">libfci</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">load_library</span><span class="p">(</span><span class="s">&#39;libfci&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="gen_strings4orblist"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.cistring.gen_strings4orblist">[docs]</a><span class="k">def</span> <span class="nf">gen_strings4orblist</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Generate string from the given orbital list.</span>
@@ -79,6 +80,8 @@
     <span class="k">assert</span><span class="p">(</span><span class="n">nelec</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">nelec</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">nelec</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">orb_list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
     <span class="k">def</span> <span class="nf">gen_str_iter</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">nelec</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">res</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">orb_list</span><span class="p">]</span>
@@ -96,7 +99,7 @@
         <span class="k">return</span> <span class="n">res</span>
     <span class="n">strings</span> <span class="o">=</span> <span class="n">gen_str_iter</span><span class="p">(</span><span class="n">orb_list</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">nelec</span><span class="p">)</span>
     <span class="k">assert</span><span class="p">(</span><span class="n">strings</span><span class="o">.</span><span class="n">__len__</span><span class="p">()</span> <span class="o">==</span> <span class="n">num_strings</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">orb_list</span><span class="p">),</span><span class="n">nelec</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">strings</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
 </div>
 <span class="k">def</span> <span class="nf">num_strings</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">m</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
@@ -108,7 +111,7 @@
     <span class="k">if</span> <span class="n">strs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">strs</span> <span class="o">=</span> <span class="n">gen_strings4orblist</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
     <span class="n">strdic</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">strs</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="n">strs</span><span class="o">.</span><span class="n">__len__</span><span class="p">())))</span>
-    <span class="k">def</span> <span class="nf">pump1e</span><span class="p">(</span><span class="n">str0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">propgate1e</span><span class="p">(</span><span class="n">str0</span><span class="p">):</span>
         <span class="n">occ</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">vir</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">orb_list</span><span class="p">:</span>
@@ -116,21 +119,21 @@
                 <span class="n">occ</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">vir</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-        <span class="n">pumpmap</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">linktab</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">occ</span><span class="p">:</span>
-            <span class="n">pumpmap</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">strdic</span><span class="p">[</span><span class="n">str0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">linktab</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">strdic</span><span class="p">[</span><span class="n">str0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">occ</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">vir</span><span class="p">:</span>
                 <span class="n">str1</span> <span class="o">=</span> <span class="n">str0</span> <span class="o">^</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">i</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">a</span><span class="p">)</span>
                 <span class="c"># [cre, des, target_address, parity]</span>
-                <span class="n">pumpmap</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">strdic</span><span class="p">[</span><span class="n">str1</span><span class="p">],</span> <span class="n">parity</span><span class="p">(</span><span class="n">str0</span><span class="p">,</span><span class="n">str1</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="n">pumpmap</span>
+                <span class="n">linktab</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">strdic</span><span class="p">[</span><span class="n">str1</span><span class="p">],</span> <span class="n">cre_des_sign</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">str0</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">linktab</span>
 
-    <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="n">pump1e</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">strs</span><span class="p">]</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="n">propgate1e</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">strs</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
 
 <span class="c"># return [cre, des, target_address, parity]</span>
-<div class="viewcode-block" id="gen_linkstr_index"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.cistring.gen_linkstr_index">[docs]</a><span class="k">def</span> <span class="nf">gen_linkstr_index</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">strs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="gen_linkstr_index"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.cistring.gen_linkstr_index">[docs]</a><span class="k">def</span> <span class="nf">gen_linkstr_index</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">strs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tril</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Look up table, for the strings relationship in terms of a</span>
 <span class="sd">    creation-annihilating operator pair.</span>
 
@@ -145,27 +148,34 @@
     <span class="n">strs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">strs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
     <span class="n">norb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">orb_list</span><span class="p">)</span>
     <span class="n">nvir</span> <span class="o">=</span> <span class="n">norb</span> <span class="o">-</span> <span class="n">nocc</span>
-    <span class="n">na</span> <span class="o">=</span> <span class="n">num_strings</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">nocc</span><span class="p">)</span>
+    <span class="n">na</span> <span class="o">=</span> <span class="n">strs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">link_index</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">na</span><span class="p">,</span><span class="n">nocc</span><span class="o">*</span><span class="n">nvir</span><span class="o">+</span><span class="n">nocc</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
     <span class="n">libfci</span><span class="o">.</span><span class="n">FCIlinkstr_index</span><span class="p">(</span><span class="n">link_index</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
                             <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">na</span><span class="p">),</span>
                             <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nocc</span><span class="p">),</span>
                             <span class="n">strs</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
-                            <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+                            <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">tril</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">link_index</span>
 </div>
 <div class="viewcode-block" id="reform_linkstr_index"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.cistring.reform_linkstr_index">[docs]</a><span class="k">def</span> <span class="nf">reform_linkstr_index</span><span class="p">(</span><span class="n">link_index</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Compress the (a, i) pair index in linkstr_index to a lower triangular</span>
 <span class="sd">    index, to match the 4-fold symmetry of integrals.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">link_new</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">link_index</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">tab</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">link_index</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">str1</span><span class="p">,</span> <span class="n">sign</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tab</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">a</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">:</span>
-                <span class="n">ai</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="n">i</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">ai</span> <span class="o">=</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="n">a</span>
-            <span class="n">link_new</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="n">str1</span><span class="p">,</span><span class="n">sign</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c">#for k, tab in enumerate(link_index):</span>
+    <span class="c">#    for j, (a, i, str1, sign) in enumerate(tab):</span>
+    <span class="c">#        if a &gt; i:</span>
+    <span class="c">#            ai = a*(a+1)//2+i</span>
+    <span class="c">#        else:</span>
+    <span class="c">#            ai = i*(i+1)//2+a</span>
+    <span class="c">#        link_new[k,j] = (ai,0,str1,sign)</span>
+    <span class="n">link_new</span> <span class="o">=</span> <span class="n">link_index</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">link_index</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">link_index</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ai</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span> <span class="o">+</span> <span class="n">i</span>
+    <span class="n">ia</span> <span class="o">=</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span> <span class="o">+</span> <span class="n">a</span>
+    <span class="n">link_new</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">][</span><span class="n">a</span><span class="o">&gt;</span><span class="n">i</span> <span class="p">]</span> <span class="o">=</span> <span class="n">ai</span><span class="p">[</span><span class="n">a</span><span class="o">&gt;</span><span class="n">i</span> <span class="p">]</span>
+    <span class="n">link_new</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">][</span><span class="n">a</span><span class="o">&lt;=</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ia</span><span class="p">[</span><span class="n">a</span><span class="o">&lt;=</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">link_new</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">return</span> <span class="n">link_new</span>
 </div>
 <div class="viewcode-block" id="gen_linkstr_index_trilidx"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.cistring.gen_linkstr_index_trilidx">[docs]</a><span class="k">def</span> <span class="nf">gen_linkstr_index_trilidx</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">strs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -174,35 +184,21 @@
 <span class="sd">    So the resultant link_index has the structure ``[pq, *, str1, sign]``.</span>
 <span class="sd">    It is identical to a call to ``reform_linkstr_index(gen_linkstr_index(...))``.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">strs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">strs</span> <span class="o">=</span> <span class="n">gen_strings4orblist</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nocc</span><span class="p">)</span>
-    <span class="n">strs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">strs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
-    <span class="n">norb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">orb_list</span><span class="p">)</span>
-    <span class="n">nvir</span> <span class="o">=</span> <span class="n">norb</span> <span class="o">-</span> <span class="n">nocc</span>
-    <span class="n">na</span> <span class="o">=</span> <span class="n">strs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">link_index</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">na</span><span class="p">,</span><span class="n">nocc</span><span class="o">*</span><span class="n">nvir</span><span class="o">+</span><span class="n">nocc</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-    <span class="n">libfci</span><span class="o">.</span><span class="n">FCIlinkstr_index</span><span class="p">(</span><span class="n">link_index</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
-                            <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">na</span><span class="p">),</span>
-                            <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nocc</span><span class="p">),</span>
-                            <span class="n">strs</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
-                            <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">link_index</span>
+    <span class="k">return</span> <span class="n">gen_linkstr_index</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">strs</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
 
 <span class="c"># return [cre, des, target_address, parity]</span></div>
 <span class="k">def</span> <span class="nf">gen_cre_str_index_o0</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
     <span class="n">cre_strs</span> <span class="o">=</span> <span class="n">gen_strings4orblist</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">credic</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">cre_strs</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="n">cre_strs</span><span class="o">.</span><span class="n">__len__</span><span class="p">())))</span>
-    <span class="k">def</span> <span class="nf">parity</span><span class="p">(</span><span class="n">str0</span><span class="p">,</span> <span class="n">cre_bit</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="nb">bin</span><span class="p">(</span><span class="n">str0</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="n">cre_bit</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">pump1e</span><span class="p">(</span><span class="n">str0</span><span class="p">):</span>
-        <span class="n">pumpmap</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">progate1e</span><span class="p">(</span><span class="n">str0</span><span class="p">):</span>
+        <span class="n">linktab</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">orb_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">str0</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">i</span><span class="p">):</span>
                 <span class="n">str1</span> <span class="o">=</span> <span class="n">str0</span> <span class="o">|</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">i</span><span class="p">)</span>
-                <span class="n">pumpmap</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">credic</span><span class="p">[</span><span class="n">str1</span><span class="p">],</span> <span class="n">parity</span><span class="p">(</span><span class="n">str0</span><span class="p">,</span> <span class="n">i</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="n">pumpmap</span>
+                <span class="n">linktab</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">credic</span><span class="p">[</span><span class="n">str1</span><span class="p">],</span> <span class="n">cre_sign</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">str0</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">linktab</span>
 
-    <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="n">pump1e</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">gen_strings4orblist</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)]</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="n">progate1e</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">gen_strings4orblist</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)]</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">gen_cre_str_index_o1</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
     <span class="n">norb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">orb_list</span><span class="p">)</span>
@@ -230,17 +226,15 @@
 <span class="k">def</span> <span class="nf">gen_des_str_index_o0</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
     <span class="n">des_strs</span> <span class="o">=</span> <span class="n">gen_strings4orblist</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">desdic</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">des_strs</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="n">des_strs</span><span class="o">.</span><span class="n">__len__</span><span class="p">())))</span>
-    <span class="k">def</span> <span class="nf">parity</span><span class="p">(</span><span class="n">str0</span><span class="p">,</span> <span class="n">des_bit</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="nb">bin</span><span class="p">(</span><span class="n">str0</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="n">des_bit</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">pump1e</span><span class="p">(</span><span class="n">str0</span><span class="p">):</span>
-        <span class="n">pumpmap</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">progate1e</span><span class="p">(</span><span class="n">str0</span><span class="p">):</span>
+        <span class="n">linktab</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">orb_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">str0</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">i</span><span class="p">):</span>
                 <span class="n">str1</span> <span class="o">=</span> <span class="n">str0</span> <span class="o">^</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">i</span><span class="p">)</span>
-                <span class="n">pumpmap</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">desdic</span><span class="p">[</span><span class="n">str1</span><span class="p">],</span> <span class="n">parity</span><span class="p">(</span><span class="n">str0</span><span class="p">,</span> <span class="n">i</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="n">pumpmap</span>
+                <span class="n">linktab</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">desdic</span><span class="p">[</span><span class="n">str1</span><span class="p">],</span> <span class="n">des_sign</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">str0</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">linktab</span>
 
-    <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="n">pump1e</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">gen_strings4orblist</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)]</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="n">progate1e</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">gen_strings4orblist</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)]</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">gen_des_str_index_o1</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
     <span class="k">assert</span><span class="p">(</span><span class="n">nelec</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
@@ -265,8 +259,37 @@
     <span class="k">return</span> <span class="n">gen_des_str_index_o1</span><span class="p">(</span><span class="n">orb_list</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
 
 
-</div>
+
+<span class="c"># Determine the sign of  p^+ q |string0&gt;</span></div>
+<span class="k">def</span> <span class="nf">cre_des_sign</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">string0</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">q</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">string0</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">p</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="n">string0</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">q</span><span class="p">))):</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="n">q</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">p</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">q</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">q</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="nb">bin</span><span class="p">(</span><span class="n">string0</span> <span class="o">&amp;</span> <span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="p">)</span>
+
+<span class="c"># Determine the sign of  p^+ |string0&gt;</span>
+<span class="k">def</span> <span class="nf">cre_sign</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">string0</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">string0</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">p</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="nb">bin</span><span class="p">(</span><span class="n">string0</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="p">)</span>
+
+<span class="c"># Determine the sign of  p |string0&gt;</span>
+<span class="k">def</span> <span class="nf">des_sign</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">string0</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="n">string0</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">p</span><span class="p">))):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="nb">bin</span><span class="p">(</span><span class="n">string0</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="p">)</span>
+
+<span class="c"># Determine the sign of  string1 = p^+ q |string0&gt;</span>
 <span class="k">def</span> <span class="nf">parity</span><span class="p">(</span><span class="n">string0</span><span class="p">,</span> <span class="n">string1</span><span class="p">):</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;Function cistring.parity is deprecated</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
     <span class="n">ss</span> <span class="o">=</span> <span class="n">string1</span> <span class="o">-</span> <span class="n">string0</span>
     <span class="k">def</span> <span class="nf">count_bit1</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
         <span class="c"># see Hamming weight problem and K&amp;R C program</span>
@@ -338,9 +361,22 @@
         <span class="k">assert</span><span class="p">(</span><span class="nb">bin</span><span class="p">(</span><span class="n">string</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">nelec</span><span class="p">)</span>
     <span class="n">libfci</span><span class="o">.</span><span class="n">FCIstr2addr</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span>
     <span class="k">return</span> <span class="n">libfci</span><span class="o">.</span><span class="n">FCIstr2addr</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nelec</span><span class="p">),</span>
-                              <span class="n">ctypes</span><span class="o">.</span><span class="n">c_ulong</span><span class="p">(</span><span class="n">string</span><span class="p">))</span>
+                              <span class="n">ctypes</span><span class="o">.</span><span class="n">c_ulonglong</span><span class="p">(</span><span class="n">string</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="tn_strs"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.cistring.tn_strs">[docs]</a><span class="k">def</span> <span class="nf">tn_strs</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Generate strings for Tn amplitudes.  Eg n=1 (T1) has nvir*nocc strings,</span>
+<span class="sd">    n=2 (T2) has nvir*(nvir-1)/2 * nocc*(nocc-1)/2 strings.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">nelec</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="ow">or</span> <span class="n">norb</span><span class="o">-</span><span class="n">nelec</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">occs_allow</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">gen_strings4orblist</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nelec</span><span class="p">),</span> <span class="n">n</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">virs_allow</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">gen_strings4orblist</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span><span class="n">norb</span><span class="p">),</span> <span class="n">n</span><span class="p">))</span>
+    <span class="n">hf_str</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="o">*</span><span class="n">nelec</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">tns</span> <span class="o">=</span> <span class="p">(</span><span class="n">hf_str</span> <span class="o">|</span> <span class="n">virs_allow</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="o">^</span> <span class="n">occs_allow</span>
+    <span class="k">return</span> <span class="n">tns</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
 </div>
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c">#print([bin(i) for i in gen_strings4orblist(range(2,5), 2)])</span>
     <span class="c">#print(gen_strings4orblist(range(4), 2))</span>
     <span class="c">#print(gen_linkstr_index(range(6), 3))</span>
 <span class="c">#    index = gen_linkstr_index(range(8), 4)</span>
@@ -397,13 +433,13 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PySCF 1.1 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

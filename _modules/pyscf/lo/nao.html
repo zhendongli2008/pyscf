@@ -1,0 +1,440 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyscf.lo.nao &mdash; PySCF 1.3 alpha documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.3 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PySCF 1.3 alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyscf.lo.nao</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Natural atomic orbitals</span>
+<span class="sd">Ref:</span>
+<span class="sd">    F. Weinhold et al., J. Chem. Phys. 83(1985), 735-746</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="nb">reduce</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span>
+<span class="kn">import</span> <span class="nn">pyscf.lib.parameters</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">pyscf.gto</span> <span class="kn">import</span> <span class="n">mole</span>
+<span class="kn">from</span> <span class="nn">pyscf.lo</span> <span class="kn">import</span> <span class="n">orth</span>
+<span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span>
+
+<span class="c"># Note the valence space for Li, Be may need include 2p, Al..Cl may need 3d ...</span>
+<span class="n">AOSHELL</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c"># core       core+valence</span>
+<span class="c"># core+valence = lambda nuc, l: \</span>
+<span class="c">#            int(numpy.ceil(pyscf.lib.parameters.ELEMENTS[nuc][2][l]/(4*l+2.)))</span>
+    <span class="p">[</span><span class="s">&#39;0s0p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;0s0p0d0f&#39;</span><span class="p">],</span>     <span class="c">#  0  GHOST</span>
+    <span class="p">[</span><span class="s">&#39;0s0p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;1s0p0d0f&#39;</span><span class="p">],</span>     <span class="c">#  1  H</span>
+    <span class="p">[</span><span class="s">&#39;0s0p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;1s0p0d0f&#39;</span><span class="p">],</span>     <span class="c">#  2  He</span>
+    <span class="p">[</span><span class="s">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;2s0p0d0f&#39;</span><span class="p">],</span>     <span class="c">#  3  Li</span>
+    <span class="p">[</span><span class="s">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;2s0p0d0f&#39;</span><span class="p">],</span>     <span class="c">#  4  Be</span>
+    <span class="p">[</span><span class="s">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c">#  5  B</span>
+    <span class="p">[</span><span class="s">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c">#  6  C</span>
+    <span class="p">[</span><span class="s">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c">#  7  N</span>
+    <span class="p">[</span><span class="s">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c">#  8  O</span>
+    <span class="p">[</span><span class="s">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c">#  9  F</span>
+    <span class="p">[</span><span class="s">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c"># 10  Ne</span>
+    <span class="p">[</span><span class="s">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;3s1p0d0f&#39;</span><span class="p">],</span>     <span class="c"># 11  Na</span>
+    <span class="p">[</span><span class="s">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;3s1p0d0f&#39;</span><span class="p">],</span>     <span class="c"># 12  Mg</span>
+    <span class="p">[</span><span class="s">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c"># 13  Al</span>
+    <span class="p">[</span><span class="s">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c"># 14  Si</span>
+    <span class="p">[</span><span class="s">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c"># 15  P</span>
+    <span class="p">[</span><span class="s">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c"># 16  S</span>
+    <span class="p">[</span><span class="s">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c"># 17  Cl</span>
+    <span class="p">[</span><span class="s">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c"># 18  Ar</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p0d0f&#39;</span><span class="p">],</span>     <span class="c"># 19  K</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p0d0f&#39;</span><span class="p">],</span>     <span class="c"># 20  Ca</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 21  Sc</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 22  Ti</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 23  V</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 24  Cr</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 25  Mn</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 26  Fe</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 27  Co</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 28  Ni</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 29  Cu</span>
+    <span class="p">[</span><span class="s">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 30  Zn</span>
+    <span class="p">[</span><span class="s">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 31  Ga</span>
+    <span class="p">[</span><span class="s">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 32  Ge</span>
+    <span class="p">[</span><span class="s">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 33  As</span>
+    <span class="p">[</span><span class="s">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 34  Se</span>
+    <span class="p">[</span><span class="s">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 35  Br</span>
+    <span class="p">[</span><span class="s">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 36  Kr</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s3p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 37  Rb</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s3p1d0f&#39;</span><span class="p">],</span>     <span class="c"># 38  Sr</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 39  Y</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 40  Zr</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 41  Nb</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 42  Mo</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 43  Tc</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 44  Ru</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 45  Rh</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;4s3p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 46  Pd</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 47  Ag</span>
+    <span class="p">[</span><span class="s">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 48  Cd</span>
+    <span class="p">[</span><span class="s">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 49  In</span>
+    <span class="p">[</span><span class="s">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 50  Sn</span>
+    <span class="p">[</span><span class="s">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 51  Sb</span>
+    <span class="p">[</span><span class="s">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 52  Te</span>
+    <span class="p">[</span><span class="s">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 53  I</span>
+    <span class="p">[</span><span class="s">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 54  Xe</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 55  Cs</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d0f&#39;</span><span class="p">],</span>     <span class="c"># 56  Ba</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d0f&#39;</span><span class="p">],</span>     <span class="c"># 57  La</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 58  Ce</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c"># 59  Pr</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c"># 60  Nd</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c"># 61  Pm</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c"># 62  Sm</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c"># 63  Eu</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 64  Gd</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 65  Tb</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c"># 66  Dy</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c"># 67  Ho</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c"># 68  Er</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c"># 69  Tm</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c"># 70  Yb</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 71  Lu</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 72  Hf</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 73  Ta</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 74  W</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 75  Re</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 76  Os</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 77  Ir</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 78  Pt</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 79  Au</span>
+    <span class="p">[</span><span class="s">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 80  Hg</span>
+    <span class="p">[</span><span class="s">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 81  Tl</span>
+    <span class="p">[</span><span class="s">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 82  Pb</span>
+    <span class="p">[</span><span class="s">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 83  Bi</span>
+    <span class="p">[</span><span class="s">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 84  Po</span>
+    <span class="p">[</span><span class="s">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 85  At</span>
+    <span class="p">[</span><span class="s">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 86  Rn</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 87  Fr</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p3d1f&#39;</span><span class="p">],</span>     <span class="c"># 88  Ra</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d1f&#39;</span><span class="p">],</span>     <span class="c"># 89  Ac</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d1f&#39;</span><span class="p">],</span>     <span class="c"># 90  Th</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c"># 91  Pa</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c"># 92  U</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c"># 93  Np</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c"># 94  Pu</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c"># 95  Am</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c"># 96  Cm</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c"># 97  Bk</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c"># 98  Cf</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c"># 99  Es</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c">#100  Fm</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c">#101  Md</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c">#102  No</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c">#103  Lr</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c">#104  Rf</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c">#105  Db</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c">#106  Sg</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c">#107  Bh</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c">#108  Hs</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c">#109  Mt</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c">#110  E110</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c">#111  E111</span>
+    <span class="p">[</span><span class="s">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c">#112  E112</span>
+    <span class="p">[</span><span class="s">&#39;6s5p4d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s6p4d2f&#39;</span><span class="p">],</span>     <span class="c">#113  E113</span>
+    <span class="p">[</span><span class="s">&#39;6s5p4d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s6p4d2f&#39;</span><span class="p">],</span>     <span class="c">#114  E114</span>
+    <span class="p">[</span><span class="s">&#39;6s5p4d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s6p4d2f&#39;</span><span class="p">],</span>     <span class="c">#115  E115</span>
+    <span class="p">[</span><span class="s">&#39;6s5p4d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s6p4d2f&#39;</span><span class="p">],</span>     <span class="c">#116  E116</span>
+    <span class="p">[</span><span class="s">&#39;6s3p4d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s6p4d2f&#39;</span><span class="p">],</span>     <span class="c">#117  E117</span>
+    <span class="p">[</span><span class="s">&#39;6s3p4d2f&#39;</span><span class="p">,</span> <span class="s">&#39;7s6p4d2f&#39;</span><span class="p">]</span>      <span class="c">#118  E118</span>
+<span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">prenao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">):</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_prenao_sub</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">s</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">nao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">restore</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">)</span>
+    <span class="n">dm</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+    <span class="n">pre_occ</span><span class="p">,</span> <span class="n">pre_nao</span> <span class="o">=</span> <span class="n">_prenao_sub</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="n">cnao</span> <span class="o">=</span> <span class="n">_nao_sub</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">pre_occ</span><span class="p">,</span> <span class="n">pre_nao</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">restore</span><span class="p">:</span>
+        <span class="c"># restore natural character</span>
+        <span class="n">p_nao</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">cnao</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cnao</span><span class="p">))</span>
+        <span class="n">s_nao</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p_nao</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">cnao</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">cnao</span><span class="p">,</span> <span class="n">_prenao_sub</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">p_nao</span><span class="p">,</span> <span class="n">s_nao</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">cnao</span>
+
+
+<span class="k">def</span> <span class="nf">_prenao_sub</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="p">[[[]]</span><span class="o">*</span><span class="mi">8</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">)]</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">ib</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">):</span>
+        <span class="n">ia</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_angular</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
+        <span class="n">nc</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_nctr</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
+        <span class="n">idx</span><span class="p">[</span><span class="n">ia</span><span class="p">][</span><span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="n">ia</span><span class="p">][</span><span class="n">l</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="o">+</span><span class="n">nc</span><span class="o">*</span><span class="p">(</span><span class="n">l</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="n">k</span> <span class="o">+=</span> <span class="n">nc</span> <span class="o">*</span> <span class="p">(</span><span class="n">l</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
+    <span class="n">occ</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nao</span><span class="p">)</span>
+    <span class="n">cao</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">ia</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">lst</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">idx</span><span class="p">[</span><span class="n">ia</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">degen</span> <span class="o">=</span> <span class="n">l</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">p_frag</span> <span class="o">=</span> <span class="n">_spheric_average_mat</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">lst</span><span class="p">)</span>
+            <span class="n">s_frag</span> <span class="o">=</span> <span class="n">_spheric_average_mat</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">lst</span><span class="p">)</span>
+            <span class="n">e</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">p_frag</span><span class="p">,</span> <span class="n">s_frag</span><span class="p">)</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">degen</span><span class="p">):</span>
+                <span class="n">ilst</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="n">k</span><span class="p">::</span><span class="n">degen</span><span class="p">]</span>
+                <span class="n">occ</span><span class="p">[</span><span class="n">ilst</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">i0</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ilst</span><span class="p">):</span>
+                    <span class="n">cao</span><span class="p">[</span><span class="n">i0</span><span class="p">,</span><span class="n">ilst</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">occ</span><span class="p">,</span> <span class="n">cao</span>
+
+<span class="k">def</span> <span class="nf">_nao_sub</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">pre_occ</span><span class="p">,</span> <span class="n">pre_nao</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">)</span>
+    <span class="n">core_lst</span><span class="p">,</span> <span class="n">val_lst</span><span class="p">,</span> <span class="n">rydbg_lst</span> <span class="o">=</span> <span class="n">_core_val_ryd_list</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">nbf</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
+    <span class="n">cnao</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nbf</span><span class="p">,</span><span class="n">nbf</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">core_lst</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">pre_nao</span><span class="p">[:,</span><span class="n">core_lst</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">s1</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+        <span class="n">cnao</span><span class="p">[:,</span><span class="n">core_lst</span><span class="p">]</span> <span class="o">=</span> <span class="n">c1</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">orth</span><span class="o">.</span><span class="n">lowdin</span><span class="p">(</span><span class="n">s1</span><span class="p">))</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">pre_nao</span><span class="p">[:,</span><span class="n">val_lst</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">c</span> <span class="o">-=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c1</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">pre_nao</span><span class="p">[:,</span><span class="n">val_lst</span><span class="p">]</span>
+
+    <span class="n">s1</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+    <span class="n">wt</span> <span class="o">=</span> <span class="n">pre_occ</span><span class="p">[</span><span class="n">val_lst</span><span class="p">]</span>
+    <span class="n">cnao</span><span class="p">[:,</span><span class="n">val_lst</span><span class="p">]</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">orth</span><span class="o">.</span><span class="n">weight_orth</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">wt</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">rydbg_lst</span><span class="p">:</span>
+        <span class="n">cvlst</span> <span class="o">=</span> <span class="n">core_lst</span> <span class="o">+</span> <span class="n">val_lst</span>
+        <span class="n">c1</span> <span class="o">=</span> <span class="n">cnao</span><span class="p">[:,</span><span class="n">cvlst</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">pre_nao</span><span class="p">[:,</span><span class="n">rydbg_lst</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">c</span> <span class="o">-=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c1</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+        <span class="n">s1</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+        <span class="n">cnao</span><span class="p">[:,</span><span class="n">rydbg_lst</span><span class="p">]</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">orth</span><span class="o">.</span><span class="n">lowdin</span><span class="p">(</span><span class="n">s1</span><span class="p">))</span>
+    <span class="n">snorm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="nb">reduce</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">cnao</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">cnao</span><span class="p">))</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nbf</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">snorm</span> <span class="o">&gt;</span> <span class="mf">1e-9</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s">&#39;Weak orthogonality for localized orbitals </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">snorm</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cnao</span>
+
+<span class="k">def</span> <span class="nf">_core_val_ryd_list</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">pyscf.gto.ecp</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">core_lst</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">val_lst</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">rydbg_lst</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">ib</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">):</span>
+        <span class="n">ia</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
+        <span class="n">nuc</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_charge</span><span class="p">(</span><span class="n">ia</span><span class="p">)</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_angular</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
+        <span class="n">nc</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_nctr</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
+        <span class="n">symb</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="n">ia</span><span class="p">)</span>
+        <span class="n">nelec_ecp</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_nelec_core</span><span class="p">(</span><span class="n">ia</span><span class="p">)</span>
+        <span class="n">ecpcore</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">ecp</span><span class="o">.</span><span class="n">core_configuration</span><span class="p">(</span><span class="n">nelec_ecp</span><span class="p">)</span>
+        <span class="n">coreshell</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">AOSHELL</span><span class="p">[</span><span class="n">nuc</span><span class="p">][</span><span class="mi">0</span><span class="p">][::</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="n">cvshell</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">AOSHELL</span><span class="p">[</span><span class="n">nuc</span><span class="p">][</span><span class="mi">1</span><span class="p">][::</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nc</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">rydbg_lst</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="o">+</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="n">ecpcore</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">+</span><span class="n">count</span><span class="p">[</span><span class="n">ia</span><span class="p">,</span><span class="n">l</span><span class="p">]</span><span class="o">+</span><span class="n">n</span> <span class="o">&lt;</span> <span class="n">coreshell</span><span class="p">[</span><span class="n">l</span><span class="p">]:</span>
+                <span class="n">core_lst</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="o">+</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="n">ecpcore</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">+</span><span class="n">count</span><span class="p">[</span><span class="n">ia</span><span class="p">,</span><span class="n">l</span><span class="p">]</span><span class="o">+</span><span class="n">n</span> <span class="o">&lt;</span> <span class="n">cvshell</span><span class="p">[</span><span class="n">l</span><span class="p">]:</span>
+                <span class="n">val_lst</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="o">+</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rydbg_lst</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="o">+</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">count</span><span class="p">[</span><span class="n">ia</span><span class="p">,</span><span class="n">l</span><span class="p">]</span> <span class="o">+=</span> <span class="n">nc</span>
+    <span class="k">return</span> <span class="n">core_lst</span><span class="p">,</span> <span class="n">val_lst</span><span class="p">,</span> <span class="n">rydbg_lst</span>
+
+<span class="k">def</span> <span class="nf">_spheric_average_mat</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">lst</span><span class="p">):</span>
+    <span class="n">degen</span> <span class="o">=</span> <span class="n">l</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">nd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">//</span> <span class="n">degen</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="p">([</span><span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">degen</span><span class="p">)</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">degen</span><span class="p">)]</span><span class="o">*</span><span class="n">nd</span><span class="p">))</span>
+    <span class="n">mat_frag</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">mat</span><span class="p">[</span><span class="n">lst</span><span class="p">,:][:,</span><span class="n">lst</span><span class="p">],</span><span class="n">t</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">mat_frag</span>
+
+<div class="viewcode-block" id="set_atom_conf"><a class="viewcode-back" href="../../../lo.html#pyscf.lo.nao.set_atom_conf">[docs]</a><span class="k">def</span> <span class="nf">set_atom_conf</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Change the default atomic core and valence configuration to the one</span>
+<span class="sd">    given by &quot;description&quot;.</span>
+<span class="sd">    See lo.nao.AOSHELL for the default configuration.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        element : str or int</span>
+<span class="sd">            Element symbol or nuclear charge</span>
+<span class="sd">        description : str or a list of str</span>
+<span class="sd">            | &quot;double p&quot; : double p shell</span>
+<span class="sd">            | &quot;double d&quot; : double d shell</span>
+<span class="sd">            | &quot;double f&quot; : double f shell</span>
+<span class="sd">            | &quot;polarize&quot; : add one polarized shell</span>
+<span class="sd">            | &quot;1s1d&quot;     : keep core unchanged and set 1 s 1 d shells for valence</span>
+<span class="sd">            | (&quot;3s2p&quot;,&quot;1d&quot;) : 3 s, 2 p shells for core and 1 d shells for valence</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">charge</span> <span class="o">=</span> <span class="n">mole</span><span class="o">.</span><span class="n">_charge</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">to_conf</span><span class="p">(</span><span class="n">desc</span><span class="p">):</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s">&quot;doublep&quot;</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">:</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="s">&#39;2p&#39;</span>
+        <span class="k">elif</span> <span class="s">&quot;doubled&quot;</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">:</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="s">&#39;2d&#39;</span>
+        <span class="k">elif</span> <span class="s">&quot;doublef&quot;</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">:</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="s">&#39;2f&#39;</span>
+        <span class="k">elif</span> <span class="s">&quot;polarize&quot;</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">:</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">AOSHELL</span><span class="p">[</span><span class="n">charge</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;0&#39;</span><span class="p">)</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="s">&#39;1&#39;</span> <span class="o">+</span> <span class="n">AOSHELL</span><span class="p">[</span><span class="n">charge</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">loc</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">desc</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">c_desc</span><span class="p">,</span> <span class="n">v_desc</span> <span class="o">=</span> <span class="n">AOSHELL</span><span class="p">[</span><span class="n">charge</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">to_conf</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">c_desc</span><span class="p">,</span> <span class="n">v_desc</span> <span class="o">=</span> <span class="n">to_conf</span><span class="p">(</span><span class="n">description</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">to_conf</span><span class="p">(</span><span class="n">description</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">ncore</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">AOSHELL</span><span class="p">[</span><span class="n">charge</span><span class="p">][</span><span class="mi">0</span><span class="p">][::</span><span class="mi">2</span><span class="p">]]</span>
+    <span class="n">ncv</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">AOSHELL</span><span class="p">[</span><span class="n">charge</span><span class="p">][</span><span class="mi">1</span><span class="p">][::</span><span class="mi">2</span><span class="p">]]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="s">&#39;s&#39;</span><span class="p">,</span> <span class="s">&#39;p&#39;</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">,</span> <span class="s">&#39;f&#39;</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">c_desc</span><span class="p">:</span>
+            <span class="n">ncore</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">c_desc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">s</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">v_desc</span><span class="p">:</span>
+            <span class="n">ncv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ncore</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">v_desc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">s</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">c_conf</span>  <span class="o">=</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s">s</span><span class="si">%d</span><span class="s">p</span><span class="si">%d</span><span class="s">d</span><span class="si">%d</span><span class="s">f&#39;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ncore</span><span class="p">)</span>
+    <span class="n">cv_conf</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%d</span><span class="s">s</span><span class="si">%d</span><span class="s">p</span><span class="si">%d</span><span class="s">d</span><span class="si">%d</span><span class="s">f&#39;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ncv</span><span class="p">)</span>
+    <span class="n">AOSHELL</span><span class="p">[</span><span class="n">charge</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">c_conf</span><span class="p">,</span> <span class="n">cv_conf</span><span class="p">]</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;Update </span><span class="si">%s</span><span class="s"> conf: core </span><span class="si">%s</span><span class="s"> core+valence </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span>
+                     <span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">c_conf</span><span class="p">,</span> <span class="n">cv_conf</span><span class="p">))</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">scf</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s">&#39;out_nao&#39;</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">atom</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+        <span class="p">[</span><span class="s">&#39;O&#39;</span> <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span>     <span class="p">,</span> <span class="mf">0.</span><span class="p">)],</span>
+        <span class="p">[</span><span class="mi">1</span>   <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="o">-</span><span class="mf">0.757</span> <span class="p">,</span> <span class="mf">0.587</span><span class="p">)],</span>
+        <span class="p">[</span><span class="mi">1</span>   <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.757</span>  <span class="p">,</span> <span class="mf">0.587</span><span class="p">)]</span> <span class="p">])</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;H&#39;</span><span class="p">:</span> <span class="s">&#39;6-31g&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;O&#39;</span><span class="p">:</span> <span class="s">&#39;6-31g&#39;</span><span class="p">,}</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+    <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+
+    <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(),</span> <span class="n">s</span><span class="p">))</span>
+    <span class="n">o0</span><span class="p">,</span> <span class="n">c0</span> <span class="o">=</span> <span class="n">_prenao_sub</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">o0</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">c0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="mf">21.848915907988854</span><span class="p">)</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">nao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mf</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span><span class="o">.</span><span class="n">diagonal</span><span class="p">())</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">_core_val_ryd_list</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span>
+
+    <span class="n">set_atom_conf</span><span class="p">(</span><span class="s">&#39;Fe&#39;</span><span class="p">,</span> <span class="s">&#39;1s1d&#39;</span><span class="p">)</span>      <span class="c"># core 3s2p0d0f core+valence 4s2p1d0f</span>
+    <span class="n">set_atom_conf</span><span class="p">(</span><span class="s">&#39;Fe&#39;</span><span class="p">,</span> <span class="s">&#39;double d&#39;</span><span class="p">)</span>  <span class="c"># core 3s2p0d0f core+valence 4s2p2d0f</span>
+    <span class="n">set_atom_conf</span><span class="p">(</span><span class="s">&#39;Fe&#39;</span><span class="p">,</span> <span class="s">&#39;double p&#39;</span><span class="p">)</span>  <span class="c"># core 3s2p0d0f core+valence 4s4p2d0f</span>
+    <span class="n">set_atom_conf</span><span class="p">(</span><span class="s">&#39;Fe&#39;</span><span class="p">,</span> <span class="s">&#39;polarize&#39;</span><span class="p">)</span>  <span class="c"># core 3s2p0d0f core+valence 4s4p2d1f</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PySCF 1.3 alpha documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
