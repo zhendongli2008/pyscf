@@ -53,9 +53,11 @@
 <span class="c"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
 <span class="c">#</span>
 
+<span class="kn">import</span> <span class="nn">string</span>
 <span class="kn">import</span> <span class="nn">ctypes</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">misc</span>
 
 <span class="sd">&#39;&#39;&#39;</span>
@@ -283,7 +285,7 @@
     <span class="k">return</span> <span class="n">out</span>
 </div>
 <div class="viewcode-block" id="takebak_2d"><a class="viewcode-back" href="../../../lib.html#pyscf.lib.numpy_helper.takebak_2d">[docs]</a><span class="k">def</span> <span class="nf">takebak_2d</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">idy</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Reverse operation of take_2d.  out(idx,idy) = a</span>
+    <span class="sd">&#39;&#39;&#39;Reverse operation of take_2d.  out(idx,idy) += a</span>
 
 <span class="sd">    Examples:</span>
 
@@ -549,17 +551,17 @@
 <div class="viewcode-block" id="norm"><a class="viewcode-back" href="../../../lib.html#pyscf.lib.numpy_helper.norm">[docs]</a><span class="k">def</span> <span class="nf">norm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;numpy.linalg.norm for numpy 1.6.*</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">ord</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">ord</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">xx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ij,ij-&gt;j&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">xx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ij,ij-&gt;i&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">ord</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
-        <span class="c">#raise RuntimeError(&#39;Not support for axis = %d&#39; % axis)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span><span class="p">[:</span><span class="n">x</span><span class="o">.</span><span class="n">ndim</span><span class="p">]</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">descr</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">-&gt;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+        <span class="n">xx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="n">descr</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">xx</span> <span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="n">descr</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">xx</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="cond"><a class="viewcode-back" href="../../../lib.html#pyscf.lib.numpy_helper.cond">[docs]</a><span class="k">def</span> <span class="nf">cond</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Compute the condition number&#39;&#39;&#39;</span>
@@ -602,7 +604,7 @@
 
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">arrays</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">]</span>
-    <span class="n">dtype</span> <span class="o">=</span> <span class="n">arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">result_type</span><span class="p">(</span><span class="o">*</span><span class="n">arrays</span><span class="p">)</span>
     <span class="n">nd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrays</span><span class="p">)</span>
     <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">nd</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">]</span>
 
@@ -725,7 +727,155 @@
         <span class="n">y</span><span class="p">,</span> <span class="n">buf</span> <span class="o">=</span> <span class="n">buf</span><span class="p">,</span> <span class="n">y</span>
     <span class="k">return</span> <span class="n">y</span>
 
+<div class="viewcode-block" id="einsum"><a class="viewcode-back" href="../../../lib.html#pyscf.lib.numpy_helper.einsum">[docs]</a><span class="k">def</span> <span class="nf">einsum</span><span class="p">(</span><span class="n">idx_str</span><span class="p">,</span> <span class="o">*</span><span class="n">tensors</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Perform a more efficient einsum via reshaping to a matrix multiply.</span>
 
+<span class="sd">    Current differences compared to numpy.einsum:</span>
+<span class="sd">    This assumes that each repeated index is actually summed (i.e. no &#39;i,i-&gt;i&#39;)</span>
+<span class="sd">    and appears only twice (i.e. no &#39;ij,ik,il-&gt;jkl&#39;). The output indices must</span>
+<span class="sd">    be explicitly specified (i.e. &#39;ij,j-&gt;i&#39; and not &#39;ij,j&#39;).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">DEBUG</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">idx_str</span> <span class="o">=</span> <span class="n">idx_str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">indices</span>  <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,|-&gt;&#39;</span><span class="p">,</span><span class="n">idx_str</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s">&#39;-&gt;&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">idx_str</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">2</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">indices</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="n">idx_str</span><span class="p">,</span><span class="o">*</span><span class="n">tensors</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">idx_str</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">indices</span>  <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,|-&gt;&#39;</span><span class="p">,</span><span class="n">idx_str</span><span class="p">)</span>
+        <span class="n">indices_in</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">idx_final</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">n_shared_max</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices_in</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">indices_in</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">indices_in</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+                <span class="n">n_shared_indices</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">n_shared_indices</span> <span class="o">&gt;</span> <span class="n">n_shared_max</span><span class="p">:</span>
+                    <span class="n">n_shared_max</span> <span class="o">=</span> <span class="n">n_shared_indices</span>
+                    <span class="n">shared_indices</span> <span class="o">=</span> <span class="n">tmp</span>
+                    <span class="p">[</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+        <span class="n">tensors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tensors</span><span class="p">)</span>
+        <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">tensors</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">tensors</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
+        <span class="n">idxA</span><span class="p">,</span> <span class="n">idxB</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">indices</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
+        <span class="n">idx_out</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">idxA</span><span class="o">+</span><span class="n">idxB</span><span class="p">)</span>
+        <span class="n">idx_out</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">idx_out</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shared_indices</span><span class="p">])</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="n">idxA</span><span class="o">+</span><span class="s">&quot;,&quot;</span><span class="o">+</span><span class="n">idxB</span><span class="o">+</span><span class="s">&quot;-&gt;&quot;</span><span class="o">+</span><span class="n">idx_out</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+        <span class="n">indices_in</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">indices_in</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">indices_in</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx_out</span><span class="p">)</span>
+        <span class="n">tensors</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">tensors</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">tensors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">einsum</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">indices_in</span><span class="p">)</span><span class="o">+</span><span class="s">&quot;-&gt;&quot;</span><span class="o">+</span><span class="n">idx_final</span><span class="p">,</span><span class="o">*</span><span class="n">tensors</span><span class="p">)</span>
+
+    <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">tensors</span>
+    <span class="c"># Split the strings into a list of idx char&#39;s</span>
+    <span class="n">idxA</span><span class="p">,</span> <span class="n">idxBC</span> <span class="o">=</span> <span class="n">idx_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+    <span class="n">idxB</span><span class="p">,</span> <span class="n">idxC</span> <span class="o">=</span> <span class="n">idxBC</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;-&gt;&#39;</span><span class="p">)</span>
+    <span class="n">idxA</span><span class="p">,</span> <span class="n">idxB</span><span class="p">,</span> <span class="n">idxC</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">idxA</span><span class="p">,</span><span class="n">idxB</span><span class="p">,</span><span class="n">idxC</span><span class="p">]]</span>
+
+    <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;*** Einsum for&quot;</span><span class="p">,</span> <span class="n">idx_str</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot; idxA =&quot;</span><span class="p">,</span> <span class="n">idxA</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot; idxB =&quot;</span><span class="p">,</span> <span class="n">idxB</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot; idxC =&quot;</span><span class="p">,</span> <span class="n">idxC</span><span class="p">)</span>
+
+    <span class="c"># Get the range for each index and put it in a dictionary</span>
+    <span class="n">rangeA</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">rangeB</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="c">#rangeC = dict()</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">rnge</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">idxA</span><span class="p">,</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+        <span class="n">rangeA</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">rnge</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">rnge</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">idxB</span><span class="p">,</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+        <span class="n">rangeB</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">rnge</span>
+    <span class="c">#for idx,rnge in zip(idxC,C.shape):</span>
+    <span class="c">#    rangeC[idx] = rnge</span>
+
+    <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;rangeA =&quot;</span><span class="p">,</span> <span class="n">rangeA</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;rangeB =&quot;</span><span class="p">,</span> <span class="n">rangeB</span><span class="p">)</span>
+
+    <span class="c"># Find the shared indices being summed over</span>
+    <span class="n">shared_idxAB</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">idxA</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">idxB</span><span class="p">))</span>
+    <span class="c">#if len(shared_idxAB) == 0:</span>
+    <span class="c">#    return np.einsum(idx_str,A,B)</span>
+    <span class="n">idxAt</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">idxA</span><span class="p">)</span>
+    <span class="n">idxBt</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">idxB</span><span class="p">)</span>
+    <span class="n">inner_shape</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">insert_B_loc</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">shared_idxAB</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">rangeA</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">!=</span> <span class="n">rangeB</span><span class="p">[</span><span class="n">n</span><span class="p">]:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;ERROR: In index string&quot;</span><span class="p">,</span> <span class="n">idx_str</span><span class="p">,</span> <span class="s">&quot;, the range of index&quot;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="s">&quot;is different in A (</span><span class="si">%d</span><span class="s">) and B (</span><span class="si">%d</span><span class="s">)&quot;</span><span class="o">%</span><span class="p">(</span>
+                    <span class="n">rangeA</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">rangeB</span><span class="p">[</span><span class="n">n</span><span class="p">]))</span>
+            <span class="k">raise</span> <span class="ne">SystemExit</span>
+
+        <span class="c"># Bring idx all the way to the right for A</span>
+        <span class="c"># and to the left (but preserve order) for B</span>
+        <span class="n">idxA_n</span> <span class="o">=</span> <span class="n">idxAt</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">idxAt</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idxAt</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">idxAt</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idxA_n</span><span class="p">))</span>
+
+        <span class="n">idxB_n</span> <span class="o">=</span> <span class="n">idxBt</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">idxBt</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">insert_B_loc</span><span class="p">,</span> <span class="n">idxBt</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idxB_n</span><span class="p">))</span>
+        <span class="n">insert_B_loc</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">inner_shape</span> <span class="o">*=</span> <span class="n">rangeA</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;shared_idxAB =&quot;</span><span class="p">,</span> <span class="n">shared_idxAB</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;inner_shape =&quot;</span><span class="p">,</span> <span class="n">inner_shape</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">A</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">B</span><span class="p">)):</span>
+        <span class="n">Cshape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxC</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxA</span><span class="p">:</span>
+                <span class="n">Cshape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rangeA</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Cshape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rangeB</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">Cshape</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">result_type</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">))</span>
+
+    <span class="c"># Transpose the tensors into the proper order and reshape into matrices</span>
+    <span class="n">new_orderA</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxAt</span><span class="p">:</span>
+        <span class="n">new_orderA</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idxA</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+    <span class="n">new_orderB</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxBt</span><span class="p">:</span>
+        <span class="n">new_orderB</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idxB</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Transposing A as&quot;</span><span class="p">,</span> <span class="n">new_orderA</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Transposing B as&quot;</span><span class="p">,</span> <span class="n">new_orderB</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Reshaping A as (-1,&quot;</span><span class="p">,</span> <span class="n">inner_shape</span><span class="p">,</span> <span class="s">&quot;)&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Reshaping B as (&quot;</span><span class="p">,</span> <span class="n">inner_shape</span><span class="p">,</span> <span class="s">&quot;,-1)&quot;</span><span class="p">)</span>
+
+    <span class="c"># A or B might be HDF5 Datasets </span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="n">At</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">new_orderA</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">inner_shape</span><span class="p">)</span>
+    <span class="n">Bt</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">new_orderB</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">inner_shape</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">shapeCt</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">idxCt</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxAt</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">shared_idxAB</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">shapeCt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rangeA</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="n">idxCt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxBt</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">shared_idxAB</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">shapeCt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rangeB</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="n">idxCt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+
+    <span class="n">new_orderCt</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxC</span><span class="p">:</span>
+        <span class="n">new_orderCt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idxCt</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">At</span><span class="p">,</span><span class="n">Bt</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shapeCt</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">new_orderCt</span><span class="p">)</span>
+
+</div>
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">scipy.linalg</span>
     <span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">400</span><span class="p">,</span><span class="mi">900</span><span class="p">))</span>
@@ -852,7 +1002,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

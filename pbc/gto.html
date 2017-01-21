@@ -97,7 +97,7 @@ periodic integrals.</p>
 <span class="c"># Note two extra attributes &quot;.h&quot;, &quot;.gs&quot; for in the &quot;cell&quot; initialization.</span>
 <span class="c"># .h is a matrix for lattice vectors.  Note each column of .h denotes a direction</span>
 <span class="c">#</span>
-<span class="n">cell</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span>
+<span class="n">cell</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span>
 <span class="n">cell</span><span class="o">.</span><span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span>  <span class="c"># 10 grids on postive x direction, =&gt; 21^3 grids in total</span>
 <span class="n">cell</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
 
@@ -116,7 +116,7 @@ periodic integrals.</p>
 <span class="s">              C     0.8917  2.6751  2.6751&#39;&#39;&#39;</span><span class="p">,</span>
     <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;gth-szv&#39;</span><span class="p">,</span>
     <span class="n">pseudo</span> <span class="o">=</span> <span class="s">&#39;gth-pade&#39;</span><span class="p">,</span>
-    <span class="n">h</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span><span class="p">,</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span><span class="p">,</span>
     <span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -253,14 +253,9 @@ density fitting technique (see Chapter <a class="reference internal" href="tools
 <dl class="docutils">
 <dt>Attributes:</dt>
 <dd><dl class="first docutils">
-<dt>h <span class="classifier-delimiter">:</span> <span class="classifier">(3,3) ndarray</span></dt>
-<dd>The real-space unit cell lattice vectors, a &#8220;three-column&#8221; array [a1|a2|a3]
-(Note a1 = h[:,0]; a2 = h[:,1]; a2 = h[:,2]).  See defs. in MH Sec. 3.1
-Convert from relative or &#8220;scaled&#8221; coordinates <cite>s</cite> to &#8220;absolute&#8221;
-cartesian coordinates <cite>r</cite> via <cite>r = np.dot(_h, s)</cite>.
-Reciprocal lattice vectors are given by [b1|b2|b3] = 2 pi inv(_h.T).</dd>
 <dt>a <span class="classifier-delimiter">:</span> <span class="classifier">(3,3) ndarray</span></dt>
-<dd>Lattice primitive vectors. Each row represents a lattice vector</dd>
+<dd>Lattice primitive vectors. Each row represents a lattice vector
+Reciprocal lattice vectors are given by  b1,b2,b3 = 2 pi inv(a).T</dd>
 <dt>gs <span class="classifier-delimiter">:</span> <span class="classifier">(3,) list of ints</span></dt>
 <dd>The number of <em>positive</em> G-vectors along each direction.</dd>
 <dt>pseudo <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
@@ -269,12 +264,11 @@ Reciprocal lattice vectors are given by [b1|b2|b3] = 2 pi inv(_h.T).</dd>
 <dd>To control Ewald sums and lattice sums accuracy</dd>
 <dt>ke_cutoff <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>If set, defines a spherical cutoff of fourier components, with .5 * G**2 &lt; ke_cutoff</dd>
+<dt>dimension <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Default is 3</dd>
 </dl>
 <p>** Following attributes (for experts) are automatically generated. **</p>
 <dl class="last docutils">
-<dt>nimgs <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray of ints</span></dt>
-<dd>Number of basis function images in lattice sums, It affects the
-accuracy of integrals.  See <tt class="xref py py-func docutils literal"><span class="pre">get_nimgs()</span></tt>.</dd>
 <dt>ew_eta, ew_cut <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd>The Ewald &#8216;eta&#8217; and &#8216;cut&#8217; parameters.  See <tt class="xref py py-func docutils literal"><span class="pre">get_ewald_params()</span></tt></dd>
 </dl>
@@ -284,24 +278,31 @@ accuracy of integrals.  See <tt class="xref py py-func docutils literal"><span c
 <p>Examples:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">Mole</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;H^2 0 0 0; H 0 0 1.1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cl</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cl</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">h</span><span class="o">=</span><span class="s">&#39;3 0 0; 0 3 0; 0 0 3&#39;</span><span class="p">,</span> <span class="n">gs</span><span class="o">=</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span> <span class="n">atom</span><span class="o">=</span><span class="s">&#39;C 1 1 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cl</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="s">&#39;3 0 0; 0 3 0; 0 0 3&#39;</span><span class="p">,</span> <span class="n">gs</span><span class="o">=</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span> <span class="n">atom</span><span class="o">=</span><span class="s">&#39;C 1 1 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;sto3g&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">cl</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
 <span class="go">C</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">cl</span><span class="o">.</span><span class="n">get_nimgs</span><span class="p">(</span><span class="mf">1e-9</span><span class="p">))</span>
-<span class="go">[3,3,3]</span>
 </pre></div>
 </div>
 <dl class="method">
+<dt id="pyscf.pbc.gto.Cell.bas_rcut">
+<tt class="descname">bas_rcut</tt><big>(</big><em>cell</em>, <em>bas_id</em>, <em>precision=1e-08</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.bas_rcut" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the largest distance between the function and its image to
+reach the precision in overlap</p>
+<p>precision ~ int g(r-0) g(r-R)</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyscf.pbc.gto.Cell.build">
-<tt class="descname">build</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>h=None</em>, <em>gs=None</em>, <em>ke_cutoff=None</em>, <em>precision=None</em>, <em>nimgs=None</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em>, <em>pseudo=None</em>, <em>basis=None</em>, <em>dimension=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.build" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">build</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>a=None</em>, <em>gs=None</em>, <em>ke_cutoff=None</em>, <em>precision=None</em>, <em>nimgs=None</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em>, <em>pseudo=None</em>, <em>basis=None</em>, <em>h=None</em>, <em>dimension=None</em>, <em>ecp=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup Mole molecule and Cell and initialize some control parameters.
 Whenever you change the value of the attributes of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt>,
 you need call this function to refresh the internal data of Cell.</p>
 <dl class="docutils">
 <dt>Kwargs:</dt>
 <dd><dl class="first last docutils">
-<dt>h <span class="classifier-delimiter">:</span> <span class="classifier">(3,3) ndarray</span></dt>
-<dd>The real-space unit cell lattice vectors, a &#8220;three-column&#8221; array [a1|a2|a3]</dd>
+<dt>a <span class="classifier-delimiter">:</span> <span class="classifier">(3,3) ndarray</span></dt>
+<dd>The real-space unit cell lattice vectors. Each row represents
+a lattice vector.</dd>
 <dt>gs <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray of ints</span></dt>
 <dd>The number of <em>positive</em> G-vectors along each direction.</dd>
 <dt>pseudo <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
@@ -428,6 +429,22 @@ you need call this function to refresh the internal data of Cell.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyscf.pbc.gto.Cell.gen_uniform_grids">
+<tt class="descname">gen_uniform_grids</tt><big>(</big><em>cell</em>, <em>gs=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.gen_uniform_grids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a uniform real-space grid consistent w/ samp thm; see MH (3.19).</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>cell : instance of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt></dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>coords <span class="classifier-delimiter">:</span> <span class="classifier">(ngx*ngy*ngz, 3) ndarray</span></dt>
+<dd>The real-space grid point coordinates.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyscf.pbc.gto.Cell.get_Gv">
 <tt class="descname">get_Gv</tt><big>(</big><em>cell</em>, <em>gs=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_Gv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate three-dimensional G-vectors for the cell; see MH (3.8).</p>
@@ -436,6 +453,20 @@ to follow FFT convention. Note that, for each direction, ngs = 2*cell.gs+1.</p>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd>cell : instance of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt></dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>Gv <span class="classifier-delimiter">:</span> <span class="classifier">(ngs, 3) ndarray of floats</span></dt>
+<dd>The array of G-vectors.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.get_Gv_weights">
+<tt class="descname">get_Gv_weights</tt><big>(</big><em>cell</em>, <em>gs=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_Gv_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate G-vectors and weights.</p>
+<dl class="docutils">
 <dt>Returns:</dt>
 <dd><dl class="first last docutils">
 <dt>Gv <span class="classifier-delimiter">:</span> <span class="classifier">(ngs, 3) ndarray of floats</span></dt>
@@ -522,7 +553,7 @@ factors only)</p>
 
 <dl class="method">
 <dt id="pyscf.pbc.gto.Cell.get_lattice_Ls">
-<tt class="descname">get_lattice_Ls</tt><big>(</big><em>cell</em>, <em>nimgs=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_lattice_Ls" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_lattice_Ls</tt><big>(</big><em>cell</em>, <em>nimgs=None</em>, <em>rcut=None</em>, <em>dimension=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_lattice_Ls" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the (Cartesian, unitful) lattice translation vectors for nearby images.
 The translation vectors can be used for the lattice summation.</p>
 </dd></dl>
@@ -532,7 +563,8 @@ The translation vectors can be used for the lattice summation.</p>
 <tt class="descname">get_nimgs</tt><big>(</big><em>cell</em>, <em>precision=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.get_nimgs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Choose number of basis function images in lattice sums
 to include for given precision in overlap, using</p>
-<p>precision ~ 4 * pi * r^2 * e^{-alpha r^2}</p>
+<p>precision ~ int r^l e^{-alpha r^2} (r-rcut)^l e^{-alpha (r-rcut)^2}
+~ (rcut^2/(2alpha))^l e^{alpha/2 rcut^2}</p>
 <p>where alpha is the smallest exponent in the basis. Note
 that assumes an isolated exponent in the middle of the box, so
 it adds one additional lattice vector to be safe.</p>
@@ -552,15 +584,16 @@ it adds one additional lattice vector to be safe.</p>
 
 <dl class="method">
 <dt id="pyscf.pbc.gto.Cell.kernel">
-<tt class="descname">kernel</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>h=None</em>, <em>gs=None</em>, <em>ke_cutoff=None</em>, <em>precision=None</em>, <em>nimgs=None</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em>, <em>pseudo=None</em>, <em>basis=None</em>, <em>dimension=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.kernel" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">kernel</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>a=None</em>, <em>gs=None</em>, <em>ke_cutoff=None</em>, <em>precision=None</em>, <em>nimgs=None</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em>, <em>pseudo=None</em>, <em>basis=None</em>, <em>h=None</em>, <em>dimension=None</em>, <em>ecp=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.kernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup Mole molecule and Cell and initialize some control parameters.
 Whenever you change the value of the attributes of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt>,
 you need call this function to refresh the internal data of Cell.</p>
 <dl class="docutils">
 <dt>Kwargs:</dt>
 <dd><dl class="first last docutils">
-<dt>h <span class="classifier-delimiter">:</span> <span class="classifier">(3,3) ndarray</span></dt>
-<dd>The real-space unit cell lattice vectors, a &#8220;three-column&#8221; array [a1|a2|a3]</dd>
+<dt>a <span class="classifier-delimiter">:</span> <span class="classifier">(3,3) ndarray</span></dt>
+<dd>The real-space unit cell lattice vectors. Each row represents
+a lattice vector.</dd>
 <dt>gs <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray of ints</span></dt>
 <dd>The number of <em>positive</em> G-vectors along each direction.</dd>
 <dt>pseudo <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span></dt>
@@ -604,6 +637,17 @@ with <tt class="xref py py-mod docutils literal"><span class="pre">pickle</span>
 <dt id="pyscf.pbc.gto.Cell.pbc_intor">
 <tt class="descname">pbc_intor</tt><big>(</big><em>intor</em>, <em>comp=1</em>, <em>hermi=0</em>, <em>kpts=None</em>, <em>kpt=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.pbc_intor" title="Permalink to this definition">¶</a></dt>
 <dd><p>One-electron integrals with PBC. See also Mole.intor</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.gto.Cell.reciprocal_vectors">
+<tt class="descname">reciprocal_vectors</tt><big>(</big><em>norm_to=6.283185307179586</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.reciprocal_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><div class="math">
+\[\begin{split}\begin{align}
+\mathbf{b_1} &amp;= 2\pi \frac{\mathbf{a_2} \times \mathbf{a_3}}{\mathbf{a_1} \cdot (\mathbf{a_2} \times \mathbf{a_3})} \\
+\mathbf{b_2} &amp;= 2\pi \frac{\mathbf{a_3} \times \mathbf{a_1}}{\mathbf{a_2} \cdot (\mathbf{a_3} \times \mathbf{a_1})} \\
+\mathbf{b_3} &amp;= 2\pi \frac{\mathbf{a_1} \times \mathbf{a_2}}{\mathbf{a_3} \cdot (\mathbf{a_1} \times \mathbf{a_2})}
+\end{align}\end{split}\]</div>
 </dd></dl>
 
 <dl class="method">
@@ -741,7 +785,7 @@ in the same calculation.</p>
 <span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;&#39;&#39;</span>
 <span class="s">Si1 0 0 0</span>
 <span class="s">Si2 1 1 1&#39;&#39;&#39;</span><span class="p">,</span>
-             <span class="n">h</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;3    0    0</span>
+             <span class="n">a</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;3    0    0</span>
 <span class="s">                    0    3    0</span>
 <span class="s">                    0    0    3&#39;&#39;&#39;</span><span class="p">,</span>
              <span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span>
@@ -761,17 +805,29 @@ in the same calculation.</p>
 
 
 <span class="c">#</span>
-<span class="c"># Allow mixing quantum chemistry ECP and crystal PP in the same calculation.</span>
+<span class="c"># Allow mixing quantum chemistry ECP (or BFD PP) and crystal PP in the same calculation.</span>
 <span class="c">#</span>
 <span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
-    <span class="n">h</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;3    0    0</span>
-<span class="s">           0    3    0</span>
-<span class="s">           0    0    3&#39;&#39;&#39;</span><span class="p">,</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;4    0    0</span>
+<span class="s">           0    4    0</span>
+<span class="s">           0    0    4&#39;&#39;&#39;</span><span class="p">,</span>
     <span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span>
-    <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;Cu 0 0 1; Na 0 1 0&#39;</span><span class="p">,</span>
-    <span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;na&#39;</span><span class="p">:</span> <span class="s">&#39;lan2ldz&#39;</span><span class="p">,</span> <span class="s">&#39;Cu&#39;</span><span class="p">:</span> <span class="s">&#39;gth-szv&#39;</span><span class="p">},</span>
-    <span class="n">ecp</span> <span class="o">=</span> <span class="s">&#39;lanl2dz&#39;</span><span class="p">,</span>
-    <span class="n">pseudo</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Cu&#39;</span><span class="p">:</span> <span class="s">&#39;gthbp&#39;</span><span class="p">})</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;Cl 0 0 1; Na 0 1 0&#39;</span><span class="p">,</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;na&#39;</span><span class="p">:</span> <span class="s">&#39;gth-szv&#39;</span><span class="p">,</span> <span class="s">&#39;Cl&#39;</span><span class="p">:</span> <span class="s">&#39;bfd-vdz&#39;</span><span class="p">},</span>
+    <span class="n">ecp</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Cl&#39;</span><span class="p">:</span> <span class="s">&#39;bfd-pp&#39;</span><span class="p">},</span>
+    <span class="n">pseudo</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Na&#39;</span><span class="p">:</span> <span class="s">&#39;gthbp&#39;</span><span class="p">})</span>
+
+<span class="c">#</span>
+<span class="c"># ECP can be specified in the attribute .pseudo</span>
+<span class="c">#</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;4    0    0</span>
+<span class="s">           0    4    0</span>
+<span class="s">           0    0    4&#39;&#39;&#39;</span><span class="p">,</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;Cl 0 0 1; Na 0 1 0&#39;</span><span class="p">,</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;na&#39;</span><span class="p">:</span> <span class="s">&#39;gth-szv&#39;</span><span class="p">,</span> <span class="s">&#39;Cl&#39;</span><span class="p">:</span> <span class="s">&#39;bfd-vdz&#39;</span><span class="p">},</span>
+    <span class="n">pseudo</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Na&#39;</span><span class="p">:</span> <span class="s">&#39;gthbp&#39;</span><span class="p">,</span> <span class="s">&#39;Cl&#39;</span><span class="p">:</span> <span class="s">&#39;bfd-pp&#39;</span><span class="p">})</span>
 </pre></div>
 </div>
 </div>

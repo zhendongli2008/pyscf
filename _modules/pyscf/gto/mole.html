@@ -125,7 +125,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;l should be &gt; 0&#39;</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="cart2sph"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.cart2sph">[docs]</a><span class="k">def</span> <span class="nf">cart2sph</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Cartesian to real spheric transformation matrix&#39;&#39;&#39;</span>
+    <span class="sd">&#39;&#39;&#39;Cartesian to real spherical transformation matrix&#39;&#39;&#39;</span>
     <span class="n">nf</span> <span class="o">=</span> <span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
     <span class="n">cmat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -747,7 +747,8 @@
             <span class="s">&#39;spin&#39;</span>    <span class="p">:</span> <span class="n">mol</span><span class="o">.</span><span class="n">spin</span><span class="p">,</span>
             <span class="s">&#39;symmetry&#39;</span><span class="p">:</span> <span class="n">mol</span><span class="o">.</span><span class="n">symmetry</span><span class="p">,</span>
             <span class="s">&#39;nucmod&#39;</span>  <span class="p">:</span> <span class="n">mol</span><span class="o">.</span><span class="n">nucmod</span><span class="p">,</span>
-            <span class="s">&#39;ecp&#39;</span>     <span class="p">:</span> <span class="n">mol</span><span class="o">.</span><span class="n">ecp</span><span class="p">}</span></div>
+            <span class="s">&#39;ecp&#39;</span>     <span class="p">:</span> <span class="n">mol</span><span class="o">.</span><span class="n">ecp</span><span class="p">,</span>
+            <span class="s">&#39;verbose&#39;</span> <span class="p">:</span> <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span><span class="p">}</span></div>
 <div class="viewcode-block" id="unpack"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.unpack">[docs]</a><span class="k">def</span> <span class="nf">unpack</span><span class="p">(</span><span class="n">moldic</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Unpack a dict which is packed by :func:`pack`, to generate the input</span>
 <span class="sd">    arguments for :class:`Mole` object.</span>
@@ -1003,39 +1004,37 @@
                     <span class="n">i</span> <span class="o">+=</span> <span class="n">dj</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tao</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="energy_nuc"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.energy_nuc">[docs]</a><span class="k">def</span> <span class="nf">energy_nuc</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Nuclear repulsion energy, (AU)</span>
+<div class="viewcode-block" id="energy_nuc"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.energy_nuc">[docs]</a><span class="k">def</span> <span class="nf">energy_nuc</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">charges</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Compute nuclear repulsion energy (AU) or static Coulomb energy</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">        float</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">mol</span><span class="o">.</span><span class="n">natm</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">charges</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">charges</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_charges</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">coords</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">coords</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">charges</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="mi">0</span>
     <span class="c">#e = 0</span>
-    <span class="c">#chargs = [mol.atom_charge(i) for i in range(len(mol._atm))]</span>
-    <span class="c">#coords = [mol.atom_coord(i) for i in range(len(mol._atm))]</span>
     <span class="c">#for j in range(len(mol._atm)):</span>
-    <span class="c">#    q2 = chargs[j]</span>
+    <span class="c">#    q2 = charges[j]</span>
     <span class="c">#    r2 = coords[j]</span>
     <span class="c">#    for i in range(j):</span>
-    <span class="c">#        q1 = chargs[i]</span>
+    <span class="c">#        q1 = charges[i]</span>
     <span class="c">#        r1 = coords[i]</span>
     <span class="c">#        r = numpy.linalg.norm(r1-r2)</span>
     <span class="c">#        e += q1 * q2 / r</span>
-    <span class="n">chargs</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_charges</span><span class="p">()</span>
-    <span class="n">coords</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">()</span>
     <span class="n">rr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
     <span class="n">rd</span> <span class="o">=</span> <span class="n">rr</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span>
     <span class="n">rr</span> <span class="o">=</span> <span class="n">rd</span><span class="p">[:,</span><span class="bp">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">rd</span> <span class="o">-</span> <span class="n">rr</span><span class="o">*</span><span class="mi">2</span>
     <span class="n">rr</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">diag_indices_from</span><span class="p">(</span><span class="n">rr</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1e-60</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rr</span><span class="p">)</span>
-    <span class="n">qq</span> <span class="o">=</span> <span class="n">chargs</span><span class="p">[:,</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">chargs</span><span class="p">[</span><span class="bp">None</span><span class="p">,:]</span>
+    <span class="n">qq</span> <span class="o">=</span> <span class="n">charges</span><span class="p">[:,</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">charges</span><span class="p">[</span><span class="bp">None</span><span class="p">,:]</span>
     <span class="n">qq</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">diag_indices_from</span><span class="p">(</span><span class="n">qq</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="n">qq</span><span class="o">/</span><span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
     <span class="k">return</span> <span class="n">e</span>
 </div>
 <div class="viewcode-block" id="spheric_labels"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.spheric_labels">[docs]</a><span class="k">def</span> <span class="nf">spheric_labels</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Labels for spheric GTO functions</span>
+    <span class="sd">&#39;&#39;&#39;Labels for spherical GTO functions</span>
 
 <span class="sd">    Kwargs:</span>
 <span class="sd">        fmt : str or bool</span>
@@ -1044,7 +1043,7 @@
 <span class="sd">        be used as the print format.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        List of [(atom-id, symbol-str, nl-str, str-of-real-spheric-notation]</span>
+<span class="sd">        List of [(atom-id, symbol-str, nl-str, str-of-real-spherical-notation]</span>
 <span class="sd">        or formatted strings based on the argument &quot;fmt&quot;</span>
 
 <span class="sd">    Examples:</span>
@@ -1089,7 +1088,7 @@
 <span class="sd">        be used as the print format.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        List of [(atom-id, symbol-str, nl-str, str-of-real-spheric-notation)]</span>
+<span class="sd">        List of [(atom-id, symbol-str, nl-str, str-of-real-spherical-notation)]</span>
 <span class="sd">        or formatted strings based on the argument &quot;fmt&quot;</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">count</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
@@ -1841,6 +1840,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;[INPUT] num electrons = </span><span class="si">%d</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelectron</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;[INPUT] charge = </span><span class="si">%d</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;[INPUT] spin (= nelec alpha-beta = 2S) = </span><span class="si">%d</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;[INPUT] symmetry </span><span class="si">%s</span><span class="s"> subgroup </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span>
+                          <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry_subgroup</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">ia</span><span class="p">,</span><span class="n">atom</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_atom</span><span class="p">):</span>
             <span class="n">coorda</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">x</span> <span class="o">*</span> <span class="n">param</span><span class="o">.</span><span class="n">BOHR</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">atom</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
@@ -1876,20 +1877,23 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39; </span><span class="si">%4.12g</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">c</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;nuclear repulsion = </span><span class="si">%.15g</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_nuc</span><span class="p">())</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">topgroup</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupname</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;point group symmetry = </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">topgroup</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;point group symmetry = </span><span class="si">%s</span><span class="s">, use subgroup </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">topgroup</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupname</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">ir</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symm_orb</span><span class="o">.</span><span class="n">__len__</span><span class="p">()):</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;num. orbitals of irrep </span><span class="si">%s</span><span class="s"> = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">irrep_name</span><span class="p">[</span><span class="n">ir</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">[</span><span class="n">ir</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;number of shells = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbas</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;number of NR pGTOs = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">npgto_nr</span><span class="p">())</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;number of NR cGTOs = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">())</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">DEBUG1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;nuclear repulsion = </span><span class="si">%.15g</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_nuc</span><span class="p">())</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">topgroup</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupname</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;point group symmetry = </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">topgroup</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;point group symmetry = </span><span class="si">%s</span><span class="s">, use subgroup </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">topgroup</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">groupname</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">ir</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symm_orb</span><span class="o">.</span><span class="n">__len__</span><span class="p">()):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;num. orbitals of irrep </span><span class="si">%s</span><span class="s"> = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">irrep_name</span><span class="p">[</span><span class="n">ir</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">[</span><span class="n">ir</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;number of shells = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbas</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;number of NR pGTOs = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">npgto_nr</span><span class="p">())</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;number of NR cGTOs = </span><span class="si">%d</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">())</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;basis = </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;ecp = </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ecp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">DEBUG2</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bas</span><span class="p">)):</span>
                 <span class="n">exps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bas_exp</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;bas </span><span class="si">%d</span><span class="s">, expnt(s) = </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">exps</span><span class="p">))</span>
@@ -2365,8 +2369,7 @@
         <span class="k">return</span> <span class="n">eval_gto</span><span class="p">(</span><span class="n">eval_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">,</span>
                         <span class="n">coords</span><span class="p">,</span> <span class="n">comp</span><span class="p">,</span> <span class="n">shls_slice</span><span class="p">,</span> <span class="n">non0tab</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
 </div>
-    <span class="k">def</span> <span class="nf">energy_nuc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">energy_nuc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="n">energy_nuc</span> <span class="o">=</span> <span class="n">energy_nuc</span>
     <span class="k">def</span> <span class="nf">get_enuc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_nuc</span><span class="p">()</span>
 
@@ -2376,8 +2379,9 @@
 </div>
     <span class="nd">@lib.with_doc</span><span class="p">(</span><span class="n">spheric_labels</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
 <div class="viewcode-block" id="Mole.spheric_labels"><a class="viewcode-back" href="../../../gto.html#pyscf.gto.mole.Mole.spheric_labels">[docs]</a>    <span class="k">def</span> <span class="nf">spheric_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">spheric_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fmt</span><span class="p">)</span>
-</div>
+        <span class="k">return</span> <span class="n">spheric_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fmt</span><span class="p">)</span></div>
+    <span class="n">spherical_labels</span> <span class="o">=</span> <span class="n">spheric_labels</span>
+
     <span class="k">def</span> <span class="nf">search_shell_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atm_id</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">search_shell_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atm_id</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
 
@@ -2646,7 +2650,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

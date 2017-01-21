@@ -573,15 +573,6 @@
 <span class="k">def</span> <span class="nf">fix_spin</span><span class="p">(</span><span class="n">fciobj</span><span class="p">,</span> <span class="n">shift</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span> <span class="n">ss</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">fix_spin_</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">fciobj</span><span class="p">),</span> <span class="n">shift</span><span class="p">,</span> <span class="n">ss</span><span class="p">)</span>
 
-
-<span class="k">def</span> <span class="nf">_unpack</span><span class="p">(</span><span class="n">nelec</span><span class="p">):</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">number</span><span class="p">)):</span>
-        <span class="n">nelecb</span> <span class="o">=</span> <span class="n">nelec</span><span class="o">//</span><span class="mi">2</span>
-        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelec</span> <span class="o">-</span> <span class="n">nelecb</span>
-        <span class="k">return</span> <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">nelec</span>
-
 <div class="viewcode-block" id="transform_ci_for_orbital_rotation"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.addons.transform_ci_for_orbital_rotation">[docs]</a><span class="k">def</span> <span class="nf">transform_ci_for_orbital_rotation</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Transform CI coefficients to the representation in new one-particle basis.</span>
 <span class="sd">    Solving CI problem for Hamiltonian h1, h2 defined in old basis,</span>
@@ -605,10 +596,14 @@
     <span class="c"># Unitary transformation array trans_ci is the overlap between two sets of CI basis.</span>
     <span class="n">occ_masks</span> <span class="o">=</span> <span class="p">(</span><span class="n">strsa</span><span class="p">[:,</span><span class="bp">None</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">one_particle_strs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
     <span class="n">trans_ci_a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">na</span><span class="p">,</span><span class="n">na</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">stri</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">strsa</span><span class="p">):</span> <span class="c"># for old basis</span>
-        <span class="n">orbi_mask</span> <span class="o">=</span> <span class="n">occ_masks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="n">ui</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="n">orbi_mask</span><span class="p">]</span>
-        <span class="n">minors</span> <span class="o">=</span> <span class="p">[</span><span class="n">ui</span><span class="p">[:,</span><span class="n">occ_masks</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">strsa</span><span class="p">))]</span>  <span class="c"># for new basis</span>
+    <span class="c">#for i in range(na): # for old basis</span>
+    <span class="c">#    for j in range(na):</span>
+    <span class="c">#        uij = u[occ_masks[i]][:,occ_masks[j]]</span>
+    <span class="c">#        trans_ci_a[i,j] = numpy.linalg.det(uij)</span>
+    <span class="n">occ_idx_all_strs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">occ_masks</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">na</span><span class="p">):</span>
+        <span class="n">ui</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="n">occ_masks</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">minors</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">ui</span><span class="p">,</span> <span class="n">occ_idx_all_strs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">na</span><span class="p">,</span><span class="n">neleca</span><span class="p">,</span><span class="n">neleca</span><span class="p">)</span>
         <span class="n">trans_ci_a</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">minors</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">neleca</span> <span class="o">==</span> <span class="n">nelecb</span><span class="p">:</span>
@@ -616,10 +611,14 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">occ_masks</span> <span class="o">=</span> <span class="p">(</span><span class="n">strsb</span><span class="p">[:,</span><span class="bp">None</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">one_particle_strs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
         <span class="n">trans_ci_b</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nb</span><span class="p">,</span><span class="n">nb</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">stri</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">strsb</span><span class="p">):</span>
-            <span class="n">orbi_mask</span> <span class="o">=</span> <span class="n">occ_masks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-            <span class="n">ui</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="n">orbi_mask</span><span class="p">]</span>
-            <span class="n">minors</span> <span class="o">=</span> <span class="p">[</span><span class="n">ui</span><span class="p">[:,</span><span class="n">occ_masks</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">strsb</span><span class="p">))]</span>
+        <span class="c">#for i in range(nb):</span>
+        <span class="c">#    for j in range(nb):</span>
+        <span class="c">#        uij = u[occ_masks[i]][:,occ_masks[j]]</span>
+        <span class="c">#        trans_ci_b[i,j] = numpy.linalg.det(uij)</span>
+        <span class="n">occ_idx_all_strs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">occ_masks</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb</span><span class="p">):</span>
+            <span class="n">ui</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="n">occ_masks</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">minors</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">ui</span><span class="p">,</span> <span class="n">occ_idx_all_strs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nb</span><span class="p">,</span><span class="n">nelecb</span><span class="p">,</span><span class="n">nelecb</span><span class="p">)</span>
             <span class="n">trans_ci_b</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">minors</span><span class="p">)</span>
 
     <span class="c"># Transform old basis to new basis for all alpha-electron excitations</span>
@@ -629,6 +628,18 @@
     <span class="k">return</span> <span class="n">ci</span>
 
 </div>
+<span class="k">def</span> <span class="nf">_unpack</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">spin</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">spin</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nelec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">nelec</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nelec</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">number</span><span class="p">)):</span>
+        <span class="n">nelecb</span> <span class="o">=</span> <span class="p">(</span><span class="n">nelec</span><span class="o">-</span><span class="n">spin</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+        <span class="n">neleca</span> <span class="o">=</span> <span class="n">nelec</span> <span class="o">-</span> <span class="n">nelecb</span>
+        <span class="n">nelec</span> <span class="o">=</span> <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span>
+    <span class="k">return</span> <span class="n">nelec</span>
+
+
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">a4</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">)[:,</span><span class="bp">None</span><span class="p">]</span>
     <span class="n">a6</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">)[:,</span><span class="bp">None</span><span class="p">]</span>
@@ -724,7 +735,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

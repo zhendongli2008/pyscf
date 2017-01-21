@@ -63,7 +63,6 @@
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="nb">reduce</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">scipy.linalg</span>
-<span class="kn">import</span> <span class="nn">pyscf.lib.parameters</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lib</span>
 <span class="kn">from</span> <span class="nn">pyscf.gto</span> <span class="kn">import</span> <span class="n">mole</span>
 <span class="kn">from</span> <span class="nn">pyscf.lo</span> <span class="kn">import</span> <span class="n">orth</span>
@@ -263,9 +262,10 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">c</span> <span class="o">=</span> <span class="n">pre_nao</span><span class="p">[:,</span><span class="n">val_lst</span><span class="p">]</span>
 
-    <span class="n">s1</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
-    <span class="n">wt</span> <span class="o">=</span> <span class="n">pre_occ</span><span class="p">[</span><span class="n">val_lst</span><span class="p">]</span>
-    <span class="n">cnao</span><span class="p">[:,</span><span class="n">val_lst</span><span class="p">]</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">orth</span><span class="o">.</span><span class="n">weight_orth</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">wt</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">val_lst</span><span class="p">:</span>
+        <span class="n">s1</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+        <span class="n">wt</span> <span class="o">=</span> <span class="n">pre_occ</span><span class="p">[</span><span class="n">val_lst</span><span class="p">]</span>
+        <span class="n">cnao</span><span class="p">[:,</span><span class="n">val_lst</span><span class="p">]</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">orth</span><span class="o">.</span><span class="n">weight_orth</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">wt</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">rydbg_lst</span><span class="p">:</span>
         <span class="n">cvlst</span> <span class="o">=</span> <span class="n">core_lst</span> <span class="o">+</span> <span class="n">val_lst</span>
@@ -280,7 +280,7 @@
     <span class="k">return</span> <span class="n">cnao</span>
 
 <span class="k">def</span> <span class="nf">_core_val_ryd_list</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
-    <span class="kn">import</span> <span class="nn">pyscf.gto.ecp</span>
+    <span class="kn">from</span> <span class="nn">pyscf.gto.ecp</span> <span class="kn">import</span> <span class="n">core_configuration</span>
     <span class="n">count</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
     <span class="n">core_lst</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">val_lst</span> <span class="o">=</span> <span class="p">[]</span>
@@ -288,12 +288,13 @@
     <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">ib</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">):</span>
         <span class="n">ia</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
-        <span class="n">nuc</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_charge</span><span class="p">(</span><span class="n">ia</span><span class="p">)</span>
+<span class="c"># Avoid calling mol.atom_charge because we should include ECP core electrons here</span>
+        <span class="n">nuc</span> <span class="o">=</span> <span class="n">mole</span><span class="o">.</span><span class="n">_charge</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="n">ia</span><span class="p">))</span>
         <span class="n">l</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_angular</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
         <span class="n">nc</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_nctr</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
         <span class="n">symb</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="n">ia</span><span class="p">)</span>
         <span class="n">nelec_ecp</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_nelec_core</span><span class="p">(</span><span class="n">ia</span><span class="p">)</span>
-        <span class="n">ecpcore</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">ecp</span><span class="o">.</span><span class="n">core_configuration</span><span class="p">(</span><span class="n">nelec_ecp</span><span class="p">)</span>
+        <span class="n">ecpcore</span> <span class="o">=</span> <span class="n">core_configuration</span><span class="p">(</span><span class="n">nelec_ecp</span><span class="p">)</span>
         <span class="n">coreshell</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">AOSHELL</span><span class="p">[</span><span class="n">nuc</span><span class="p">][</span><span class="mi">0</span><span class="p">][::</span><span class="mi">2</span><span class="p">]]</span>
         <span class="n">cvshell</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">AOSHELL</span><span class="p">[</span><span class="n">nuc</span><span class="p">][</span><span class="mi">1</span><span class="p">][::</span><span class="mi">2</span><span class="p">]]</span>
         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nc</span><span class="p">):</span>
@@ -434,7 +435,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>
