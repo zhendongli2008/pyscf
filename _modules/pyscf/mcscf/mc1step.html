@@ -444,13 +444,14 @@
                 <span class="n">norm_gorb0</span> <span class="o">=</span> <span class="n">norm_gorb</span>
             <span class="n">norm_t</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">u</span><span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nmo</span><span class="p">))</span>
             <span class="n">t3m</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s">&#39;orbital rotation&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t3m</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">norm_gci</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">accepted_gorb</span> <span class="o">=</span> <span class="n">norm_gorb</span> <span class="o">&lt;</span> <span class="n">norm_ddm</span><span class="o">*</span><span class="mi">2</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">accepted_gorb</span> <span class="o">=</span> <span class="n">norm_gorb</span> <span class="o">&lt;</span> <span class="n">norm_gci</span><span class="o">*</span><span class="mf">1.5</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">imicro</span> <span class="o">&gt;=</span> <span class="n">max_cycle_micro</span> <span class="ow">and</span>
-                <span class="p">(</span><span class="n">accepted_gorb</span> <span class="ow">or</span> <span class="n">imicro</span> <span class="o">&gt;</span> <span class="n">max_cycle_micro</span><span class="o">*</span><span class="mi">2</span> <span class="ow">or</span>
-                 <span class="n">norm_gorb</span> <span class="o">&gt;</span> <span class="n">norm_gorb0</span><span class="p">)):</span>
+            <span class="c">#if norm_gci is None:</span>
+            <span class="c">#    accepted_gorb = norm_gorb &lt; norm_ddm*2</span>
+            <span class="c">#else:</span>
+            <span class="c">#    accepted_gorb = norm_gorb &lt; norm_gci*1.5</span>
+            <span class="c">#if (imicro &gt;= max_cycle_micro and</span>
+            <span class="c">#    (accepted_gorb or imicro &gt; max_cycle_micro*2 or</span>
+            <span class="c">#     norm_gorb &gt; norm_gorb0)):</span>
+            <span class="k">if</span> <span class="n">imicro</span> <span class="o">&gt;=</span> <span class="n">max_cycle_micro</span><span class="p">:</span>
                 <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;micro </span><span class="si">%d</span><span class="s">  |u-1|=</span><span class="si">%5.3g</span><span class="s">  |g[o]|=</span><span class="si">%5.3g</span><span class="s">&#39;</span><span class="p">,</span>
                           <span class="n">imicro</span><span class="p">,</span> <span class="n">norm_t</span><span class="p">,</span> <span class="n">norm_gorb</span><span class="p">)</span>
                 <span class="k">break</span>
@@ -981,9 +982,17 @@
             <span class="n">tol</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv_tol</span><span class="p">,</span> <span class="n">envs</span><span class="p">[</span><span class="s">&#39;norm_gorb&#39;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*.</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">tol</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="p">,</span> <span class="s">&#39;approx_kernel&#39;</span><span class="p">):</span>
-            <span class="n">ci1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">approx_kernel</span><span class="p">(</span><span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="n">ci0</span><span class="p">,</span>
-                                               <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">max_memory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_memory</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="p">,</span> <span class="s">&#39;contract_2e&#39;</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="p">,</span> <span class="s">&#39;absorb_h1e&#39;</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="p">,</span> <span class="s">&#39;approx_kernel&#39;</span><span class="p">):</span>
+                <span class="n">fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">approx_kernel</span>
+                <span class="n">ci1</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="n">ci0</span><span class="p">,</span>
+                         <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">max_memory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_memory</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">kernel</span>
+                <span class="n">ci1</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ci0</span><span class="o">=</span><span class="n">ci0</span><span class="p">,</span>
+                         <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">max_memory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_memory</span><span class="p">,</span>
+                         <span class="n">max_cycle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ci_response_space</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">ci1</span><span class="p">,</span> <span class="bp">None</span>
 
         <span class="n">h2eff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">absorb_h1e</span><span class="p">(</span><span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span>
@@ -1244,7 +1253,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

@@ -66,6 +66,7 @@
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">parameters</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">numpy_helper</span>
+<span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="kn">import</span> <span class="n">misc</span>
 
 <div class="viewcode-block" id="safe_eigh"><a class="viewcode-back" href="../../../lib.html#pyscf.lib.linalg_helper.safe_eigh">[docs]</a><span class="k">def</span> <span class="nf">safe_eigh</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">lindep</span><span class="o">=</span><span class="mf">1e-15</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Solve generalized eigenvalue problem  h v = w s v.</span>
@@ -674,9 +675,7 @@
                 <span class="n">heff</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">head</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">xi</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">axt</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
 
         <span class="n">w</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">heff</span><span class="p">[:</span><span class="n">space</span><span class="p">,:</span><span class="n">space</span><span class="p">])</span>
-        <span class="c">#TODO: Shouldn&#39;t gen_x0 twice (see line 635)</span>
-        <span class="n">x0</span> <span class="o">=</span> <span class="n">_gen_x0</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">xs</span><span class="p">)</span>
-        <span class="n">e</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">pick</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">nroots</span><span class="p">,</span> <span class="n">x0</span><span class="p">)</span>
+        <span class="n">e</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">pick</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">nroots</span><span class="p">,</span> <span class="nb">locals</span><span class="p">())</span>
         <span class="n">e</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">_sort_by_similarity</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">nroots</span><span class="p">,</span> <span class="n">conv</span><span class="p">,</span> <span class="n">vlast</span><span class="p">,</span> <span class="n">emin</span><span class="p">,</span>
                                    <span class="n">heff</span><span class="p">[:</span><span class="n">space</span><span class="p">,:</span><span class="n">space</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">elast</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
@@ -1218,37 +1217,24 @@
 
     <span class="n">conv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span>
     <span class="n">head</span> <span class="o">=</span> <span class="n">vlast</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">space</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">e</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nroots</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">w</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-    <span class="n">c</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">space</span><span class="p">,</span><span class="n">nroots</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">ovlp</span> <span class="o">=</span> <span class="n">vlast</span><span class="p">[:,</span><span class="n">conv</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">[:</span><span class="n">head</span><span class="p">])</span>
+    <span class="n">ovlp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;ij,ij-&gt;j&#39;</span><span class="p">,</span> <span class="n">ovlp</span><span class="p">,</span> <span class="n">ovlp</span><span class="p">)</span>
+    <span class="n">nconv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span>
+    <span class="n">nleft</span> <span class="o">=</span> <span class="n">nroots</span> <span class="o">-</span> <span class="n">nconv</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">ovlp</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span>
+    <span class="n">sorted_idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nroots</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">sorted_idx</span><span class="p">[</span><span class="n">conv</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">idx</span><span class="p">[</span><span class="o">-</span><span class="n">nconv</span><span class="p">:])</span>
+    <span class="n">sorted_idx</span><span class="p">[</span><span class="o">~</span><span class="n">conv</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">idx</span><span class="p">[:</span><span class="o">-</span><span class="n">nconv</span><span class="p">])[:</span><span class="n">nleft</span><span class="p">]</span>
 
-    <span class="n">idx_to_conv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nroots</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">conv</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vlast</span><span class="p">[:,</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">v</span><span class="p">[:</span><span class="n">head</span><span class="p">])</span>
-            <span class="n">map_to_last</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
-            <span class="n">e</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="n">map_to_last</span><span class="p">]</span>
-            <span class="n">c</span><span class="p">[:,</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="n">map_to_last</span><span class="p">]</span>
-            <span class="n">idx_to_conv</span><span class="p">[</span><span class="n">map_to_last</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
-    <span class="k">if</span> <span class="n">emin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">drop</span> <span class="o">=</span> <span class="n">w</span> <span class="o">&lt;</span> <span class="n">emin</span><span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">emin</span><span class="p">)</span><span class="o">*.</span><span class="mo">01</span>
-        <span class="n">idx_to_conv</span> <span class="o">=</span> <span class="n">idx_to_conv</span> <span class="o">&amp;</span> <span class="p">(</span><span class="o">~</span><span class="n">drop</span><span class="p">)</span>
-    <span class="n">idx_to_conv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">idx_to_conv</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">nroots_left</span> <span class="o">=</span> <span class="n">nroots</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span>
-    <span class="n">e</span><span class="p">[</span><span class="o">~</span><span class="n">conv</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="n">idx_to_conv</span><span class="p">[:</span><span class="n">nroots_left</span><span class="p">]]</span>
-    <span class="n">c</span><span class="p">[:,</span><span class="o">~</span><span class="n">conv</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="n">idx_to_conv</span><span class="p">[:</span><span class="n">nroots_left</span><span class="p">]]</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="n">sorted_idx</span><span class="p">]</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="n">sorted_idx</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span>
 
 
 <span class="k">class</span> <span class="nc">_Xlist</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fd</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">scr_h5</span> <span class="o">=</span> <span class="n">scr_h5</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fd</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scr_h5</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">H5TmpFile</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">scr_h5</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fd</span> <span class="o">=</span> <span class="bp">None</span>
 
     <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
@@ -1480,7 +1466,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

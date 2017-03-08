@@ -94,8 +94,8 @@ periodic integrals.</p>
 <span class="n">cell</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;gth-szv&#39;</span>
 <span class="n">cell</span><span class="o">.</span><span class="n">pseudo</span> <span class="o">=</span> <span class="s">&#39;gth-pade&#39;</span>
 <span class="c">#</span>
-<span class="c"># Note two extra attributes &quot;.h&quot;, &quot;.gs&quot; for in the &quot;cell&quot; initialization.</span>
-<span class="c"># .h is a matrix for lattice vectors.  Note each column of .h denotes a direction</span>
+<span class="c"># Note two extra attributes &quot;.a&quot;, &quot;.gs&quot; for in the &quot;cell&quot; initialization.</span>
+<span class="c"># .a is a matrix for lattice vectors.  Each row of .a is a primitive vector.</span>
 <span class="c">#</span>
 <span class="n">cell</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span>
 <span class="n">cell</span><span class="o">.</span><span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span>  <span class="c"># 10 grids on postive x direction, =&gt; 21^3 grids in total</span>
@@ -121,71 +121,34 @@ periodic integrals.</p>
 </pre></div>
 </div>
 <p>Addition to the basic parameters <tt class="xref py py-attr docutils literal"><span class="pre">atom</span></tt>, <tt class="xref py py-attr docutils literal"><span class="pre">basis</span></tt>, you need at least
-set the lattice parameter <tt class="xref py py-attr docutils literal"><span class="pre">h</span></tt>, the dense of FFT-mesh <tt class="xref py py-attr docutils literal"><span class="pre">gs</span></tt> to
-describe the cell.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The lattice vector .h is a 3x3 array. Each column of .h array is a real space
-primitive vector.</p>
-</div>
+set lattice parameter <tt class="xref py py-attr docutils literal"><span class="pre">a</span></tt>, dense of FFT-mesh <tt class="xref py py-attr docutils literal"><span class="pre">gs</span></tt> to
+describe the cell.  Lattice vector .a is a 3x3 array. Each row of .a
+is a real space primitive vector.</p>
 <p>In certain systems, it is convenient to choose the FFT-mesh based on the kinetic
 energy cutoff.  The <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> class offers an alternative attribute
 <tt class="xref py py-attr docutils literal"><span class="pre">ke_cutoff</span></tt> to set the FFT-mesh.  If <tt class="xref py py-attr docutils literal"><span class="pre">ke_cutoff</span></tt> was set and
 <tt class="xref py py-attr docutils literal"><span class="pre">gs</span></tt> is blank,  <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> initialization function will convert the
 <tt class="xref py py-attr docutils literal"><span class="pre">ke_cutoff</span></tt> to the FFT-mesh and overwrite the <tt class="xref py py-attr docutils literal"><span class="pre">gs</span></tt> attribute in
-terms of the relation <span class="math">\(\mathbf{g} = \frac{\sqrt{2k_{cut}}}{2\pi}\mathbf{h}\)</span>.
+terms of the relation <span class="math">\(\mathbf{g} = \frac{\sqrt{2k_{cut}}}{2\pi}\mathbf{a}^T\)</span>.
 Aside from these parameters, the pseudo potential <tt class="xref py py-attr docutils literal"><span class="pre">pseudo</span></tt> is another
 attribute commonly required by many calculations (see also <a class="reference internal" href="#pseudo"><em>Pseudo potential</em></a>).</p>
-<p>The input parameters <tt class="docutils literal"><span class="pre">.h</span></tt> and <tt class="docutils literal"><span class="pre">.pseudo</span></tt> are immutable in the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt>
+<p>The input parameters <tt class="docutils literal"><span class="pre">.a</span></tt> and <tt class="docutils literal"><span class="pre">.pseudo</span></tt> are immutable in the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt>
 object.  The input format might be different to the internal format required
 by the program.  Similar to the convention in <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt>, the internal Python
-data layer is created to hold the formatted <tt class="docutils literal"><span class="pre">.h</span></tt> and <tt class="docutils literal"><span class="pre">.pseudo</span></tt> parameters.</p>
+data layer is created to hold the formatted <tt class="docutils literal"><span class="pre">.a</span></tt> and <tt class="docutils literal"><span class="pre">.pseudo</span></tt> parameters.</p>
 <dl class="docutils">
-<dt>_h</dt>
-<dd>Lattice vectors in atomic unit.</dd>
 <dt>_pseudo</dt>
 <dd>The internal format to hold PBC pseudo potential parameters.  It is
 represented with nested Python lists only.</dd>
 </dl>
 <p>There are some attributes of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> relevant to the calculation accuracy.
-They are <tt class="xref py py-attr docutils literal"><span class="pre">nimgs</span></tt> the number of repeated images in the real space lattice
+They are <tt class="xref py py-attr docutils literal"><span class="pre">rcut</span></tt> the radius to truncate for real space lattice
 summation, <tt class="xref py py-attr docutils literal"><span class="pre">ew_eta</span></tt> and <tt class="xref py py-attr docutils literal"><span class="pre">ew_cut</span></tt> the model charge and the energy
 cutoff to control the accuracy of Ewald summation.  Generally, we don&#8217;t have to
-manually set them in the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> initialization procedure.
+manually set these parameters in the <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> initialization procedure.
 They are generated by the initialization function based on the attribute
 <tt class="xref py py-attr docutils literal"><span class="pre">precision</span></tt> which is a raw parameter to control the effective accuracy of
-the calculation.  Nevertheless, we have to adjust these attributes in some
-systems, especially when the diffused basis functions are employed.  For
-example, in the following primitive cell of Diamond crystal, the default
-<tt class="xref py py-attr docutils literal"><span class="pre">nimgs</span></tt> (5,5,5) is not able to produce enough accuracy to guarantee
-the periodicity.  It breaks the positive definition of the overlap matrix:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span>
-<span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">gto</span>
-<span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
-<span class="s">C 0.000000000000  0.000000000000  0.000000000000</span>
-<span class="s">C 1.685068664391  1.685068664391  1.685068664391&#39;&#39;&#39;</span><span class="p">,</span>
-<span class="n">unit</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">,</span>
-<span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;gth-dzvp&#39;</span><span class="p">,</span>
-<span class="n">pseudo</span> <span class="o">=</span> <span class="s">&#39;gth-pade&#39;</span><span class="p">,</span>
-<span class="n">h</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
-<span class="s">0.000000000  3.370137329  3.370137329</span>
-<span class="s">3.370137329  0.000000000  3.370137329</span>
-<span class="s">3.370137329  3.370137329  0.000000000&#39;&#39;&#39;</span><span class="p">,</span>
-<span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">])</span>
-<span class="n">kpts</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">make_kpts</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
-<span class="n">sk</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">pbc_intor</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">,</span> <span class="n">kpts</span><span class="o">=</span><span class="n">kpts</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">nimgs</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">s</span><span class="p">)[</span><span class="mi">3</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>  <span class="c"># not positive-definite</span>
-
-<span class="n">cell</span><span class="o">.</span><span class="n">nimgs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span>
-<span class="n">sk</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">pbc_intor</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_sph&#39;</span><span class="p">,</span> <span class="n">kpts</span><span class="o">=</span><span class="n">kpts</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">s</span><span class="p">)[</span><span class="mi">3</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>  <span class="c"># positive-definite</span>
-</pre></div>
-</div>
-<p>When you got Linear <tt class="docutils literal"><span class="pre">LinAlgError</span></tt> from <tt class="docutils literal"><span class="pre">scipy.linalg.eigh</span></tt> function with the
-<cite>not positive definite</cite> error, it is very likely due to the truncation in the
-real space lattice summation.  Increasing <tt class="xref py py-attr docutils literal"><span class="pre">nimgs</span></tt> can solve this issue in
-most scenario.</p>
+the calculation.</p>
 <p>Besides the methods and parameters provided by <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> class (see Chapter
 <a class="reference internal" href="../gto.html#gto"><em>gto &#8212; Molecular structure and GTO basis</em></a>), There are some parameters constantly used in the code to access the
 information of the crystal.</p>
@@ -211,17 +174,10 @@ the number of FFT grids in each direction.  <tt class="xref py py-meth docutils 
 convert the FFT-mesh to the plane waves.  <tt class="docutils literal"><span class="pre">Gv</span></tt> are the the plane wave bases
 of 3D-FFT transformation.  Given <tt class="docutils literal"><span class="pre">gs</span> <span class="pre">=</span> <span class="pre">[nx,ny,nz]</span></tt>, the number of vectors in
 <tt class="docutils literal"><span class="pre">Gv</span></tt> is <tt class="docutils literal"><span class="pre">(2*nx+1)*(2*ny+1)*(2*nz+1)</span></tt>.</dd>
-<dt>nimgs</dt>
-<dd><tt class="xref py py-attr docutils literal"><span class="pre">nimgs</span></tt> is the number of repeated images in each direction to mimic the
-periodicity.  It is mainly affected by the diffuse functions in the basis set.
-You may need increase the number of repeated images as shown by the above
-example to restore the periodicity.  The range of lattice summation is
-determined by this variable.  <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt> provides the function
-<tt class="xref py py-func docutils literal"><span class="pre">get_lattice_Ls()</span></tt> to convert the number of repeated images to the
-translation vectors of lattice summation.  This function is widely used in
-both the analytical and the numerical PBC integration.</dd>
 <dt>vol</dt>
 <dd><tt class="xref py py-attr docutils literal"><span class="pre">Cell.vol</span></tt> gives the volume of the unit cell (in atomic unit).</dd>
+<dt>reciprocal_vectors</dt>
+<dd>A 3x3 array.  Each row is a reciprocal space primitive vector.</dd>
 <dt>energy_nuc</dt>
 <dd>Similar to the <tt class="xref py py-func docutils literal"><span class="pre">energy_nuc()</span></tt> provided by <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt> class, this
 function also return the energy associated to the nuclear repulsion.  The
@@ -293,7 +249,7 @@ reach the precision in overlap</p>
 
 <dl class="method">
 <dt id="pyscf.pbc.gto.Cell.build">
-<tt class="descname">build</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>a=None</em>, <em>gs=None</em>, <em>ke_cutoff=None</em>, <em>precision=None</em>, <em>nimgs=None</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em>, <em>pseudo=None</em>, <em>basis=None</em>, <em>h=None</em>, <em>dimension=None</em>, <em>ecp=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.build" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">build</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>a=None</em>, <em>gs=None</em>, <em>ke_cutoff=None</em>, <em>precision=None</em>, <em>nimgs=None</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em>, <em>pseudo=None</em>, <em>basis=None</em>, <em>h=None</em>, <em>dimension=None</em>, <em>rcut=None</em>, <em>ecp=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup Mole molecule and Cell and initialize some control parameters.
 Whenever you change the value of the attributes of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt>,
 you need call this function to refresh the internal data of Cell.</p>
@@ -584,7 +540,7 @@ it adds one additional lattice vector to be safe.</p>
 
 <dl class="method">
 <dt id="pyscf.pbc.gto.Cell.kernel">
-<tt class="descname">kernel</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>a=None</em>, <em>gs=None</em>, <em>ke_cutoff=None</em>, <em>precision=None</em>, <em>nimgs=None</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em>, <em>pseudo=None</em>, <em>basis=None</em>, <em>h=None</em>, <em>dimension=None</em>, <em>ecp=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.kernel" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">kernel</tt><big>(</big><em>dump_input=True</em>, <em>parse_arg=True</em>, <em>a=None</em>, <em>gs=None</em>, <em>ke_cutoff=None</em>, <em>precision=None</em>, <em>nimgs=None</em>, <em>ew_eta=None</em>, <em>ew_cut=None</em>, <em>pseudo=None</em>, <em>basis=None</em>, <em>h=None</em>, <em>dimension=None</em>, <em>rcut=None</em>, <em>ecp=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.kernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup Mole molecule and Cell and initialize some control parameters.
 Whenever you change the value of the attributes of <tt class="xref py py-class docutils literal"><span class="pre">Cell</span></tt>,
 you need call this function to refresh the internal data of Cell.</p>
@@ -611,11 +567,19 @@ a lattice vector.</dd>
 
 <dl class="method">
 <dt id="pyscf.pbc.gto.Cell.make_kpts">
-<tt class="descname">make_kpts</tt><big>(</big><em>cell</em>, <em>nks</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.make_kpts" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">make_kpts</tt><big>(</big><em>cell</em>, <em>nks</em>, <em>wrap_around=False</em>, <em>with_gamma_point=True</em><big>)</big><a class="headerlink" href="#pyscf.pbc.gto.Cell.make_kpts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given number of kpoints along x,y,z , generate kpoints</p>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd>nks : (3,) ndarray</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>wrap_around <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>To ensure all kpts are in first Brillouin zone.</dd>
+<dt>with_gamma_point <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Whether to shift Monkhorst-pack grid to include gamma-point.</dd>
+</dl>
+</dd>
 <dt>Returns:</dt>
 <dd>kpts in absolute value (unit 1/Bohr).  Gamma point is placed at the
 first place in the k-points list</dd>
@@ -903,7 +867,7 @@ in the same calculation.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

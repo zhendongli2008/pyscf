@@ -142,7 +142,7 @@ control the runtime behaviour of CCSD module, eg the convergence criteria, DIIS
 parameters.</p>
 <dl class="class">
 <dt id="pyscf.cc.ccsd.CCSD">
-<em class="property">class </em><tt class="descclassname">pyscf.cc.ccsd.</tt><tt class="descname">CCSD</tt><big>(</big><em>mf</em>, <em>frozen=</em>, <span class="optional">[</span><span class="optional">]</span><em>mo_coeff=None</em>, <em>mo_occ=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/ccsd.html#CCSD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.ccsd.CCSD" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pyscf.cc.ccsd.</tt><tt class="descname">CCSD</tt><big>(</big><em>mf</em>, <em>frozen=[]</em>, <em>mo_coeff=None</em>, <em>mo_occ=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/ccsd.html#CCSD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.ccsd.CCSD" title="Permalink to this definition">¶</a></dt>
 <dd><p>restricted CCSD</p>
 <dl class="docutils">
 <dt>Attributes:</dt>
@@ -285,7 +285,7 @@ CASCI solver to approximate the multi-configuration calculation.</p>
         <span class="n">e_corr</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mycc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">eris</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eris</span><span class="p">)</span>
         <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mycc</span><span class="o">.</span><span class="n">solve_lambda</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">,</span> <span class="n">eris</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eris</span><span class="p">)</span>
         <span class="n">e</span> <span class="o">=</span> <span class="n">fake_hf</span><span class="o">.</span><span class="n">e_tot</span> <span class="o">+</span> <span class="n">e_corr</span>
-        <span class="k">return</span> <span class="n">e</span><span class="p">,</span> <span class="p">[</span><span class="n">t1</span><span class="p">,</span><span class="n">t2</span><span class="p">,</span><span class="n">l1</span><span class="p">,</span><span class="n">l2</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">e</span><span class="o">+</span><span class="n">ecore</span><span class="p">,</span> <span class="p">[</span><span class="n">t1</span><span class="p">,</span><span class="n">t2</span><span class="p">,</span><span class="n">l1</span><span class="p">,</span><span class="n">l2</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">make_rdm1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fake_ci</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
         <span class="n">mo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mycc</span><span class="o">.</span><span class="n">mo_coeff</span>
@@ -300,11 +300,10 @@ CASCI solver to approximate the multi-configuration calculation.</p>
         <span class="n">dm2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mycc</span><span class="o">.</span><span class="n">make_rdm2</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">)</span>
         <span class="n">dm2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">dm2</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nmo</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
         <span class="n">dm2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dm2</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">nmo</span><span class="p">),</span> <span class="n">mo</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-        <span class="n">dm2</span> <span class="o">=</span> <span class="n">dm2</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">nmo</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">dm2</span> <span class="o">=</span> <span class="n">dm2</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">nmo</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">dm2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">dm2</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nmo</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
         <span class="n">dm2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dm2</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">nmo</span><span class="p">),</span> <span class="n">mo</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-        <span class="c"># convert physicist&#39;s notation to chemist&#39;s notation</span>
-        <span class="n">dm2</span> <span class="o">=</span> <span class="n">dm2</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">nmo</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">dm2</span> <span class="o">=</span> <span class="n">dm2</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">nmo</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="n">fake_ci</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">),</span> <span class="n">dm2</span>
 
     <span class="k">def</span> <span class="nf">spin_square</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fake_ci</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
@@ -524,7 +523,7 @@ support user to feed MO integrals.</p>
 
 <dl class="class">
 <dt>
-<em class="property">class </em><tt class="descclassname">pyscf.cc.ccsd.</tt><tt class="descname">CCSD</tt><big>(</big><em>mf</em>, <em>frozen=</em>, <span class="optional">[</span><span class="optional">]</span><em>mo_coeff=None</em>, <em>mo_occ=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/ccsd.html#CCSD"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><tt class="descclassname">pyscf.cc.ccsd.</tt><tt class="descname">CCSD</tt><big>(</big><em>mf</em>, <em>frozen=[]</em>, <em>mo_coeff=None</em>, <em>mo_occ=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/ccsd.html#CCSD"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>restricted CCSD</p>
 <dl class="docutils">
 <dt>Attributes:</dt>
@@ -579,7 +578,7 @@ occupied and virtual orbitals can be frozen in CC calculation.</p>
 <dl class="method">
 <dt id="pyscf.cc.ccsd.CCSD.make_rdm1">
 <tt class="descname">make_rdm1</tt><big>(</big><em>t1=None</em>, <em>t2=None</em>, <em>l1=None</em>, <em>l2=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/ccsd.html#CCSD.make_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.ccsd.CCSD.make_rdm1" title="Permalink to this definition">¶</a></dt>
-<dd><p>1-particle density matrix in MO space</p>
+<dd><p>Un-relaxed 1-particle density matrix in MO space</p>
 </dd></dl>
 
 <dl class="method">
@@ -599,10 +598,22 @@ stored in physicist notation</p>
 </dd></dl>
 
 <span class="target" id="module-pyscf.cc.addons"></span><dl class="function">
+<dt id="pyscf.cc.addons.spatial2spin">
+<tt class="descclassname">pyscf.cc.addons.</tt><tt class="descname">spatial2spin</tt><big>(</big><em>tx</em>, <em>orbspin</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/addons.html#spatial2spin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.addons.spatial2spin" title="Permalink to this definition">¶</a></dt>
+<dd><p>call orbspin_of_sorted_mo_energy to get orbspin</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyscf.cc.addons.spatial2spinorb">
 <tt class="descclassname">pyscf.cc.addons.</tt><tt class="descname">spatial2spinorb</tt><big>(</big><em>t1_or_t2</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/addons.html#spatial2spinorb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.addons.spatial2spinorb" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert T1/T2 of spatial orbital representation to T1/T2 of
 spin-orbital representation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.cc.addons.spin2spatial">
+<tt class="descclassname">pyscf.cc.addons.</tt><tt class="descname">spin2spatial</tt><big>(</big><em>tx</em>, <em>orbspin</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/addons.html#spin2spatial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.addons.spin2spatial" title="Permalink to this definition">¶</a></dt>
+<dd><p>call orbspin_of_sorted_mo_energy to get orbspin</p>
 </dd></dl>
 
 </div>
@@ -611,11 +622,37 @@ spin-orbital representation</p>
 </div>
 <div class="section" id="module-pyscf.cc.uccsd">
 <span id="uccsd"></span><h3>UCCSD<a class="headerlink" href="#module-pyscf.cc.uccsd" title="Permalink to this headline">¶</a></h3>
+<p>UCCSD with spatial integrals</p>
+<dl class="function">
+<dt id="pyscf.cc.uccsd.get_umoidx">
+<tt class="descclassname">pyscf.cc.uccsd.</tt><tt class="descname">get_umoidx</tt><big>(</big><em>cc</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/uccsd.html#get_umoidx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.uccsd.get_umoidx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get MO boolean indices for unrestricted reference, accounting for frozen orbs.</p>
+</dd></dl>
+
 <dl class="function">
 <dt id="pyscf.cc.uccsd.kernel">
 <tt class="descclassname">pyscf.cc.uccsd.</tt><tt class="descname">kernel</tt><big>(</big><em>cc</em>, <em>eris</em>, <em>t1=None</em>, <em>t2=None</em>, <em>max_cycle=50</em>, <em>tol=1e-08</em>, <em>tolnormt=1e-06</em>, <em>verbose=4</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/uccsd.html#kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.uccsd.kernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exactly the same as pyscf.cc.ccsd.kernel, which calls a
 <em>local</em> energy() function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.cc.uccsd.uspatial2spin">
+<tt class="descclassname">pyscf.cc.uccsd.</tt><tt class="descname">uspatial2spin</tt><big>(</big><em>cc</em>, <em>moidx</em>, <em>mo_coeff</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/uccsd.html#uspatial2spin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.uccsd.uspatial2spin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the results of an unrestricted mean-field calculation to spin-orbital form.</p>
+<p>Spin-orbital ordering is determined by orbital energy without regard for spin.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>fock <span class="classifier-delimiter">:</span> <span class="classifier">(nso,nso) ndarray</span></dt>
+<dd>The Fock matrix in the basis of spin-orbitals</dd>
+<dt>so_coeff <span class="classifier-delimiter">:</span> <span class="classifier">(nao, nso) ndarray</span></dt>
+<dd>The matrix of spin-orbital coefficients in the AO basis</dd>
+<dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">(nso,) ndarary</span></dt>
+<dd>The spin (0 or 1) of each spin-orbital</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -705,7 +742,7 @@ spin-orbital representation</p>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

@@ -201,13 +201,15 @@
         <span class="n">h2e</span><span class="p">[:,:,</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">f1e</span>
     <span class="k">return</span> <span class="n">ao2mo</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">h2e</span><span class="p">,</span> <span class="n">norb</span><span class="p">)</span> <span class="o">*</span> <span class="n">fac</span>
 </div>
-<div class="viewcode-block" id="pspace"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.direct_spin1.pspace">[docs]</a><span class="k">def</span> <span class="nf">pspace</span><span class="p">(</span><span class="n">h1e</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">hdiag</span><span class="p">,</span> <span class="n">np</span><span class="o">=</span><span class="mi">400</span><span class="p">):</span>
+<div class="viewcode-block" id="pspace"><a class="viewcode-back" href="../../../fci.html#pyscf.fci.direct_spin1.pspace">[docs]</a><span class="k">def</span> <span class="nf">pspace</span><span class="p">(</span><span class="n">h1e</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">hdiag</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">np</span><span class="o">=</span><span class="mi">400</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;pspace Hamiltonian to improve Davidson preconditioner. See, CPL, 169, 463</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">neleca</span><span class="p">,</span> <span class="n">nelecb</span> <span class="o">=</span> <span class="n">_unpack_nelec</span><span class="p">(</span><span class="n">nelec</span><span class="p">)</span>
     <span class="n">h1e</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">h1e</span><span class="p">)</span>
     <span class="n">eri</span> <span class="o">=</span> <span class="n">ao2mo</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">norb</span><span class="p">)</span>
     <span class="n">nb</span> <span class="o">=</span> <span class="n">cistring</span><span class="o">.</span><span class="n">num_strings</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">nelecb</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hdiag</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">hdiag</span> <span class="o">=</span> <span class="n">make_hdiag</span><span class="p">(</span><span class="n">h1e</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">hdiag</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">np</span><span class="p">:</span>
         <span class="n">addr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">hdiag</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -777,7 +779,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>
