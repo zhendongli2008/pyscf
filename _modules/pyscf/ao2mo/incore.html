@@ -88,7 +88,7 @@
 <span class="sd">    &gt;&gt;&gt; from pyscf.scf import _vhf</span>
 <span class="sd">    &gt;&gt;&gt; from pyscf import ao2mo</span>
 <span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;O 0 0 0; H 0 1 0; H 0 0 1&#39;, basis=&#39;sto3g&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; eri = _vhf.int2e_sph(mol._atm, mol._bas, mol._env)</span>
+<span class="sd">    &gt;&gt;&gt; eri = mol.intor(&#39;int2e_sph&#39;, aosym=&#39;s8&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; mo1 = numpy.random.random((mol.nao_nr(), 10))</span>
 <span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.full(eri, mo1)</span>
 <span class="sd">    &gt;&gt;&gt; print(eri1.shape)</span>
@@ -134,7 +134,7 @@
 <span class="sd">    &gt;&gt;&gt; from pyscf.scf import _vhf</span>
 <span class="sd">    &gt;&gt;&gt; from pyscf import ao2mo</span>
 <span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;O 0 0 0; H 0 1 0; H 0 0 1&#39;, basis=&#39;sto3g&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; eri = _vhf.int2e_sph(mol._atm, mol._bas, mol._env)</span>
+<span class="sd">    &gt;&gt;&gt; eri = mol.intor(&#39;int2e_sph&#39;, aosym=&#39;s8&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; mo1 = numpy.random.random((mol.nao_nr(), 10))</span>
 <span class="sd">    &gt;&gt;&gt; mo2 = numpy.random.random((mol.nao_nr(), 8))</span>
 <span class="sd">    &gt;&gt;&gt; mo3 = numpy.random.random((mol.nao_nr(), 6))</span>
@@ -208,7 +208,7 @@
 <span class="sd">    &gt;&gt;&gt; from pyscf import gto</span>
 <span class="sd">    &gt;&gt;&gt; from pyscf import ao2mo</span>
 <span class="sd">    &gt;&gt;&gt; mol = gto.M(atom=&#39;O 0 0 0; H 0 1 0; H 0 0 1&#39;, basis=&#39;sto3g&#39;)</span>
-<span class="sd">    &gt;&gt;&gt; eri = _vhf.int2e_sph(mol._atm, mol._bas, mol._env)</span>
+<span class="sd">    &gt;&gt;&gt; eri = mol.intor(&#39;int2e_sph&#39;, aosym=&#39;s8&#39;)</span>
 <span class="sd">    &gt;&gt;&gt; mo1 = numpy.random.random((mol.nao_nr(), 10))</span>
 <span class="sd">    &gt;&gt;&gt; mo2 = numpy.random.random((mol.nao_nr(), 8))</span>
 <span class="sd">    &gt;&gt;&gt; eri1 = ao2mo.incore.half_e1(eri, (mo1,mo2))</span>
@@ -223,9 +223,8 @@
 <span class="sd">    (55, 28)</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">eri_ao</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eri_ao</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
-    <span class="n">nmoi</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">nao</span><span class="p">,</span> <span class="n">nmoi</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
     <span class="n">nmoj</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">nao</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">nao_pair</span> <span class="o">=</span> <span class="n">nao</span><span class="o">*</span><span class="p">(</span><span class="n">nao</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
     <span class="n">ijmosym</span><span class="p">,</span> <span class="n">nij_pair</span><span class="p">,</span> <span class="n">moij</span><span class="p">,</span> <span class="n">ijshape</span> <span class="o">=</span> <span class="n">_conc_mos</span><span class="p">(</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">compact</span><span class="p">)</span>
     <span class="n">ijshape</span> <span class="o">=</span> <span class="p">(</span><span class="n">ijshape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ijshape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">ijshape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
@@ -237,8 +236,12 @@
 
     <span class="k">if</span> <span class="n">eri_ao</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">nao_pair</span><span class="o">**</span><span class="mi">2</span><span class="p">:</span> <span class="c"># 4-fold symmetry</span>
         <span class="n">ftrans</span> <span class="o">=</span> <span class="n">_ao2mo</span><span class="o">.</span><span class="n">libao2mo</span><span class="o">.</span><span class="n">AO2MOtranse1_incore_s4</span>
-    <span class="k">else</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">eri_ao</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">nao_pair</span><span class="o">*</span><span class="p">(</span><span class="n">nao_pair</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">:</span>
         <span class="n">ftrans</span> <span class="o">=</span> <span class="n">_ao2mo</span><span class="o">.</span><span class="n">libao2mo</span><span class="o">.</span><span class="n">AO2MOtranse1_incore_s8</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">pyscf.ao2mo.addons</span> <span class="kn">import</span> <span class="n">restore</span>
+        <span class="n">eri_ao</span> <span class="o">=</span> <span class="n">restore</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">eri_ao</span><span class="p">,</span> <span class="n">nao</span><span class="p">)</span>
+        <span class="n">ftrans</span> <span class="o">=</span> <span class="n">_ao2mo</span><span class="o">.</span><span class="n">libao2mo</span><span class="o">.</span><span class="n">AO2MOtranse1_incore_s4</span>
     <span class="k">if</span> <span class="n">ijmosym</span> <span class="o">==</span> <span class="s">&#39;s2&#39;</span><span class="p">:</span>
         <span class="n">fmmm</span> <span class="o">=</span> <span class="n">_ao2mo</span><span class="o">.</span><span class="n">libao2mo</span><span class="o">.</span><span class="n">AO2MOmmm_nr_s2_s2</span>
     <span class="k">elif</span> <span class="n">nmoi</span> <span class="o">&lt;=</span> <span class="n">nmoj</span><span class="p">:</span>

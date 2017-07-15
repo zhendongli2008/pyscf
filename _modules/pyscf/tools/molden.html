@@ -224,10 +224,10 @@
         <span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span>
         <span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="p">[</span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">atom_seq</span><span class="p">]</span>
 
-        <span class="n">mol</span><span class="o">.</span><span class="n">_cart_gto</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">mol</span><span class="o">.</span><span class="n">cart</span> <span class="o">=</span> <span class="bp">True</span>
         <span class="k">while</span> <span class="n">line</span><span class="p">:</span>
             <span class="k">if</span> <span class="s">&#39;[5d]&#39;</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">or</span> <span class="s">&#39;[9g]&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-                <span class="n">mol</span><span class="o">.</span><span class="n">_cart_gto</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="n">mol</span><span class="o">.</span><span class="n">cart</span> <span class="o">=</span> <span class="bp">False</span>
             <span class="k">elif</span> <span class="s">&#39;[MO]&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                 <span class="k">break</span>
             <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
@@ -261,11 +261,11 @@
             <span class="n">mo_coeff</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">orb</span><span class="p">)</span>
         <span class="n">mo_energy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mo_energy</span><span class="p">)</span>
         <span class="n">mo_occ</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mo_occ</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">mol</span><span class="o">.</span><span class="n">_cart_gto</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mol</span><span class="o">.</span><span class="n">cart</span><span class="p">:</span>
             <span class="n">aoidx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">order_ao_index</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">cart</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
             <span class="n">mo_coeff</span> <span class="o">=</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)[</span><span class="n">aoidx</span><span class="p">]</span>
 <span class="c"># AO are assumed to be normalized in molpro molden file</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s">&#39;cint1e_ovlp_cart&#39;</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s">&#39;int1e_ovlp&#39;</span><span class="p">)</span>
             <span class="n">mo_coeff</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s">&#39;i,ij-&gt;ij&#39;</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">s</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()),</span> <span class="n">mo_coeff</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">aoidx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">order_ao_index</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span>

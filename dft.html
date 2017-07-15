@@ -82,10 +82,8 @@ SCF base class.   non-relativistic RHF.</p>
 <dt>init_guess <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
 <dd>initial guess method.  It can be one of &#8216;minao&#8217;, &#8216;atom&#8217;, &#8216;1e&#8217;, &#8216;chkfile&#8217;.
 Default is &#8216;minao&#8217;</dd>
-<dt>DIIS <span class="classifier-delimiter">:</span> <span class="classifier">class listed in <tt class="xref py py-mod docutils literal"><span class="pre">scf.diis</span></tt></span></dt>
+<dt>diis <span class="classifier-delimiter">:</span> <span class="classifier">boolean or object of DIIS class listed in <tt class="xref py py-mod docutils literal"><span class="pre">scf.diis</span></tt></span></dt>
 <dd>Default is <tt class="xref py py-class docutils literal"><span class="pre">diis.SCF_DIIS</span></tt>. Set it to None to turn off DIIS.</dd>
-<dt>diis <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
-<dd>whether to do DIIS.  Default is True.</dd>
 <dt>diis_space <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
 <dd>DIIS space size.  By default, 8 Fock matrices and errors vector are stored.</dd>
 <dt>diis_start_cycle <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
@@ -478,7 +476,7 @@ atom center; the second is the volume of that grid.</dd>
 <dt>
 <tt class="descname">3.30702072,  3.30702072,  3.30702072,  3.30702072,  3.30702072,</tt></dt>
 <dt>
-<tt class="descname">3.30702072]), becke_scheme=&lt;function original_becke at 0x2ba8a6de1a28&gt;)</tt></dt>
+<tt class="descname">3.30702072]), becke_scheme=&lt;function original_becke at 0x2b1032bbea28&gt;)</tt></dt>
 <dd><p>Generate the mesh grid coordinates and weights for DFT numerical integration.
 We can change radii_adjust, becke_scheme functions to generate different meshgrid.</p>
 <dl class="docutils">
@@ -488,11 +486,41 @@ weight 1D array has N elements.</dd>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="pyscf.dft.gen_grid.Grids.make_mask">
+<tt class="descname">make_mask</tt><big>(</big><em>mol=None</em>, <em>coords=None</em>, <em>relativity=0</em>, <em>shls_slice=None</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#Grids.make_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.Grids.make_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mask to indicate whether a shell is zero on grid</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">mol : an instance of <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></p>
+<dl class="last docutils">
+<dt>coords <span class="classifier-delimiter">:</span> <span class="classifier">2D array, shape (N,3)</span></dt>
+<dd>The coordinates of grids.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>relativity <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>No effects.</dd>
+<dt>shls_slice <span class="classifier-delimiter">:</span> <span class="classifier">2-element list</span></dt>
+<dd>(shl_start, shl_end).
+If given, only part of AOs (shl_start &lt;= shell_id &lt; shl_end) are
+evaluated.  By default, all shells defined in mol will be evaluated.</dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
+<dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>2D mask array of shape (N,nbas), where N is the number of grids, nbas
+is the number of shells.</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.dft.gen_grid.gen_atomic_grids">
-<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">gen_atomic_grids</tt><big>(</big><em>mol</em>, <em>atom_grid={}</em>, <em>radi_method=&lt;function gauss_chebyshev at 0x2ba8a6de15f0&gt;</em>, <em>level=3</em>, <em>prune=&lt;function nwchem_prune at 0x2ba8a6de18c0&gt;</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">gen_atomic_grids</tt><big>(</big><em>mol</em>, <em>atom_grid={}</em>, <em>radi_method=&lt;function gauss_chebyshev at 0x2b1032bbe5f0&gt;</em>, <em>level=3</em>, <em>prune=&lt;function nwchem_prune at 0x2b1032bbe8c0&gt;</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate number of radial grids and angular grids for the given molecule.</p>
 <dl class="docutils">
 <dt>Returns:</dt>
@@ -556,13 +584,43 @@ atom center; the second is the volume of that grid.</dd>
 <dt>
 <tt class="descname">3.30702072,  3.30702072,  3.30702072,  3.30702072,  3.30702072,</tt></dt>
 <dt>
-<tt class="descname">3.30702072]), becke_scheme=&lt;function original_becke at 0x2ba8a6de1a28&gt;)</tt></dt>
+<tt class="descname">3.30702072]), becke_scheme=&lt;function original_becke at 0x2b1032bbea28&gt;)</tt></dt>
 <dd><p>Generate the mesh grid coordinates and weights for DFT numerical integration.
 We can change radii_adjust, becke_scheme functions to generate different meshgrid.</p>
 <dl class="docutils">
 <dt>Returns:</dt>
 <dd>grid_coord and grid_weight arrays.  grid_coord array has shape (N,3);
 weight 1D array has N elements.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.gen_grid.make_mask">
+<tt class="descclassname">pyscf.dft.gen_grid.</tt><tt class="descname">make_mask</tt><big>(</big><em>mol</em>, <em>coords</em>, <em>relativity=0</em>, <em>shls_slice=None</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#make_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.make_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mask to indicate whether a shell is zero on grid</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">mol : an instance of <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></p>
+<dl class="last docutils">
+<dt>coords <span class="classifier-delimiter">:</span> <span class="classifier">2D array, shape (N,3)</span></dt>
+<dd>The coordinates of grids.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>relativity <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>No effects.</dd>
+<dt>shls_slice <span class="classifier-delimiter">:</span> <span class="classifier">2-element list</span></dt>
+<dd>(shl_start, shl_end).
+If given, only part of AOs (shl_start &lt;= shell_id &lt; shl_end) are
+evaluated.  By default, all shells defined in mol will be evaluated.</dd>
+<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
+<dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>2D mask array of shape (N,nbas), where N is the number of grids, nbas
+is the number of shells.</dd>
 </dl>
 </dd></dl>
 
@@ -718,7 +776,7 @@ DFT hessian module etc.</p>
 
 <dl class="function">
 <dt id="pyscf.dft.numint.eval_ao">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_ao</tt><big>(</big><em>mol</em>, <em>coords</em>, <em>deriv=0</em>, <em>relativity=0</em>, <em>shls_slice=None</em>, <em>non0tab=None</em>, <em>out=None</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_ao"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_ao" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_ao</tt><big>(</big><em>mol</em>, <em>coords</em>, <em>deriv=0</em>, <em>shls_slice=None</em>, <em>non0tab=None</em>, <em>out=None</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_ao"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_ao" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate AO function value on the given grids.</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -744,7 +802,7 @@ If given, only part of AOs (shl_start &lt;= shell_id &lt; shl_end) are
 evaluated.  By default, all shells defined in mol will be evaluated.</dd>
 <dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
 <dd>mask array to indicate whether the AO values are zero.  The mask
-array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
+array can be obtained by calling <tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></dd>
 <dt>out <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
 <dd>If provided, results are written into this array.</dd>
 <dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
@@ -817,7 +875,7 @@ If the kwarg spin is not 0, a list [vsigma_uu,vsigma_ud] is required.</dd>
 <dd>LDA/GGA/mGGA.  It affects the shape of <cite>ao</cite> and <cite>rho</cite></dd>
 <dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
 <dd>mask array to indicate whether the AO values are zero.  The mask
-array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
+array can be obtained by calling <tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></dd>
 <dt>spin <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
 <dd>If not 0, the matrix is contracted with the spin non-degenerated
 UKS formula</dd>
@@ -831,7 +889,7 @@ number of AO functions.</dd>
 
 <dl class="function">
 <dt id="pyscf.dft.numint.eval_rho">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_rho</tt><big>(</big><em>mol</em>, <em>ao</em>, <em>dm</em>, <em>non0tab=None</em>, <em>xctype='LDA'</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_rho"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_rho" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">eval_rho</tt><big>(</big><em>mol</em>, <em>ao</em>, <em>dm</em>, <em>non0tab=None</em>, <em>xctype='LDA'</em>, <em>hermi=0</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#eval_rho"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.eval_rho" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the electron density for LDA functional, and the density
 derivatives for GGA functional.</p>
 <dl class="docutils">
@@ -851,9 +909,11 @@ are second derivatives of ao values.</dd>
 <dd><dl class="first last docutils">
 <dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
 <dd>mask array to indicate whether the AO values are zero.  The mask
-array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
+array can be obtained by calling <tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></dd>
 <dt>xctype <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
 <dd>LDA/GGA/mGGA.  It affects the shape of the return density.</dd>
+<dt>hermi <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>dm is hermitian or not</dd>
 <dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
 <dd>No effects.</dd>
 </dl>
@@ -900,7 +960,7 @@ are second derivatives of ao values.</dd>
 <dd><dl class="first last docutils">
 <dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
 <dd>mask array to indicate whether the AO values are zero.  The mask
-array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
+array can be obtained by calling <tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></dd>
 <dt>xctype <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
 <dd>LDA/GGA/mGGA.  It affects the shape of the return density.</dd>
 <dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
@@ -922,41 +982,8 @@ nabla^2 rho and tau = 1/2(nabla f)^2</dd>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyscf.dft.numint.make_mask">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">make_mask</tt><big>(</big><em>mol</em>, <em>coords</em>, <em>relativity=0</em>, <em>shls_slice=None</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#make_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.make_mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mask to indicate whether a shell is zero on particular grid</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd><p class="first">mol : an instance of <tt class="xref py py-class docutils literal"><span class="pre">Mole</span></tt></p>
-<dl class="last docutils">
-<dt>coords <span class="classifier-delimiter">:</span> <span class="classifier">2D array, shape (N,3)</span></dt>
-<dd>The coordinates of the grids.</dd>
-</dl>
-</dd>
-<dt>Kwargs:</dt>
-<dd><dl class="first last docutils">
-<dt>relativity <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
-<dd>No effects.</dd>
-<dt>shls_slice <span class="classifier-delimiter">:</span> <span class="classifier">2-element list</span></dt>
-<dd>(shl_start, shl_end).
-If given, only part of AOs (shl_start &lt;= shell_id &lt; shl_end) are
-evaluated.  By default, all shells defined in mol will be evaluated.</dd>
-<dt>non0tab <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span></dt>
-<dd>mask array to indicate whether the AO values are zero.  The mask
-array can be obtained by calling <a class="reference internal" href="#pyscf.dft.numint.make_mask" title="pyscf.dft.numint.make_mask"><tt class="xref py py-func docutils literal"><span class="pre">make_mask()</span></tt></a></dd>
-<dt>verbose <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></span></dt>
-<dd>No effects.</dd>
-</dl>
-</dd>
-<dt>Returns:</dt>
-<dd>2D bool array of shape (N,nbas), where N is the number of grids, nbas
-is the number of shells</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
 <dt id="pyscf.dft.numint.nr_fxc">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_fxc</tt><big>(</big><em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dm0</em>, <em>dms</em>, <em>spin0</em>, <em>relativity=0</em>, <em>hermi=1</em>, <em>rho0=None</em>, <em>vxc=None</em>, <em>fxc=None</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_fxc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_fxc" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_fxc</tt><big>(</big><em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dm0</em>, <em>dms</em>, <em>spin0</em>, <em>relativity=0</em>, <em>hermi=0</em>, <em>rho0=None</em>, <em>vxc=None</em>, <em>fxc=None</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_fxc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_fxc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Contract XC kernel matrix with given density matrices</p>
 <p>... math:</p>
 <div class="highlight-python"><div class="highlight"><pre>a_{pq} = f_{pq,rs} * x_{rs}
@@ -966,7 +993,7 @@ is the number of shells</dd>
 
 <dl class="function">
 <dt id="pyscf.dft.numint.nr_rks">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_rks</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=1</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_rks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_rks" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_rks</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=0</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_rks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_rks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate RKS XC functional and potential matrix on given meshgrids
 for a set of density matrices</p>
 <dl class="docutils">
@@ -1011,8 +1038,8 @@ excsum is the XC functional value.  vmat is the XC potential matrix in
 
 <dl class="function">
 <dt id="pyscf.dft.numint.nr_rks_fxc">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_rks_fxc</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dm0</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=1</em>, <em>rho0=None</em>, <em>vxc=None</em>, <em>fxc=None</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_rks_fxc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_rks_fxc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Contract RKS XC kernel matrix with given density matrices</p>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_rks_fxc</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dm0</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=0</em>, <em>rho0=None</em>, <em>vxc=None</em>, <em>fxc=None</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_rks_fxc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_rks_fxc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contract RKS XC (singlet hessian) kernel matrix with given density matrices</p>
 <dl class="docutils">
 <dt>Args:</dt>
 <dd><p class="first">ni : an instance of <tt class="xref py py-class docutils literal"><span class="pre">_NumInt</span></tt></p>
@@ -1052,8 +1079,18 @@ excsum is the XC functional value.  vmat is the XC potential matrix in
 </dd></dl>
 
 <dl class="function">
+<dt id="pyscf.dft.numint.nr_rks_fxc_st">
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_rks_fxc_st</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dm0</em>, <em>dms_alpha</em>, <em>relativity=0</em>, <em>singlet=True</em>, <em>rho0=None</em>, <em>vxc=None</em>, <em>fxc=None</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_rks_fxc_st"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_rks_fxc_st" title="Permalink to this definition">¶</a></dt>
+<dd><p>Associated to singlet or triplet Hessian
+Note the difference to nr_rks_fxc, dms_alpha is the response density
+matrices of alpha spin, alpha+/-beta DM is applied due to singlet/triplet
+coupling</p>
+<p>Ref. CPL, 256, 454</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyscf.dft.numint.nr_rks_vxc">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_rks_vxc</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=1</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="headerlink" href="#pyscf.dft.numint.nr_rks_vxc" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_rks_vxc</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=0</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="headerlink" href="#pyscf.dft.numint.nr_rks_vxc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate RKS XC functional and potential matrix on given meshgrids
 for a set of density matrices</p>
 <dl class="docutils">
@@ -1098,7 +1135,7 @@ excsum is the XC functional value.  vmat is the XC potential matrix in
 
 <dl class="function">
 <dt id="pyscf.dft.numint.nr_uks">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_uks</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=1</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_uks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_uks" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_uks</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=0</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_uks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_uks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate UKS XC functional and potential matrix on given meshgrids
 for a set of density matrices</p>
 <dl class="docutils">
@@ -1132,7 +1169,7 @@ vmat is the XC potential matrix for (alpha,beta) spin.</dd>
 
 <dl class="function">
 <dt id="pyscf.dft.numint.nr_uks_fxc">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_uks_fxc</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dm0</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=1</em>, <em>rho0=None</em>, <em>vxc=None</em>, <em>fxc=None</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_uks_fxc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_uks_fxc" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_uks_fxc</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dm0</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=0</em>, <em>rho0=None</em>, <em>vxc=None</em>, <em>fxc=None</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_uks_fxc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_uks_fxc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Contract UKS XC kernel matrix with given density matrices</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -1174,7 +1211,7 @@ excsum is the XC functional value.  vmat is the XC potential matrix in
 
 <dl class="function">
 <dt id="pyscf.dft.numint.nr_uks_vxc">
-<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_uks_vxc</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=1</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="headerlink" href="#pyscf.dft.numint.nr_uks_vxc" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.numint.</tt><tt class="descname">nr_uks_vxc</tt><big>(</big><em>ni</em>, <em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dms</em>, <em>relativity=0</em>, <em>hermi=0</em>, <em>max_memory=2000</em>, <em>verbose=None</em><big>)</big><a class="headerlink" href="#pyscf.dft.numint.nr_uks_vxc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate UKS XC functional and potential matrix on given meshgrids
 for a set of density matrices</p>
 <dl class="docutils">
@@ -1358,7 +1395,7 @@ rho is ((den_u,grad_xu,grad_yu,grad_zu,laplacian_u,tau_u)</p>
 
 <dl class="function">
 <dt id="pyscf.dft.libxc.hybrid_coeff">
-<tt class="descclassname">pyscf.dft.libxc.</tt><tt class="descname">hybrid_coeff</tt><big>(</big><em>xc_code</em>, <em>spin=1</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/libxc.html#hybrid_coeff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.hybrid_coeff" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.dft.libxc.</tt><tt class="descname">hybrid_coeff</tt><big>(</big><em>xc_code</em>, <em>spin=0</em><big>)</big><a class="reference internal" href="_modules/pyscf/dft/libxc.html#hybrid_coeff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.hybrid_coeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Support recursively defining hybrid functional</p>
 </dd></dl>
 
@@ -1460,7 +1497,7 @@ contribution is included.</li>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

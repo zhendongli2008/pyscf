@@ -121,10 +121,9 @@ accuracy (see <a class="reference internal" href="#with-df"><em>with_df for dens
 
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">dft</span>
-<span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">df</span>
 
 <span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
-    <span class="n">h</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span><span class="p">,</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span><span class="p">,</span>
     <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;C     0.      0.      0.    </span>
 <span class="s">              C     0.8917  0.8917  0.8917</span>
 <span class="s">              C     1.7834  1.7834  0.    </span>
@@ -138,16 +137,19 @@ accuracy (see <a class="reference internal" href="#with-df"><em>with_df for dens
     <span class="n">verbose</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="n">mydf</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">MDF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
-<span class="n">mydf</span><span class="o">.</span><span class="n">auxbasis</span> <span class="o">=</span> <span class="s">&#39;weigend&#39;</span>
-
-<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
-<span class="n">mf</span><span class="o">.</span><span class="n">with_df</span> <span class="o">=</span> <span class="n">mydf</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">mix_density_fit</span><span class="p">(</span><span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;weigend&#39;</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 
-<span class="n">mf</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">RKS</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
-<span class="n">mf</span><span class="o">.</span><span class="n">with_df</span> <span class="o">=</span> <span class="n">mydf</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">RKS</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">mix_density_fit</span><span class="p">(</span><span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;weigend&#39;</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s">&#39;bp86&#39;</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="c">#</span>
+<span class="c"># Second order SCF solver can be used in the PBC SCF code the same way in the</span>
+<span class="c"># molecular calculation</span>
+<span class="c">#</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">mix_density_fit</span><span class="p">(</span><span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;weigend&#39;</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">newton</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -372,7 +374,7 @@ computation of J, K matrices</dd>
 <dd>The &#8220;inner&#8221; dummy k-point at which the DM was evaluated (or
 sampled).</dd>
 <dt>kpt_band <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
-<dd>The &#8220;outer&#8221; primary k-point at which J and K are evaluated.</dd>
+<dd>An arbitrary &#8220;band&#8221; k-point at which J is evaluated.</dd>
 </dl>
 </dd>
 <dt>Returns:</dt>
@@ -406,7 +408,7 @@ computation of J, K matrices</dd>
 <dd>The &#8220;inner&#8221; dummy k-point at which the DM was evaluated (or
 sampled).</dd>
 <dt>kpt_band <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
-<dd>The &#8220;outer&#8221; primary k-point at which J and K are evaluated.</dd>
+<dd>An arbitrary &#8220;band&#8221; k-point at which J and K are evaluated.</dd>
 </dl>
 </dd>
 <dt>Returns:</dt>
@@ -546,7 +548,7 @@ e.g. mo_coeff is (nkpts, nao, nao) ndarray</p>
 
 <dl class="method">
 <dt id="pyscf.pbc.scf.khf.KRHF.get_bands">
-<tt class="descname">get_bands</tt><big>(</big><em>kpt_band</em>, <em>cell=None</em>, <em>dm_kpts=None</em>, <em>kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#KRHF.get_bands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF.get_bands" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_bands</tt><big>(</big><em>kpts_band</em>, <em>cell=None</em>, <em>dm_kpts=None</em>, <em>kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#KRHF.get_bands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF.get_bands" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get energy bands at a given (arbitrary) &#8216;band&#8217; k-point.</p>
 <dl class="docutils">
 <dt>Returns:</dt>
@@ -558,6 +560,12 @@ e.g. mo_coeff is (nkpts, nao, nao) ndarray</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.pbc.scf.khf.KRHF.get_fermi">
+<tt class="descname">get_fermi</tt><big>(</big><em>mf</em>, <em>mo_energy_kpts=None</em>, <em>mo_occ_kpts=None</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF.get_fermi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fermi level</p>
 </dd></dl>
 
 <dl class="method">
@@ -589,7 +597,7 @@ in sequential patches of the 1D array</p>
 
 <dl class="method">
 <dt id="pyscf.pbc.scf.khf.KRHF.get_veff">
-<tt class="descname">get_veff</tt><big>(</big><em>cell=None</em>, <em>dm_kpts=None</em>, <em>dm_last=0</em>, <em>vhf_last=0</em>, <em>hermi=1</em>, <em>kpts=None</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#KRHF.get_veff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF.get_veff" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_veff</tt><big>(</big><em>cell=None</em>, <em>dm_kpts=None</em>, <em>dm_last=0</em>, <em>vhf_last=0</em>, <em>hermi=1</em>, <em>kpts=None</em>, <em>kpts_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#KRHF.get_veff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.KRHF.get_veff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hartree-Fock potential matrix for the given density matrix.
 See <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.get_veff()</span></tt> and <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.RHF.get_veff()</span></tt></p>
 </dd></dl>
@@ -597,9 +605,22 @@ See <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.get_ve
 </dd></dl>
 
 <dl class="function">
+<dt id="pyscf.pbc.scf.khf.analyze">
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">analyze</tt><big>(</big><em>mf</em>, <em>verbose=5</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#analyze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.analyze" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analyze the given SCF object:  print orbital energies, occupancies;
+print orbital coefficients; Mulliken population analysis; Dipole moment</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyscf.pbc.scf.khf.energy_elec">
 <tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">energy_elec</tt><big>(</big><em>mf</em>, <em>dm_kpts=None</em>, <em>h1e_kpts=None</em>, <em>vhf_kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#energy_elec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.energy_elec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Following pyscf.scf.hf.energy_elec()</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.khf.get_fermi">
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">get_fermi</tt><big>(</big><em>mf</em>, <em>mo_energy_kpts=None</em>, <em>mo_occ_kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#get_fermi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.get_fermi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fermi level</p>
 </dd></dl>
 
 <dl class="function">
@@ -616,7 +637,7 @@ See <tt class="xref py py-func docutils literal"><span class="pre">scf.hf.get_ve
 
 <dl class="function">
 <dt id="pyscf.pbc.scf.khf.get_j">
-<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">get_j</tt><big>(</big><em>mf</em>, <em>cell</em>, <em>dm_kpts</em>, <em>kpts</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#get_j"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.get_j" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">get_j</tt><big>(</big><em>mf</em>, <em>cell</em>, <em>dm_kpts</em>, <em>kpts</em>, <em>kpts_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#get_j"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.get_j" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the Coulomb (J) AO matrix at sampled k-points.</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -629,8 +650,8 @@ separately.</dd>
 </dd>
 <dt>Kwargs:</dt>
 <dd><dl class="first last docutils">
-<dt>kpt_band <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
-<dd>An arbitrary &#8220;band&#8221; k-point at which to evalute the matrix.</dd>
+<dt>kpts_band <span class="classifier-delimiter">:</span> <span class="classifier">(k,3) ndarray</span></dt>
+<dd>A list of arbitrary &#8220;band&#8221; k-points at which to evalute the matrix.</dd>
 </dl>
 </dd>
 <dt>Returns:</dt>
@@ -641,7 +662,7 @@ or list of vj if the input dm_kpts is a list of DMs</dd>
 
 <dl class="function">
 <dt id="pyscf.pbc.scf.khf.get_jk">
-<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">get_jk</tt><big>(</big><em>mf</em>, <em>cell</em>, <em>dm_kpts</em>, <em>kpts</em>, <em>kpt_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#get_jk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.get_jk" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">get_jk</tt><big>(</big><em>mf</em>, <em>cell</em>, <em>dm_kpts</em>, <em>kpts</em>, <em>kpts_band=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#get_jk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.get_jk" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the Coulomb (J) and exchange (K) AO matrices at sampled k-points.</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -652,8 +673,8 @@ or list of vj if the input dm_kpts is a list of DMs</dd>
 </dd>
 <dt>Kwargs:</dt>
 <dd><dl class="first last docutils">
-<dt>kpt_band <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
-<dd>An arbitrary &#8220;band&#8221; k-point at which to evalute the matrix.</dd>
+<dt>kpts_band <span class="classifier-delimiter">:</span> <span class="classifier">(3,) ndarray</span></dt>
+<dd>A list of arbitrary &#8220;band&#8221; k-point at which to evalute the matrix.</dd>
 </dl>
 </dd>
 <dt>Returns:</dt>
@@ -703,6 +724,12 @@ basis defined by <tt class="docutils literal"><span class="pre">cell</span></tt>
 </dl>
 </dd></dl>
 
+<dl class="function">
+<dt id="pyscf.pbc.scf.khf.mulliken_meta">
+<tt class="descclassname">pyscf.pbc.scf.khf.</tt><tt class="descname">mulliken_meta</tt><big>(</big><em>mol</em>, <em>dm_ao</em>, <em>verbose=5</em>, <em>pre_orth_method='ANO'</em>, <em>s=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/khf.html#mulliken_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.khf.mulliken_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mulliken population analysis, based on meta-Lowdin AOs.</p>
+</dd></dl>
+
 <span class="target" id="module-pyscf.pbc.scf.kuhf"></span><p>Hartree-Fock for periodic systems with k-point sampling</p>
 <dl class="docutils">
 <dt>See Also:</dt>
@@ -727,7 +754,7 @@ virtual subspaces separatedly (without change occupancy).</p>
 
 <dl class="method">
 <dt id="pyscf.pbc.scf.kuhf.KUHF.get_bands">
-<tt class="descname">get_bands</tt><big>(</big><em>kpt_band</em>, <em>cell=None</em>, <em>dm_kpts=None</em>, <em>kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#KUHF.get_bands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.KUHF.get_bands" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_bands</tt><big>(</big><em>kpts_band</em>, <em>cell=None</em>, <em>dm_kpts=None</em>, <em>kpts=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#KUHF.get_bands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.KUHF.get_bands" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get energy bands at a given (arbitrary) &#8216;band&#8217; k-point.</p>
 <dl class="docutils">
 <dt>Returns:</dt>
@@ -760,6 +787,131 @@ virtual subspaces separatedly (without change occupancy).</p>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="pyscf.pbc.scf.kuhf.KUHF.spin_square">
+<tt class="descname">spin_square</tt><big>(</big><em>mo_coeff=None</em>, <em>s=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#KUHF.spin_square"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.KUHF.spin_square" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spin of the given UHF orbitals</p>
+<div class="math">
+\[S^2 = \frac{1}{2}(S_+ S_-  +  S_- S_+) + S_z^2\]</div>
+<p>where <span class="math">\(S_+ = \sum_i S_{i+}\)</span> is effective for all beta occupied
+orbitals; <span class="math">\(S_- = \sum_i S_{i-}\)</span> is effective for all alpha occupied
+orbitals.</p>
+<ol class="arabic">
+<li><dl class="first docutils">
+<dt>There are two possibilities for <span class="math">\(S_+ S_-\)</span></dt>
+<dd><ol class="first arabic simple">
+<li>same electron <span class="math">\(S_+ S_- = \sum_i s_{i+} s_{i-}\)</span>,</li>
+</ol>
+<div class="math">
+\[\sum_i \langle UHF|s_{i+} s_{i-}|UHF\rangle
+ = \sum_{pq}\langle p|s_+s_-|q\rangle \gamma_{qp} = n_\alpha\]</div>
+<p>2) different electrons <span class="math">\(S_+ S_- = \sum s_{i+} s_{j-},  (i\neq j)\)</span>.
+There are in total <span class="math">\(n(n-1)\)</span> terms.  As a two-particle operator,</p>
+<div class="last math">
+\[\langle S_+ S_- \rangle = \langle ij|s_+ s_-|ij\rangle
+                        - \langle ij|s_+ s_-|ji\rangle
+                        = -\langle i^\alpha|j^\beta\rangle
+                           \langle j^\beta|i^\alpha\rangle\]</div>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Similarly, for <span class="math">\(S_- S_+\)</span></dt>
+<dd><ol class="first arabic simple">
+<li>same electron</li>
+</ol>
+<div class="math">
+\[\sum_i \langle s_{i-} s_{i+}\rangle = n_\beta\]</div>
+<ol class="arabic simple" start="2">
+<li>different electrons</li>
+</ol>
+<div class="last math">
+\[\langle S_- S_+ \rangle = -\langle i^\beta|j^\alpha\rangle
+                           \langle j^\alpha|i^\beta\rangle\]</div>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>For <span class="math">\(S_z^2\)</span></dt>
+<dd><ol class="first arabic simple">
+<li>same electron</li>
+</ol>
+<div class="math">
+\[\langle s_z^2\rangle = \frac{1}{4}(n_\alpha + n_\beta)\]</div>
+<ol class="arabic simple" start="2">
+<li>different electrons</li>
+</ol>
+<div class="last math">
+\[\begin{split}&amp;\frac{1}{2}\sum_{ij}(\langle ij|2s_{z1}s_{z2}|ij\rangle
+                     -\langle ij|2s_{z1}s_{z2}|ji\rangle) \\
+&amp;=\frac{1}{4}(\langle i^\alpha|i^\alpha\rangle \langle j^\alpha|j^\alpha\rangle
+ - \langle i^\alpha|i^\alpha\rangle \langle j^\beta|j^\beta\rangle
+ - \langle i^\beta|i^\beta\rangle \langle j^\alpha|j^\alpha\rangle
+ + \langle i^\beta|i^\beta\rangle \langle j^\beta|j^\beta\rangle) \\
+&amp;-\frac{1}{4}(\langle i^\alpha|i^\alpha\rangle \langle i^\alpha|i^\alpha\rangle
+ + \langle i^\beta|i^\beta\rangle\langle i^\beta|i^\beta\rangle) \\
+&amp;=\frac{1}{4}(n_\alpha^2 - n_\alpha n_\beta - n_\beta n_\alpha + n_\beta^2)
+ -\frac{1}{4}(n_\alpha + n_\beta) \\
+&amp;=\frac{1}{4}((n_\alpha-n_\beta)^2 - (n_\alpha+n_\beta))\end{split}\]</div>
+</dd>
+</dl>
+</li>
+</ol>
+<p>In total</p>
+<div class="math">
+\[\begin{split}\langle S^2\rangle &amp;= \frac{1}{2}
+(n_\alpha-\sum_{ij}\langle i^\alpha|j^\beta\rangle \langle j^\beta|i^\alpha\rangle
++n_\beta -\sum_{ij}\langle i^\beta|j^\alpha\rangle\langle j^\alpha|i^\beta\rangle)
++ \frac{1}{4}(n_\alpha-n_\beta)^2 \\\end{split}\]</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>mo <span class="classifier-delimiter">:</span> <span class="classifier">a list of 2 ndarrays</span></dt>
+<dd>Occupied alpha and occupied beta orbitals</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>s <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>AO overlap</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>A list of two floats.  The first is the expectation value of S^2.
+The second is the corresponding 2S+1</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;O 0 0 0; H 0 0 1; H 0 1 0&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">UHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">-75.623975516256706</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mo</span> <span class="o">=</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_occ</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">],</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_occ</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;S^2 = </span><span class="si">%.7f</span><span class="s">, 2S+1 = </span><span class="si">%.7f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">spin_square</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s">&#39;int1e_ovlp_sph&#39;</span><span class="p">)))</span>
+<span class="go">S^2 = 0.7570150, 2S+1 = 2.0070027</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.kuhf.canonical_occ">
+<tt class="descclassname">pyscf.pbc.scf.kuhf.</tt><tt class="descname">canonical_occ</tt><big>(</big><em>mf</em><big>)</big><a class="headerlink" href="#pyscf.pbc.scf.kuhf.canonical_occ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Label the occupancies for each orbital for sampled k-points.
+This is for KUHF objects.
+Each k-point has a fixed number of up and down electrons in this,
+which results in a finite size error for metallic systems
+but can accelerate convergence</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.kuhf.canonical_occ_">
+<tt class="descclassname">pyscf.pbc.scf.kuhf.</tt><tt class="descname">canonical_occ_</tt><big>(</big><em>mf</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#canonical_occ_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.canonical_occ_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Label the occupancies for each orbital for sampled k-points.
+This is for KUHF objects.
+Each k-point has a fixed number of up and down electrons in this,
+which results in a finite size error for metallic systems
+but can accelerate convergence</p>
 </dd></dl>
 
 <dl class="function">
@@ -801,6 +953,12 @@ basis defined by <tt class="docutils literal"><span class="pre">cell</span></tt>
 <dt>Returns:</dt>
 <dd>dm_kpts : (2, nkpts, nao, nao) ndarray</dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.pbc.scf.kuhf.mulliken_meta">
+<tt class="descclassname">pyscf.pbc.scf.kuhf.</tt><tt class="descname">mulliken_meta</tt><big>(</big><em>mol</em>, <em>dm_ao</em>, <em>verbose=5</em>, <em>pre_orth_method='ANO'</em>, <em>s=None</em><big>)</big><a class="reference internal" href="../_modules/pyscf/pbc/scf/kuhf.html#mulliken_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.kuhf.mulliken_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mulliken population analysis, based on meta-Lowdin AOs.</p>
 </dd></dl>
 
 </div>

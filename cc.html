@@ -339,10 +339,9 @@ field method to CC module to have the gamma point CCSD correlation.</p>
 
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
-<span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="kn">import</span> <span class="n">df</span>
 
 <span class="n">cell</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
-    <span class="n">h</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span><span class="p">,</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="mf">3.5668</span><span class="p">,</span>
     <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;C     0.      0.      0.    </span>
 <span class="s">              C     0.8917  0.8917  0.8917</span>
 <span class="s">              C     1.7834  1.7834  0.    </span>
@@ -365,10 +364,7 @@ field method to CC module to have the gamma point CCSD correlation.</p>
 <span class="c">#</span>
 <span class="n">cell</span><span class="o">.</span><span class="n">incore_anyway</span> <span class="o">=</span> <span class="bp">True</span>
 
-<span class="n">mydf</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">MDF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
-<span class="n">mydf</span><span class="o">.</span><span class="n">auxbasis</span> <span class="o">=</span> <span class="s">&#39;weigend&#39;</span>
-<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
-<span class="n">mf</span><span class="o">.</span><span class="n">with_df</span> <span class="o">=</span> <span class="n">mydf</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">mix_density_fit</span><span class="p">(</span><span class="n">auxbasis</span><span class="o">=</span><span class="s">&#39;weigend&#39;</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 
 <span class="c">#</span>
@@ -448,7 +444,8 @@ population analysis.</p>
 <span class="c">#</span>
 <span class="c"># Relaxed CCSD density matrix in MO basis</span>
 <span class="c">#</span>
-<span class="n">dm1</span> <span class="o">+=</span> <span class="n">response_dm1</span><span class="p">(</span><span class="n">mycc</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">t1</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">t2</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">l1</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">l2</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pyscf.cc</span> <span class="kn">import</span> <span class="n">ccsd_grad</span>
+<span class="n">dm1</span> <span class="o">+=</span> <span class="n">ccsd_grad</span><span class="o">.</span><span class="n">response_dm1</span><span class="p">(</span><span class="n">mycc</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">t1</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">t2</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">l1</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">l2</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -511,8 +508,8 @@ support user to feed MO integrals.</p>
 <h3>Restart CCSD<a class="headerlink" href="#restart-ccsd" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
-<div class="section" id="apis">
-<h2>APIs<a class="headerlink" href="#apis" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="attributes-and-methods">
+<h2>Attributes and methods<a class="headerlink" href="#attributes-and-methods" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="module-pyscf.cc.ccsd">
 <span id="ccsd"></span><h3>CCSD<a class="headerlink" href="#module-pyscf.cc.ccsd" title="Permalink to this headline">¶</a></h3>
 <dl class="attribute">
@@ -585,8 +582,8 @@ occupied and virtual orbitals can be frozen in CC calculation.</p>
 <dt id="pyscf.cc.ccsd.CCSD.make_rdm2">
 <tt class="descname">make_rdm2</tt><big>(</big><em>t1=None</em>, <em>t2=None</em>, <em>l1=None</em>, <em>l2=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/ccsd.html#CCSD.make_rdm2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.ccsd.CCSD.make_rdm2" title="Permalink to this definition">¶</a></dt>
 <dd><p>2-particle density matrix in MO space.  The density matrix is
-stored in physicist notation</p>
-<p>dm2[p,q,r,s] = &lt;p^+ q^+ s r&gt;</p>
+stored as</p>
+<p>dm2[p,r,q,s] = &lt;p^+ q^+ s r&gt;</p>
 </dd></dl>
 
 </dd></dl>
@@ -599,15 +596,18 @@ stored in physicist notation</p>
 
 <span class="target" id="module-pyscf.cc.addons"></span><dl class="function">
 <dt id="pyscf.cc.addons.spatial2spin">
-<tt class="descclassname">pyscf.cc.addons.</tt><tt class="descname">spatial2spin</tt><big>(</big><em>tx</em>, <em>orbspin</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/addons.html#spatial2spin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.addons.spatial2spin" title="Permalink to this definition">¶</a></dt>
-<dd><p>call orbspin_of_sorted_mo_energy to get orbspin</p>
+<tt class="descclassname">pyscf.cc.addons.</tt><tt class="descname">spatial2spin</tt><big>(</big><em>tx</em>, <em>orbspin=None</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/addons.html#spatial2spin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.addons.spatial2spin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert T1/T2 of spatial orbital representation to T1/T2 of
+spin-orbital representation</p>
+<p>call orbspin_of_sorted_mo_energy to get orbspin</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.cc.addons.spatial2spinorb">
-<tt class="descclassname">pyscf.cc.addons.</tt><tt class="descname">spatial2spinorb</tt><big>(</big><em>t1_or_t2</em><big>)</big><a class="reference internal" href="_modules/pyscf/cc/addons.html#spatial2spinorb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.addons.spatial2spinorb" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyscf.cc.addons.</tt><tt class="descname">spatial2spinorb</tt><big>(</big><em>tx</em>, <em>orbspin=None</em><big>)</big><a class="headerlink" href="#pyscf.cc.addons.spatial2spinorb" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert T1/T2 of spatial orbital representation to T1/T2 of
 spin-orbital representation</p>
+<p>call orbspin_of_sorted_mo_energy to get orbspin</p>
 </dd></dl>
 
 <dl class="function">
@@ -683,7 +683,7 @@ spin-orbital representation</p>
 <li><a class="reference internal" href="#restart-ccsd">Restart CCSD</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#apis">APIs</a><ul>
+<li><a class="reference internal" href="#attributes-and-methods">Attributes and methods</a><ul>
 <li><a class="reference internal" href="#module-pyscf.cc.ccsd">CCSD</a></li>
 <li><a class="reference internal" href="#module-pyscf.cc.ccsd_t">CCSD(T)</a></li>
 <li><a class="reference internal" href="#module-pyscf.cc.uccsd">UCCSD</a></li>

@@ -57,15 +57,12 @@
 <span id="installing"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>You may already have <a class="reference external" href="http://www.cmake.org">cmake</a>,
 <a class="reference external" href="http://www.numpy.org/">numpy</a>, <a class="reference external" href="http://www.scipy.org/">scipy</a>
-and <a class="reference external" href="http://www.h5py.org/">h5py</a> installed.  If not, you can use
-<tt class="docutils literal"><span class="pre">python-pypi</span></tt> to install numpy, scipy and h5py:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ pip install --target=/path/to/python/libs numpy
-$ pip install --target=/path/to/python/libs scipy
-$ pip install --target=/path/to/python/libs h5py
-</pre></div>
-</div>
-<p>or install the integrated science platform <a class="reference external" href="https://www.continuum.io/downloads#linux">anaconda</a>.
-You can download the latest release version
+and <a class="reference external" href="http://www.h5py.org/">h5py</a> installed.  If not, you can install
+them from any Python package managers (<a class="reference external" href="https://pypi.python.org/">Pypi</a>,
+<a class="reference external" href="http://conda.pydata.org/">conda</a>).  Here we recommend to use the
+integrated science platform <a class="reference external" href="https://www.continuum.io/downloads#linux">Anaconda</a>.
+(with <a class="reference external" href="https://anaconda.org/anaconda/cmake">conda-cmake</a>).</p>
+<p>You can download the latest PySCF release version
 <a class="reference external" href="https://github.com/sunqm/pyscf/releases/tag/v1.2">1.2</a> or the
 develment branch from github</p>
 <blockquote>
@@ -105,21 +102,90 @@ Referenced from: xxx/pyscf/lib/libcgto.dylib
 Reason: unsafe use of relative rpath libcint.2.8.dylib in xxx/pyscf/lib/libao2mo.dylib with restricted binary
 </pre></div>
 </div>
-<p>It can be fixed by running the script <tt class="docutils literal"><span class="pre">pyscf/lib/_runme_to_fix_dylib_osx10.11.sh</span></tt> in <tt class="docutils literal"><span class="pre">pyscf/lib</span></tt>:</p>
+<p>This is caused by the RPATH
+It can be fixed by running the script <tt class="docutils literal"><span class="pre">pyscf/lib/_runme_to_fix_dylib_osx10.11.sh</span></tt> in <tt class="docutils literal"><span class="pre">pyscf/lib</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre>cd pyscf/lib
 sh _runme_to_fix_dylib_osx10.11.sh
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">RPATH has been built in the dynamic library.  This may cause library loading
+error on some systems.  You can run <tt class="docutils literal"><span class="pre">pyscf/lib/_runme_to_remove_rpath.sh</span></tt> to
+remove the rpath code from the library head.  Another workaround is to set
+<tt class="docutils literal"><span class="pre">-DCMAKE_SKIP_RPATH=1</span></tt> and <tt class="docutils literal"><span class="pre">-DCMAKE_MACOSX_RPATH=0</span></tt> in cmake command line.
+When the RPATH was removed, you need to add <tt class="docutils literal"><span class="pre">pyscf/lib</span></tt> and
+<tt class="docutils literal"><span class="pre">pyscf/lib/deps/lib</span></tt> in <tt class="docutils literal"><span class="pre">LD_LIBRARY_PATH</span></tt>.</p>
+</div>
+<div class="section" id="installation-without-network">
+<h2>Installation without network<a class="headerlink" href="#installation-without-network" title="Permalink to this headline">¶</a></h2>
+<p>If you get problem to download the external libraries on your computer, you can
+manually build the libraries, as shown in the following instructions.  First,
+you need to install libcint, libxc or xcfun libraries.
+<a class="reference external" href="https://github.com/sunqm/libcint/tree/cint3">libcint cint3 branch</a>
+and <a href="#id7"><span class="problematic" id="id8">`xcfun stable-1.x branch &lt;https://github.com/dftlibs/xcfun/tree/stable-1.x`_</span></a>
+are required by PySCF.  They can be downloaded from github:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/sunqm/libcint.git
+$ cd libcint
+$ git checkout origin/cint3
+$ cd .. &amp;&amp; tar czf libcint.tar.gz libcint
+
+$ git clone https://github.com/sunqm/xcfun.git
+$ cd xcfun
+$ git checkout origin/stable-1.x
+$ cd .. &amp;&amp; tar czf xcfun.tar.gz xcfun
+</pre></div>
+</div>
+<p>libxc-2.2.* can be found in <a class="reference external" href="http://octopus-code.org/wiki/Main_Page">http://octopus-code.org/wiki/Main_Page</a> .
+Assuming <tt class="docutils literal"><span class="pre">/opt</span></tt> is the place where these libraries will be installed, these
+packages should be compiled with the flags:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ tar xvzf libcint.tar.gz
+$ cd libcint
+$ mkdir build &amp;&amp; cd build
+$ cmake -DWITH_F12=1 -DWITH_RANGE_COULOMB=1 -DWITH_COULOMB_ERF=1 \
+    -DCMAKE_INSTALL_PREFIX:PATH=/opt -DCMAKE_INSTALL_LIBDIR:PATH=lib ..
+$ make &amp;&amp; make install
+
+$ tar xvzf libxc-2.2.2.tar.gz
+$ cd libxc-2.2.2
+$ mkdir build &amp;&amp; cd build
+$ ../configure --prefix=/opt --libdir=/opt/lib --enable-shared --disable-fortran LIBS=-lm
+$ make &amp;&amp; make install
+
+$ tar xvzf xcfun.tar.gz
+$ cd xcfun
+$ mkdir build &amp;&amp; cd build
+$ cmake -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_SHARED_LIBS=1 -DXC_MAX_ORDER=3 -DXCFUN_ENABLE_TESTS=0 \
+    -DCMAKE_INSTALL_PREFIX:PATH=/opt -DCMAKE_INSTALL_LIBDIR:PATH=lib ..
+$ make &amp;&amp; make install
+</pre></div>
+</div>
+<p>Next compile PySCF:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd pyscf/pyscf/lib
+$ mkdir build &amp;&amp; cd build
+$ cmake -DBUILD_LIBCINT=0 -DBUILD_LIBXC=0 -DBUILD_XCFUN=0 -DCMAKE_INSTALL_PREFIX:PATH=/opt ..
+$ make
+</pre></div>
+</div>
+<p>Finally update the <tt class="docutils literal"><span class="pre">PYTHONPATH</span></tt> environment for Python interpreter.</p>
+</div>
 <div class="section" id="using-optimized-blas">
 <span id="installing-blas"></span><h2>Using optimized BLAS<a class="headerlink" href="#using-optimized-blas" title="Permalink to this headline">¶</a></h2>
-<p>The Linear algebra libraries have significant affects on the performance
-of the PySCF package.  The default installation does not require to
-provide external linear algebra libraries.  It&#8217;s possible that the setup
-script only find and link to the slow BLAS/LAPACK libraries.  You can
-install the package with other BLAS venders instead of the default one
-to improve the performance,  eg MKL (it can provide 10 times speedup in
-many modules):</p>
+<p>The default installation does not need to provide external linear
+algebra libraries.  It&#8217;s possible that the setup script only find and
+link to the slow BLAS/LAPACK libraries.  You can install the package
+with other BLAS venders instead of the default one to improve the
+performance,  eg MKL (it can provide 10 times speedup in many modules):</p>
 <div class="highlight-python"><div class="highlight"><pre>$ cd pyscf/lib/build
+$ cmake -DBLA_VENDOR=Intel10_64lp_seq ..
+$ make
+</pre></div>
+</div>
+<p>If you are using Anaconda as your Python-side platform, you can link PySCF
+to the MKL library coming with Anaconda package:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ export MKLROOT=/path/to/anaconda2
+$ export LD_LIBRARY_PATH=$MKLROOT/lib:$LD_LIBRARY_PATH
+$ cd pyscf/lib/build
 $ cmake -DBLA_VENDOR=Intel10_64lp_seq ..
 $ make
 </pre></div>
@@ -247,6 +313,7 @@ is the main developer of XianCI program.</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#installation-without-network">Installation without network</a></li>
 <li><a class="reference internal" href="#using-optimized-blas">Using optimized BLAS</a></li>
 <li><a class="reference internal" href="#using-optimized-integral-library">Using optimized integral library</a></li>
 <li><a class="reference internal" href="#offline-installation">Offline installation</a></li>
@@ -310,7 +377,7 @@ is the main developer of XianCI program.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2015-, Qiming Sun &lt;osirpt.sun@gmail.com&gt;.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>
