@@ -89,7 +89,6 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../overview.html">An overview of PySCF</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">Advanced topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../gto.html">gto &#8212; Molecular structure and GTO basis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../lib.html">lib &#8212; Helper functions, parameters, and C extensions</a></li>
@@ -110,6 +109,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../hessian.html">hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../pbc.html">pbc &#8212; Periodic boundary conditions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../lo.html">lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">Miscellaneous</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../qmmm.html">qmmm &#8212; QM/MM interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mrpt.html">mrpt &#8212; Multi-reference perturbation theory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../benchmark.html">Benchmark</a></li>
@@ -224,9 +224,13 @@
     <span class="k">if</span> <span class="n">seig</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">lindep</span><span class="p">:</span>
         <span class="n">idx</span> <span class="o">=</span> <span class="n">seig</span> <span class="o">&gt;=</span> <span class="n">lindep</span>
         <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">seig</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
-        <span class="n">heff</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">h</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
-        <span class="n">w</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">heff</span><span class="p">)</span>
-        <span class="n">v</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">heff</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">h</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+            <span class="n">w</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">heff</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,))</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">t</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">w</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">seig</span></div>

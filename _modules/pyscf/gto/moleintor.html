@@ -89,7 +89,6 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../overview.html">An overview of PySCF</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">Advanced topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../gto.html">gto &#8212; Molecular structure and GTO basis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../lib.html">lib &#8212; Helper functions, parameters, and C extensions</a></li>
@@ -110,6 +109,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../hessian.html">hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../pbc.html">pbc &#8212; Periodic boundary conditions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../lo.html">lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">Miscellaneous</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../qmmm.html">qmmm &#8212; QM/MM interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mrpt.html">mrpt &#8212; Multi-reference perturbation theory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../benchmark.html">Benchmark</a></li>
@@ -512,14 +512,14 @@
         <span class="n">cintopt</span> <span class="o">=</span> <span class="n">make_cintopt</span><span class="p">(</span><span class="n">atm</span><span class="p">,</span> <span class="n">bas</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">intor_name</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">aosym</span> <span class="o">==</span> <span class="s1">&#39;s8&#39;</span><span class="p">:</span>
-        <span class="c1">#assert(intor_name in (&#39;int2e_sph&#39;, &#39;int2e_cart&#39;))</span>
+        <span class="k">assert</span><span class="p">(</span><span class="s1">&#39;_spinor&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">intor_name</span><span class="p">)</span>
         <span class="k">assert</span><span class="p">(</span><span class="n">shls_slice</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">libcvhf</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">load_library</span><span class="p">(</span><span class="s1">&#39;libcvhf&#39;</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="k">import</span> <span class="n">_vhf</span>
         <span class="n">nao</span> <span class="o">=</span> <span class="n">ao_loc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">nao_pair</span> <span class="o">=</span> <span class="n">nao</span><span class="o">*</span><span class="p">(</span><span class="n">nao</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
         <span class="n">out</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">((</span><span class="n">nao_pair</span><span class="o">*</span><span class="p">(</span><span class="n">nao_pair</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">),</span> <span class="n">buffer</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
-        <span class="n">drv</span> <span class="o">=</span> <span class="n">libcvhf</span><span class="o">.</span><span class="n">GTO2e_cart_or_sph</span>
-        <span class="n">drv</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">libcgto</span><span class="p">,</span> <span class="n">intor_name</span><span class="p">),</span>
+        <span class="n">drv</span> <span class="o">=</span> <span class="n">_vhf</span><span class="o">.</span><span class="n">libcvhf</span><span class="o">.</span><span class="n">GTO2e_cart_or_sph</span>
+        <span class="n">drv</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">libcgto</span><span class="p">,</span> <span class="n">intor_name</span><span class="p">),</span> <span class="n">cintopt</span><span class="p">,</span>
             <span class="n">out</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
             <span class="n">ao_loc</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
             <span class="n">c_atm</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">natm</span><span class="p">),</span> <span class="n">c_bas</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nbas</span><span class="p">),</span> <span class="n">c_env</span><span class="p">)</span>

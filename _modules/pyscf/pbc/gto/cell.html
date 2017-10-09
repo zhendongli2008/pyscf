@@ -89,7 +89,6 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../overview.html">An overview of PySCF</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../advanced.html">Advanced topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../gto.html">gto &#8212; Molecular structure and GTO basis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../lib.html">lib &#8212; Helper functions, parameters, and C extensions</a></li>
@@ -110,6 +109,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../hessian.html">hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../pbc.html">pbc &#8212; Periodic boundary conditions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../lo.html">lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../advanced.html">Miscellaneous</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../qmmm.html">qmmm &#8212; QM/MM interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../mrpt.html">mrpt &#8212; Multi-reference perturbation theory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../benchmark.html">Benchmark</a></li>
@@ -748,6 +748,9 @@
     <span class="k">if</span> <span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">gs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">gs</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span>
+            <span class="n">gs</span><span class="p">[</span><span class="n">gs</span><span class="o">&gt;</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="mi">40</span>
         <span class="n">Gmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span> <span class="o">*</span> <span class="n">lib</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">reciprocal_vectors</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
         <span class="n">log_precision</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">precision</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">Gmax</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
         <span class="n">ew_eta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">Gmax</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">log_precision</span><span class="p">))</span>
@@ -808,7 +811,8 @@
     <span class="c1"># See also Eq. (32) of ewald.pdf at</span>
     <span class="c1">#   http://www.fisica.uniud.it/~giannozz/public/ewald.pdf</span>
 
-    <span class="n">gs</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">gs</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">gs</span><span class="p">)</span>
+    <span class="n">gs</span><span class="p">[</span><span class="n">gs</span><span class="o">&gt;</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="mi">40</span>
     <span class="n">Gv</span><span class="p">,</span> <span class="n">Gvbase</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get_Gv_weights</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span>
     <span class="n">absG2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;gi,gi-&gt;g&#39;</span><span class="p">,</span> <span class="n">Gv</span><span class="p">,</span> <span class="n">Gv</span><span class="p">)</span>
     <span class="n">absG2</span><span class="p">[</span><span class="n">absG2</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e200</span>
@@ -1053,7 +1057,6 @@
 <span class="s1">  Lattice are not in right-handed coordinate system. This can cause wrong value for some integrals.</span>
 <span class="s1">  It&#39;s recommended to resort the lattice vectors to</span><span class="se">\n</span><span class="s1">a = </span><span class="si">%s</span><span class="se">\n\n</span><span class="s1">&#39;&#39;&#39;</span> <span class="o">%</span> <span class="n">_a</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
 
-        <span class="n">ke_cutoff</span> <span class="ow">is</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ke_cutoff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">ke_cutoff</span> <span class="o">=</span> <span class="n">estimate_ke_cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">)</span>

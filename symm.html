@@ -90,20 +90,22 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">An overview of PySCF</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gto.html">gto &#8212; Molecular structure and GTO basis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="lib.html">lib &#8212; Helper functions, parameters, and C functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lib.html">lib &#8212; Helper functions, parameters, and C extensions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scf.html">scf &#8212; Mean-field methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ao2mo.html">ao2mo &#8212; Integral transformations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcscf.html">mcscf &#8212; Multi-configurational self-consistent field</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fci.html">fci &#8212; Full configuration interaction</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">symm &#8211; Point group symmetry and spin symmetry</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#enabling-symmetry-in-other-module">Enabling symmetry in other module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#program-reference">Program reference</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyscf.symm.geom">geom</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyscf.symm.basis">basis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyscf.symm.addons">addons</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyscf.symm.cg">Clebsch Gordon coefficients</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#common-issues">Common issues</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="df.html">df &#8212; Density fitting</a></li>
@@ -118,6 +120,7 @@
 <li class="toctree-l1"><a class="reference internal" href="hessian.html">hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pbc.html">pbc &#8212; Periodic boundary conditions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lo.html">lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">Miscellaneous</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qmmm.html">qmmm &#8212; QM/MM interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mrpt.html">mrpt &#8212; Multi-reference perturbation theory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
@@ -191,6 +194,728 @@
 <p>This module offers the functions to detect point group symmetry, basis
 symmetriziation, Clebsch-Gordon coefficients.  This module works as a plugin of
 PySCF package.  Symmetry is not hard coded in each method.</p>
+<p>PySCF supports D2h symmetry and linear molecule symmetry (Dooh and
+Coov).  For D2h, the direct production of representations are</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="14%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">D2h</th>
+<th class="head">A1g</th>
+<th class="head">B1g</th>
+<th class="head">B2g</th>
+<th class="head">B3g</th>
+<th class="head">A1u</th>
+<th class="head">B1u</th>
+<th class="head">B2u</th>
+<th class="head">B3u</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>A1g</td>
+<td>A1g</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>B1g</td>
+<td>B1g</td>
+<td>A1g</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>B2g</td>
+<td>B2g</td>
+<td>B3g</td>
+<td>A1g</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>B3g</td>
+<td>B3g</td>
+<td>B2g</td>
+<td>B1g</td>
+<td>A1g</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>A1u</td>
+<td>A1u</td>
+<td>B1u</td>
+<td>B2u</td>
+<td>B3u</td>
+<td>A1g</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>B1u</td>
+<td>B1u</td>
+<td>A1u</td>
+<td>B3u</td>
+<td>B2u</td>
+<td>B1g</td>
+<td>A1g</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>B2u</td>
+<td>B2u</td>
+<td>B3u</td>
+<td>A1u</td>
+<td>B1u</td>
+<td>B2g</td>
+<td>B3g</td>
+<td>A1g</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>B3u</td>
+<td>B3u</td>
+<td>B2u</td>
+<td>B1u</td>
+<td>A1u</td>
+<td>B3g</td>
+<td>B2g</td>
+<td>B1g</td>
+<td>A1g</td>
+</tr>
+</tbody>
+</table>
+<p>The multiplication table for XOR operator is</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="14%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+<col width="11%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">XOR</th>
+<th class="head">000</th>
+<th class="head">001</th>
+<th class="head">010</th>
+<th class="head">011</th>
+<th class="head">100</th>
+<th class="head">101</th>
+<th class="head">110</th>
+<th class="head">111</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>000</td>
+<td>000</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>001</td>
+<td>001</td>
+<td>000</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>010</td>
+<td>010</td>
+<td>011</td>
+<td>000</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>011</td>
+<td>011</td>
+<td>010</td>
+<td>001</td>
+<td>000</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>100</td>
+<td>100</td>
+<td>101</td>
+<td>110</td>
+<td>111</td>
+<td>000</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>101</td>
+<td>101</td>
+<td>100</td>
+<td>111</td>
+<td>110</td>
+<td>001</td>
+<td>000</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>110</td>
+<td>110</td>
+<td>111</td>
+<td>100</td>
+<td>101</td>
+<td>010</td>
+<td>011</td>
+<td>000</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>111</td>
+<td>111</td>
+<td>110</td>
+<td>101</td>
+<td>100</td>
+<td>011</td>
+<td>010</td>
+<td>001</td>
+<td>000</td>
+</tr>
+</tbody>
+</table>
+<p>Comparing the two table, we notice that the two tables can be changed to
+each other with the mapping</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="36%" />
+<col width="36%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">D2h</th>
+<th class="head">XOR</th>
+<th class="head">ID</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>A1g</td>
+<td>000</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>B1g</td>
+<td>001</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>B2g</td>
+<td>010</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>B3g</td>
+<td>011</td>
+<td>3</td>
+</tr>
+<tr class="row-even"><td>A1u</td>
+<td>100</td>
+<td>4</td>
+</tr>
+<tr class="row-odd"><td>B1u</td>
+<td>101</td>
+<td>5</td>
+</tr>
+<tr class="row-even"><td>B2u</td>
+<td>110</td>
+<td>6</td>
+</tr>
+<tr class="row-odd"><td>B3u</td>
+<td>111</td>
+<td>7</td>
+</tr>
+</tbody>
+</table>
+<p>The XOR operator and the D2h subgroups have the similar relationships.
+We therefore use the XOR operator ID to assign the irreps (see
+<code class="file docutils literal"><span class="pre">pyscf/symm/param.py</span></code>).</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="12%" />
+<col width="12%" />
+<col width="10%" />
+<col width="12%" />
+<col width="12%" />
+<col width="10%" />
+<col width="12%" />
+<col width="12%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">C2h</th>
+<th class="head">XOR</th>
+<th class="head">ID</th>
+<th class="head">C2v</th>
+<th class="head">XOR</th>
+<th class="head">ID</th>
+<th class="head">D2</th>
+<th class="head">XOR</th>
+<th class="head">ID</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Ag</td>
+<td>00</td>
+<td>0</td>
+<td>A1</td>
+<td>00</td>
+<td>0</td>
+<td>A1</td>
+<td>00</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>Bg</td>
+<td>01</td>
+<td>1</td>
+<td>A2</td>
+<td>01</td>
+<td>1</td>
+<td>B1</td>
+<td>01</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>Au</td>
+<td>10</td>
+<td>2</td>
+<td>B1</td>
+<td>10</td>
+<td>2</td>
+<td>B2</td>
+<td>10</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>Bu</td>
+<td>11</td>
+<td>3</td>
+<td>B2</td>
+<td>11</td>
+<td>3</td>
+<td>B3</td>
+<td>11</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="12%" />
+<col width="12%" />
+<col width="10%" />
+<col width="12%" />
+<col width="12%" />
+<col width="10%" />
+<col width="12%" />
+<col width="12%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Cs</th>
+<th class="head">XOR</th>
+<th class="head">ID</th>
+<th class="head">Ci</th>
+<th class="head">XOR</th>
+<th class="head">ID</th>
+<th class="head">C2</th>
+<th class="head">XOR</th>
+<th class="head">ID</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>A&#8217;</td>
+<td>0</td>
+<td>0</td>
+<td>Ag</td>
+<td>0</td>
+<td>0</td>
+<td>A</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>B&#8221;</td>
+<td>1</td>
+<td>1</td>
+<td>Au</td>
+<td>1</td>
+<td>1</td>
+<td>B</td>
+<td>1</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>To easily get the relationship between the linear molecule symmetry
+and D2h/C2v, the ID for irreducible representations of linear molecule
+symmetry are chosen as (see <code class="file docutils literal"><span class="pre">pyscf/symm/basis.py</span></code>)</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="8%" />
+<col width="35%" />
+<col width="8%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><span class="math">\(D_{\infty h}\)</span></td>
+<td>ID</td>
+<td><span class="math">\(D_{2h}\)</span></td>
+<td>ID</td>
+</tr>
+<tr class="row-even"><td>A1g</td>
+<td>0</td>
+<td>Ag</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>A2g</td>
+<td>1</td>
+<td>B1g</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>A1u</td>
+<td>5</td>
+<td>B1u</td>
+<td>5</td>
+</tr>
+<tr class="row-odd"><td>A2u</td>
+<td>4</td>
+<td>Au</td>
+<td>4</td>
+</tr>
+<tr class="row-even"><td>E1gx</td>
+<td>2</td>
+<td>B2g</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>E1gy</td>
+<td>3</td>
+<td>B3g</td>
+<td>3</td>
+</tr>
+<tr class="row-even"><td>E1uy</td>
+<td>6</td>
+<td>B2u</td>
+<td>6</td>
+</tr>
+<tr class="row-odd"><td>E1ux</td>
+<td>7</td>
+<td>B3u</td>
+<td>7</td>
+</tr>
+<tr class="row-even"><td>E2gx</td>
+<td>10</td>
+<td>Ag</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>E2gy</td>
+<td>11</td>
+<td>B1g</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>E2ux</td>
+<td>15</td>
+<td>B1u</td>
+<td>5</td>
+</tr>
+<tr class="row-odd"><td>E2uy</td>
+<td>14</td>
+<td>Au</td>
+<td>4</td>
+</tr>
+<tr class="row-even"><td>E3gx</td>
+<td>12</td>
+<td>B2g</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>E3gy</td>
+<td>13</td>
+<td>B3g</td>
+<td>3</td>
+</tr>
+<tr class="row-even"><td>E3uy</td>
+<td>16</td>
+<td>B2u</td>
+<td>6</td>
+</tr>
+<tr class="row-odd"><td>E3ux</td>
+<td>17</td>
+<td>B3u</td>
+<td>7</td>
+</tr>
+<tr class="row-even"><td>E4gx</td>
+<td>20</td>
+<td>Ag</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>E4gy</td>
+<td>21</td>
+<td>B1g</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>E4ux</td>
+<td>25</td>
+<td>B1u</td>
+<td>5</td>
+</tr>
+<tr class="row-odd"><td>E4uy</td>
+<td>24</td>
+<td>Au</td>
+<td>4</td>
+</tr>
+<tr class="row-even"><td>E5gx</td>
+<td>22</td>
+<td>B2g</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>E5gy</td>
+<td>23</td>
+<td>B3g</td>
+<td>3</td>
+</tr>
+<tr class="row-even"><td>E5uy</td>
+<td>26</td>
+<td>B2u</td>
+<td>6</td>
+</tr>
+<tr class="row-odd"><td>E5ux</td>
+<td>27</td>
+<td>B3u</td>
+<td>7</td>
+</tr>
+</tbody>
+</table>
+<p>and</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="8%" />
+<col width="35%" />
+<col width="8%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><span class="math">\(C_{\infty v}\)</span></td>
+<td>ID</td>
+<td><span class="math">\(C_{2v}\)</span></td>
+<td>ID</td>
+</tr>
+<tr class="row-even"><td>A1</td>
+<td>0</td>
+<td>A1</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>A2</td>
+<td>1</td>
+<td>A2</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>E1x</td>
+<td>2</td>
+<td>B1</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>E1y</td>
+<td>3</td>
+<td>B2</td>
+<td>3</td>
+</tr>
+<tr class="row-even"><td>E2x</td>
+<td>10</td>
+<td>A1</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>E2y</td>
+<td>11</td>
+<td>A2</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>E3x</td>
+<td>12</td>
+<td>B1</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>E3y</td>
+<td>13</td>
+<td>B2</td>
+<td>3</td>
+</tr>
+<tr class="row-even"><td>E4x</td>
+<td>20</td>
+<td>A1</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>E4y</td>
+<td>21</td>
+<td>A2</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>E5x</td>
+<td>22</td>
+<td>B1</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>E5y</td>
+<td>23</td>
+<td>B2</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<p>So that, the subduction from linear molecule symmetry to D2h/C2v can be
+achieved by the modular operation <code class="docutils literal"><span class="pre">%10</span></code>.</p>
+<p>In many output messages, the irreducible representations are labeld with
+the IDs instead of the irreps&#8217; symbols.  We can use
+<code class="xref py py-func docutils literal"><span class="pre">symm.addons.irrep_id2name()</span></code> to convert the ID to irreps&#8217; symbol,
+e.g.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">symm</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">symm</span><span class="o">.</span><span class="n">irrep_id2name</span><span class="p">(</span><span class="s1">&#39;Dooh&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">14</span><span class="p">]]</span>
+<span class="go">[&#39;E1ux&#39;, &#39;E1uy&#39;, &#39;A1g&#39;, &#39;E2gx&#39;, &#39;E2gy&#39;, &#39;A1g&#39;, &#39;A1u&#39;, &#39;E1gy&#39;, &#39;E1gx&#39;, &#39;A1u&#39;, &#39;E2ux&#39;, &#39;E2uy&#39;]</span>
+</pre></div>
+</div>
+<div class="section" id="enabling-symmetry-in-other-module">
+<h2>Enabling symmetry in other module<a class="headerlink" href="#enabling-symmetry-in-other-module" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">SCF</p>
+<p>To control the HF determinant symmetry,  one can assign occupancy for
+particular irreps, e.g.</p>
+</li>
+</ul>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1">#</span>
+<span class="c1"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">scf</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Specify irrep_nelec to control the wave function symmetry</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">        C     0.   0.   0.625</span>
+<span class="s1">        C     0.   0.  -0.625 &#39;&#39;&#39;</span><span class="p">,</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;cc-pVDZ&#39;</span><span class="p">,</span>
+    <span class="n">spin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">symmetry</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+<span class="c1"># Frozen occupancy</span>
+<span class="c1"># &#39;A1g&#39;: 4 electrons</span>
+<span class="c1"># &#39;E1gx&#39;: 2 electrons</span>
+<span class="c1"># &#39;E1gy&#39;: 2 electrons</span>
+<span class="c1"># Rest 4 electrons are put in irreps A1u, E1ux, E1uy ... based on Aufbau principle</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">irrep_nelec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;A1g&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;E1gx&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;E1gy&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E = </span><span class="si">%.15g</span><span class="s1">  ref = -74.1112374269129&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+
+
+<span class="n">mol</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="s1">&#39;D2h&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">spin</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">dump_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">parse_arg</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+<span class="c1"># Frozen occupancy</span>
+<span class="c1"># &#39;Ag&#39;: 2 alpha, 1 beta electrons</span>
+<span class="c1"># &#39;B1u&#39;: 4 electrons</span>
+<span class="c1"># &#39;B2u&#39;: 2 electrons</span>
+<span class="c1"># &#39;B3u&#39;: 2 electrons</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">irrep_nelec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Ag&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;B1u&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;B2u&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;B3u&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,}</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E = </span><span class="si">%.15g</span><span class="s1">  ref = -74.4026583773135&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+
+<span class="c1"># Frozen occupancy</span>
+<span class="c1"># &#39;Ag&#39;: 4 electrons</span>
+<span class="c1"># &#39;B1u&#39;: 2 alpha, 1 beta electrons</span>
+<span class="c1"># &#39;B2u&#39;: 2 electrons</span>
+<span class="c1"># &#39;B3u&#39;: 2 electrons</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">irrep_nelec</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Ag&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;B1u&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;B2u&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;B3u&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,}</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E = </span><span class="si">%.15g</span><span class="s1">  ref = -74.8971476600812&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul>
+<li><p class="first">FCI</p>
+<p>FCI wavefunction symmetry can be controlled by initial guess.  Function
+<code class="xref py py-func docutils literal"><span class="pre">fci.addons.symm_initguess()</span></code> can generate the FCI initial guess with the
+right symmetry.</p>
+</li>
+<li><p class="first">MCSCF</p>
+<p>The symmetry of active space in the CASCI/CASSCF calculations can controlled</p>
+</li>
+</ul>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1">#</span>
+<span class="c1"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c1">#</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Active space can be adjusted by specifing the number of orbitals for each irrep.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;N  0  0  0; N  0  0  2&#39;</span><span class="p">,</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;ccpvtz&#39;</span><span class="p">,</span>
+    <span class="n">symmetry</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">myhf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">myhf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="n">mymc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">myhf</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">mo</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">sort_mo_by_irrep</span><span class="p">(</span><span class="n">mymc</span><span class="p">,</span> <span class="n">myhf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">,</span>
+                            <span class="p">{</span><span class="s1">&#39;E1gx&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;E1gy&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;E1ux&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;E1uy&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">})</span>
+<span class="n">mymc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul>
+<li><p class="first">MP2 and CCSD</p>
+<p>Point group symmetry are not supported in CCSD, MP2.</p>
+</li>
+</ul>
+<div class="section" id="program-reference">
+<h3>Program reference<a class="headerlink" href="#program-reference" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
 <div class="section" id="module-pyscf.symm.geom">
 <span id="geom"></span><h2>geom<a class="headerlink" href="#module-pyscf.symm.geom" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -420,9 +1145,6 @@ projects out non-symmetric components for each orbital.</p>
 </div>
 <div class="section" id="module-pyscf.symm.cg">
 <span id="clebsch-gordon-coefficients"></span><h2>Clebsch Gordon coefficients<a class="headerlink" href="#module-pyscf.symm.cg" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="common-issues">
-<h2>Common issues<a class="headerlink" href="#common-issues" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 

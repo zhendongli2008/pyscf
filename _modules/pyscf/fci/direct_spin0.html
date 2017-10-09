@@ -89,7 +89,6 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../overview.html">An overview of PySCF</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">Advanced topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../gto.html">gto &#8212; Molecular structure and GTO basis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../lib.html">lib &#8212; Helper functions, parameters, and C extensions</a></li>
@@ -110,6 +109,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../hessian.html">hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../pbc.html">pbc &#8212; Periodic boundary conditions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../lo.html">lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">Miscellaneous</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../qmmm.html">qmmm &#8212; QM/MM interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mrpt.html">mrpt &#8212; Multi-reference perturbation theory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../benchmark.html">Benchmark</a></li>
@@ -400,38 +400,42 @@
     <span class="n">na</span> <span class="o">=</span> <span class="n">link_index</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">hdiag</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">make_hdiag</span><span class="p">(</span><span class="n">h1e</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
 
-    <span class="n">addr</span><span class="p">,</span> <span class="n">h0</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">pspace</span><span class="p">(</span><span class="n">h1e</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">hdiag</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">pspace_size</span><span class="p">,</span><span class="n">nroots</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">pspace_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">pw</span><span class="p">,</span> <span class="n">pv</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">h0</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">pw</span> <span class="o">=</span> <span class="n">pv</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">addr</span><span class="p">,</span> <span class="n">h0</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">pspace</span><span class="p">(</span><span class="n">h1e</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="n">hdiag</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">pspace_size</span><span class="p">,</span><span class="n">nroots</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">pspace_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">pw</span><span class="p">,</span> <span class="n">pv</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">h0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pw</span> <span class="o">=</span> <span class="n">pv</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">if</span> <span class="n">pspace_size</span> <span class="o">&gt;=</span> <span class="n">na</span><span class="o">*</span><span class="n">na</span> <span class="ow">and</span> <span class="n">ci0</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">davidson_only</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pspace_size</span> <span class="o">&gt;=</span> <span class="n">na</span><span class="o">*</span><span class="n">na</span> <span class="ow">and</span> <span class="n">ci0</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">davidson_only</span><span class="p">:</span>
 <span class="c1"># The degenerated wfn can break symmetry.  The davidson iteration with proper</span>
 <span class="c1"># initial guess doesn&#39;t have this issue</span>
-        <span class="k">if</span> <span class="n">na</span><span class="o">*</span><span class="n">na</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">pw</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">ecore</span><span class="p">,</span> <span class="n">pv</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">nroots</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">civec</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nroots</span><span class="p">,</span><span class="n">na</span><span class="o">*</span><span class="n">na</span><span class="p">))</span>
-            <span class="n">civec</span><span class="p">[:,</span><span class="n">addr</span><span class="p">]</span> <span class="o">=</span> <span class="n">pv</span><span class="p">[:,:</span><span class="n">nroots</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
-            <span class="n">civec</span> <span class="o">=</span> <span class="n">civec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nroots</span><span class="p">,</span><span class="n">na</span><span class="p">,</span><span class="n">na</span><span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">pw</span><span class="p">[:</span><span class="n">nroots</span><span class="p">]</span><span class="o">+</span><span class="n">ecore</span><span class="p">,</span> <span class="p">[</span><span class="n">_check_</span><span class="p">(</span><span class="n">ci</span><span class="p">)</span> <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span> <span class="n">civec</span><span class="p">]</span>
-            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="k">pass</span>
-        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pw</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">pw</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">12</span><span class="p">:</span>
-            <span class="n">civec</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">na</span><span class="o">*</span><span class="n">na</span><span class="p">))</span>
-            <span class="n">civec</span><span class="p">[</span><span class="n">addr</span><span class="p">]</span> <span class="o">=</span> <span class="n">pv</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">civec</span> <span class="o">=</span> <span class="n">civec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">na</span><span class="p">,</span><span class="n">na</span><span class="p">)</span>
-            <span class="n">civec</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">transpose_sum</span><span class="p">(</span><span class="n">civec</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
-            <span class="c1"># direct diagonalization may lead to triplet ground state</span>
+            <span class="k">if</span> <span class="n">na</span><span class="o">*</span><span class="n">na</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">pw</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">ecore</span><span class="p">,</span> <span class="n">pv</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">nroots</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">civec</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nroots</span><span class="p">,</span><span class="n">na</span><span class="o">*</span><span class="n">na</span><span class="p">))</span>
+                <span class="n">civec</span><span class="p">[:,</span><span class="n">addr</span><span class="p">]</span> <span class="o">=</span> <span class="n">pv</span><span class="p">[:,:</span><span class="n">nroots</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+                <span class="n">civec</span> <span class="o">=</span> <span class="n">civec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nroots</span><span class="p">,</span><span class="n">na</span><span class="p">,</span><span class="n">na</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">pw</span><span class="p">[:</span><span class="n">nroots</span><span class="p">]</span><span class="o">+</span><span class="n">ecore</span><span class="p">,</span> <span class="p">[</span><span class="n">_check_</span><span class="p">(</span><span class="n">ci</span><span class="p">)</span> <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span> <span class="n">civec</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pw</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">pw</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">12</span><span class="p">:</span>
+                <span class="n">civec</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">na</span><span class="o">*</span><span class="n">na</span><span class="p">))</span>
+                <span class="n">civec</span><span class="p">[</span><span class="n">addr</span><span class="p">]</span> <span class="o">=</span> <span class="n">pv</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">civec</span> <span class="o">=</span> <span class="n">civec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">na</span><span class="p">,</span><span class="n">na</span><span class="p">)</span>
+                <span class="n">civec</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">transpose_sum</span><span class="p">(</span><span class="n">civec</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+                <span class="c1"># direct diagonalization may lead to triplet ground state</span>
 <span class="c1">##TODO: optimize initial guess.  Using pspace vector as initial guess may have</span>
 <span class="c1">## spin problems.  The &#39;ground state&#39; of psapce vector may have different spin</span>
 <span class="c1">## state to the true ground state.</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">pw</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">ecore</span><span class="p">,</span> <span class="n">_check_</span><span class="p">(</span><span class="n">civec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">na</span><span class="p">,</span><span class="n">na</span><span class="p">))</span>
-            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="k">pass</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">pw</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">ecore</span><span class="p">,</span> <span class="n">_check_</span><span class="p">(</span><span class="n">civec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">na</span><span class="p">,</span><span class="n">na</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+    <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+        <span class="n">addr</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pw</span> <span class="o">=</span> <span class="n">pv</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="n">precond</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">make_precond</span><span class="p">(</span><span class="n">hdiag</span><span class="p">,</span> <span class="n">pw</span><span class="p">,</span> <span class="n">pv</span><span class="p">,</span> <span class="n">addr</span><span class="p">)</span>
 
