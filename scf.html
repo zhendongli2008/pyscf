@@ -95,13 +95,14 @@
 <li class="toctree-l1"><a class="reference internal" href="lib.html">lib &#8212; Helper functions, parameters, and C extensions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">scf &#8212; Mean-field methods</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#stability-analysis">Stability analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#addons">Addons</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#caching-two-electron-integrals">Caching two-electron integrals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#customizing-hamiltonian">Customizing Hamiltonian</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyscf.scf">Program reference</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#non-relativistic-and-relativistic-hartree-fock">Non-relativistic and relativistic Hartree-Fock</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#non-relativistic-hartree-fock">Non-relativistic Hartree-Fock</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-pyscf.scf.dhf">Relativistic Hartree-Fock</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-pyscf.scf.addons">addons</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">addons</a></li>
 </ul>
 </li>
 </ul>
@@ -196,6 +197,56 @@
 <div class="section" id="stability-analysis">
 <h2>Stability analysis<a class="headerlink" href="#stability-analysis" title="Permalink to this headline">¶</a></h2>
 </div>
+<div class="section" id="addons">
+<h2>Addons<a class="headerlink" href="#addons" title="Permalink to this headline">¶</a></h2>
+<p>Special treatments may be required to the SCF methods in some situations.  These
+special treatments cannot be universally applied for all SCF models.  They were
+defined in the <code class="xref py py-mod docutils literal"><span class="pre">scf.addons</span></code> module. For example, in an UHF calculation, we
+may want the <span class="math">\(S_z\)</span> value to be changed (the numbers of alpha and beta
+electrons not conserved) during SCF iteration while conserving the total number
+of electrons.  <code class="xref py py-func docutils literal"><span class="pre">scf.addons.dynamic_sz_()</span></code> can provide this functionality:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;O 0 0 0; O 0 0 1&#39;</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">UHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">verbose</span><span class="o">=</span><span class="mi">4</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">dynamic_sz_</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;S^2 = </span><span class="si">%s</span><span class="s1">, 2S+1 = </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">mf</span><span class="o">.</span><span class="n">spin_square</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>This function automatically converges the ground sate of oxygen molecule to
+triplet state although we didn&#8217;t specify spin state in the <code class="xref py py-attr docutils literal"><span class="pre">mol</span></code> object.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Function <code class="xref py py-func docutils literal"><span class="pre">scf.addons.dynamic_sz_()</span></code> has side effects.  It changes
+the underlying mean-field object.</p>
+</div>
+<p>The <cite>addons</cite> mechanism increases the flexibility of PySCf program.  You can
+define various addons to affect the default behaviour of pyscf program.  For
+example, if you&#8217;d like to track the changes of the system density (the diagonal
+term of density matrix), you can write the following addon to output the
+density:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">output_density</span><span class="p">(</span><span class="n">mf</span><span class="p">):</span>
+    <span class="n">ao_labels</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">ao_labels</span><span class="p">()</span>
+    <span class="n">old_make_rdm1</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">make_rdm1</span>
+    <span class="k">def</span> <span class="nf">make_rdm1</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">):</span>
+        <span class="n">dm</span> <span class="o">=</span> <span class="n">old_make_rdm1</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AO         alpha             beta&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ao_labels</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">],</span> <span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">dm</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">make_rdm1</span> <span class="o">=</span> <span class="n">make_rdm1</span>
+    <span class="k">return</span> <span class="n">mf</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;O 0 0 0; O 0 0 1&#39;</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">UHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">verbose</span><span class="o">=</span><span class="mi">4</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">dynamic_sz_</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">output_density</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="caching-two-electron-integrals">
 <h2>Caching two-electron integrals<a class="headerlink" href="#caching-two-electron-integrals" title="Permalink to this headline">¶</a></h2>
 <p>When memory is enough (specified by the <code class="xref py py-attr docutils literal"><span class="pre">max_memory</span></code> of SCF object), the
@@ -232,8 +283,8 @@ model system:</p>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-    <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="n">t</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+<span class="n">t</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># anti-PBC</span>
 <span class="n">eri</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
     <span class="n">eri</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">4.0</span>
@@ -4423,9 +4474,9 @@ converge the SCF with the small component contributions (SS|SS)</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-pyscf.scf.addons">
-<span id="addons"></span><h3>addons<a class="headerlink" href="#module-pyscf.scf.addons" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
+<div class="section" id="id1">
+<h3>addons<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-pyscf.scf.addons"></span><dl class="function">
 <dt id="pyscf.scf.addons.convert_to_rhf">
 <code class="descclassname">pyscf.scf.addons.</code><code class="descname">convert_to_rhf</code><span class="sig-paren">(</span><em>mf</em>, <em>out=None</em>, <em>convert_df=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/addons.html#convert_to_rhf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.addons.convert_to_rhf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the given mean-field object to the corresponding restricted
@@ -4480,15 +4531,24 @@ value is set to (HF energy change * factor)</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pyscf.scf.addons.dynamic_sz_">
+<code class="descclassname">pyscf.scf.addons.</code><code class="descname">dynamic_sz_</code><span class="sig-paren">(</span><em>mf</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.scf.addons.dynamic_sz_" title="Permalink to this definition">¶</a></dt>
+<dd><p>For UHF, allowing the Sz value being changed during SCF iteration.
+Determine occupation of alpha and beta electrons based on energy spectrum</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyscf.scf.addons.float_occ">
 <code class="descclassname">pyscf.scf.addons.</code><code class="descname">float_occ</code><span class="sig-paren">(</span><em>mf</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.scf.addons.float_occ" title="Permalink to this definition">¶</a></dt>
-<dd><p>for UHF, do not fix the nelec_alpha. determine occupation based on energy spectrum</p>
+<dd><p>For UHF, allowing the Sz value being changed during SCF iteration.
+Determine occupation of alpha and beta electrons based on energy spectrum</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.scf.addons.float_occ_">
 <code class="descclassname">pyscf.scf.addons.</code><code class="descname">float_occ_</code><span class="sig-paren">(</span><em>mf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/addons.html#float_occ_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.addons.float_occ_" title="Permalink to this definition">¶</a></dt>
-<dd><p>for UHF, do not fix the nelec_alpha. determine occupation based on energy spectrum</p>
+<dd><p>For UHF, allowing the Sz value being changed during SCF iteration.
+Determine occupation of alpha and beta electrons based on energy spectrum</p>
 </dd></dl>
 
 <dl class="function">

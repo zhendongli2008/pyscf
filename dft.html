@@ -90,10 +90,9 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">An overview of PySCF</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced topics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gto.html">gto &#8212; Molecular structure and GTO basis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="lib.html">lib &#8212; Helper functions, parameters, and C functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lib.html">lib &#8212; Helper functions, parameters, and C extensions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scf.html">scf &#8212; Mean-field methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ao2mo.html">ao2mo &#8212; Integral transformations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcscf.html">mcscf &#8212; Multi-configurational self-consistent field</a></li>
@@ -101,7 +100,8 @@
 <li class="toctree-l1"><a class="reference internal" href="symm.html">symm &#8211; Point group symmetry and spin symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="df.html">df &#8212; Density fitting</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">dft &#8212; Density functional theory</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-pyscf.dft.rks">Kohn-Sham DFT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#customizing-xc-functional">Customizing XC functional</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pyscf.dft.rks">Program reference</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tddft.html">tddft &#8212; Time dependent density functional theory</a></li>
@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="hessian.html">hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pbc.html">pbc &#8212; Periodic boundary conditions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lo.html">lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">Miscellaneous</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qmmm.html">qmmm &#8212; QM/MM interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mrpt.html">mrpt &#8212; Multi-reference perturbation theory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
@@ -184,8 +185,85 @@
             
   <div class="section" id="dft-density-functional-theory">
 <h1>dft &#8212; Density functional theory<a class="headerlink" href="#dft-density-functional-theory" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="customizing-xc-functional">
+<h2>Customizing XC functional<a class="headerlink" href="#customizing-xc-functional" title="Permalink to this headline">¶</a></h2>
+<p>XC functional of DFT methods can be customized.  The simplest way to customize
+XC functional is to assigned a string expression to <code class="xref py py-attr docutils literal"><span class="pre">mf.xc</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">dft</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H  0  0  0; F  0.9  0  0&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;6-31g&#39;</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">RKS</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s1">&#39;HF*0.2 + .08*LDA + .72*B88, .81*LYP + .19*VWN&#39;</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s1">&#39;HF*0.5 + .08*LDA + .42*B88, .81*LYP + .19*VWN&#39;</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s1">&#39;HF*0.8 + .08*LDA + .12*B88, .81*LYP + .19*VWN&#39;</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s1">&#39;HF&#39;</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The XC functional string is parsed against the following rules.</p>
+<ul>
+<li><p class="first">The given functional description must be a one-line string.</p>
+</li>
+<li><p class="first">The functional description is case-insensitive.</p>
+</li>
+<li><p class="first">The functional description string has two parts, separated by <code class="docutils literal"><span class="pre">,</span></code>.  The
+first part describes the exchange functional, the second is the correlation
+functional.
+- If <code class="docutils literal"><span class="pre">,</span></code> was not appeared in string, the entire string is considered as</p>
+<blockquote>
+<div><p>X functional.</p>
+</div></blockquote>
+<ul class="simple">
+<li>To neglect X functional (just apply C functional), leave blank in the
+first part, eg <code class="docutils literal"><span class="pre">mf.xc=',vwn'</span></code> for pure VWN functional</li>
+</ul>
+</li>
+<li><p class="first">The functional name can be placed in arbitrary order.  Two names needs to
+be separated by operators <code class="docutils literal"><span class="pre">+</span></code> or <code class="docutils literal"><span class="pre">-</span></code>.  Blank spaces are ignored.
+NOTE the parser only reads operators <code class="docutils literal"><span class="pre">+</span> <span class="pre">-</span> <span class="pre">*</span></code>.  <code class="docutils literal"><span class="pre">/</span></code> is not supported.</p>
+</li>
+<li><p class="first">A functional name is associated with one factor.  If the factor is not
+given, it is assumed equaling 1.</p>
+</li>
+<li><p class="first">String <code class="docutils literal"><span class="pre">'HF'</span></code> stands for exact exchange (HF K matrix).  It is allowed to
+put <code class="docutils literal"><span class="pre">'HF'</span></code> in C (correlation) functional part.</p>
+</li>
+<li><p class="first">Be careful with the libxc convention on GGA functional, in which the LDA
+contribution is included.</p>
+</li>
+</ul>
+<p>Another way to customize XC functional is to redefine the <code class="xref py py-meth docutils literal"><span class="pre">eval_xc()</span></code>
+method of numerical integral class:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0.9 0 0&#39;</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;6-31g&#39;</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">RKS</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">eval_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># A fictitious XC functional to demonstrate the usage</span>
+    <span class="n">rho0</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dz</span> <span class="o">=</span> <span class="n">rho</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="p">(</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dy</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dz</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">exc</span> <span class="o">=</span> <span class="o">.</span><span class="mi">01</span> <span class="o">*</span> <span class="n">rho0</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="o">.</span><span class="mi">02</span> <span class="o">*</span> <span class="p">(</span><span class="n">gamma</span><span class="o">+.</span><span class="mi">001</span><span class="p">)</span><span class="o">**.</span><span class="mi">5</span>
+    <span class="n">vrho</span> <span class="o">=</span> <span class="o">.</span><span class="mi">01</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rho0</span>
+    <span class="n">vgamma</span> <span class="o">=</span> <span class="o">.</span><span class="mi">02</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="n">gamma</span><span class="o">+.</span><span class="mi">001</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-.</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">vlapl</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">vtau</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">vxc</span> <span class="o">=</span> <span class="p">(</span><span class="n">vrho</span><span class="p">,</span> <span class="n">vgamma</span><span class="p">,</span> <span class="n">vlapl</span><span class="p">,</span> <span class="n">vtau</span><span class="p">)</span>
+    <span class="n">fxc</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># 2nd order functional derivative</span>
+    <span class="n">kxc</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># 3rd order functional derivative</span>
+    <span class="k">return</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span><span class="p">,</span> <span class="n">fxc</span><span class="p">,</span> <span class="n">kxc</span>
+<span class="n">dft</span><span class="o">.</span><span class="n">libxc</span><span class="o">.</span><span class="n">define_xc_</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">_numint</span><span class="p">,</span> <span class="n">eval_xc</span><span class="p">,</span> <span class="n">xctype</span><span class="o">=</span><span class="s1">&#39;GGA&#39;</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>By calling <code class="xref py py-func docutils literal"><span class="pre">dft.libxc.define_xc_()</span></code> function, the customized <code class="xref py py-func docutils literal"><span class="pre">eval_xc()</span></code>
+function is patched to the numerical integration class <code class="xref py py-attr docutils literal"><span class="pre">mf._numint</span></code>
+dynamically.</p>
+<p>More examples of customizing DFT XC functional can be found in
+<code class="file docutils literal"><span class="pre">examples/dft/24-custom_xc_functional.py</span></code> and
+<code class="file docutils literal"><span class="pre">examples/dft/24-define_xc_functional.py</span></code>.</p>
+</div>
 <div class="section" id="module-pyscf.dft.rks">
-<span id="kohn-sham-dft"></span><h2>Kohn-Sham DFT<a class="headerlink" href="#module-pyscf.dft.rks" title="Permalink to this headline">¶</a></h2>
+<span id="program-reference"></span><h2>Program reference<a class="headerlink" href="#module-pyscf.dft.rks" title="Permalink to this headline">¶</a></h2>
 <p>Non-relativistic restricted Kohn-Sham</p>
 <dl class="class">
 <dt id="pyscf.dft.rks.RKS">
@@ -1232,13 +1310,23 @@ If &#8220;HF&#8221; was appeared in the string, it stands for the exact exchange
 <span class="gp">&gt;&gt;&gt; </span><span class="n">define_xc_</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">_numint</span><span class="p">,</span> <span class="s1">&#39;LDA*.08 + .72*B88 + .2*HF, .81*LYP + .19*VWN&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 <span class="go">-76.3783361189611</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">eval_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">exc</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">rho</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">... </span>    <span class="n">vrho</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rho</span>
+<span class="gp">... </span>    <span class="n">vxc</span> <span class="o">=</span> <span class="p">(</span><span class="n">vrho</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">fxc</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># 2nd order functional derivative</span>
+<span class="gp">... </span>    <span class="n">kxc</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># 3rd order functional derivative</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span><span class="p">,</span> <span class="n">fxc</span><span class="p">,</span> <span class="n">kxc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">define_xc_</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">_numint</span><span class="p">,</span> <span class="n">eval_xc</span><span class="p">,</span> <span class="n">xctype</span><span class="o">=</span><span class="s1">&#39;LDA&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">48.8525211046668</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.dft.libxc.define_xc_">
-<code class="descclassname">pyscf.dft.libxc.</code><code class="descname">define_xc_</code><span class="sig-paren">(</span><em>ni</em>, <em>description</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/libxc.html#define_xc_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.define_xc_" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyscf.dft.libxc.</code><code class="descname">define_xc_</code><span class="sig-paren">(</span><em>ni</em>, <em>description</em>, <em>xctype='LDA'</em>, <em>hyb=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/libxc.html#define_xc_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.define_xc_" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define XC functional.  See also <a class="reference internal" href="#pyscf.dft.libxc.eval_xc" title="pyscf.dft.libxc.eval_xc"><code class="xref py py-func docutils literal"><span class="pre">eval_xc()</span></code></a> for the rules of input description.</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -1260,6 +1348,16 @@ If &#8220;HF&#8221; was appeared in the string, it stands for the exact exchange
 <span class="gp">&gt;&gt;&gt; </span><span class="n">define_xc_</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">_numint</span><span class="p">,</span> <span class="s1">&#39;LDA*.08 + .72*B88 + .2*HF, .81*LYP + .19*VWN&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 <span class="go">-76.3783361189611</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">eval_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">exc</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">rho</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">... </span>    <span class="n">vrho</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rho</span>
+<span class="gp">... </span>    <span class="n">vxc</span> <span class="o">=</span> <span class="p">(</span><span class="n">vrho</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">fxc</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># 2nd order functional derivative</span>
+<span class="gp">... </span>    <span class="n">kxc</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># 3rd order functional derivative</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span><span class="p">,</span> <span class="n">fxc</span><span class="p">,</span> <span class="n">kxc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">define_xc_</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">_numint</span><span class="p">,</span> <span class="n">eval_xc</span><span class="p">,</span> <span class="n">xctype</span><span class="o">=</span><span class="s1">&#39;LDA&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">48.8525211046668</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1372,7 +1470,8 @@ rho is ((den_u,grad_xu,grad_yu,grad_zu,laplacian_u,tau_u)</p>
 <li>The functional description string has two parts, separated by &#8221;,&#8221;.  The
 first part describes the exchange functional, the second is the correlation
 functional.<ul>
-<li>If &#8221;,&#8221; not appeared in string, the entire string is considered as X functional.</li>
+<li>If &#8221;,&#8221; was not appeared in string, the entire string is considered as
+X functional.</li>
 <li>To neglect X functional (just apply C functional), leave blank in the
 first part, eg description=&#8217;,vwn&#8217; for pure VWN functional</li>
 </ul>
