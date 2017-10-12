@@ -222,18 +222,19 @@ triplet state although we didn&#8217;t specify spin state in the <code class="xr
 the underlying mean-field object.</p>
 </div>
 <p>The <cite>addons</cite> mechanism increases the flexibility of PySCf program.  You can
-define various addons to affect the default behaviour of pyscf program.  For
-example, if you&#8217;d like to track the changes of the system density (the diagonal
-term of density matrix), you can write the following addon to output the
-density:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">output_density</span><span class="p">(</span><span class="n">mf</span><span class="p">):</span>
+define various addons to customize the default behaviour of pyscf program.  For
+example, if you&#8217;d like to track the changes of the density (the diagonal
+term of density matrix) of certain basis during the SCF iteration, you can write
+the following addon to output the required density:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">output_density</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">basis_label</span><span class="p">):</span>
     <span class="n">ao_labels</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">ao_labels</span><span class="p">()</span>
     <span class="n">old_make_rdm1</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">make_rdm1</span>
     <span class="k">def</span> <span class="nf">make_rdm1</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">):</span>
         <span class="n">dm</span> <span class="o">=</span> <span class="n">old_make_rdm1</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">mo_occ</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;AO         alpha             beta&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ao_labels</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">],</span> <span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">basis_label</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">],</span> <span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">dm</span>
     <span class="n">mf</span><span class="o">.</span><span class="n">make_rdm1</span> <span class="o">=</span> <span class="n">make_rdm1</span>
     <span class="k">return</span> <span class="n">mf</span>
@@ -242,7 +243,7 @@ density:</p>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">UHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">verbose</span><span class="o">=</span><span class="mi">4</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">dynamic_sz_</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
-<span class="n">mf</span> <span class="o">=</span> <span class="n">output_density</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">output_density</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s1">&#39;O 2p&#39;</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 </pre></div>
 </div>

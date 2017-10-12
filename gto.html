@@ -92,10 +92,19 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">gto &#8212; Molecular structure and GTO basis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#mole">mole</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-pyscf.gto.moleintor">moleintor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#basis">basis</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#optimized-contraction">Optimized contraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#input">Input</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#geometry">Geometry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#input-basis">Input Basis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#command-line">Command line</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#program-reference">Program reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mole">mole</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pyscf.gto.moleintor">moleintor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#basis">basis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#internal-format">Internal format</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -194,8 +203,156 @@ the molecular geometry and format the basic functions for <cite>libcint</cite>
 integral library.  In <code class="file docutils literal"><span class="pre">mole</span></code>, a basic class <code class="xref py py-class docutils literal"><span class="pre">Mole</span></code> is
 defined to hold the global parameters, which will be used throughout the
 package.</p>
-<span class="target" id="module-pyscf.gto"></span><div class="section" id="mole">
-<h2>mole<a class="headerlink" href="#mole" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="input">
+<h2>Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="geometry">
+<h3>Geometry<a class="headerlink" href="#geometry" title="Permalink to this headline">¶</a></h3>
+<p>There are multiple ways to input molecular geometry. The internal format of
+<code class="xref py py-attr docutils literal"><span class="pre">Mole.atom</span></code> is a python list:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">atom</span> <span class="o">=</span> <span class="p">[[</span><span class="n">atom1</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)],</span>
+        <span class="p">[</span><span class="n">atom2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)],</span>
+        <span class="o">...</span>
+        <span class="p">[</span><span class="n">atomN</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)]]</span>
+</pre></div>
+</div>
+<p>You can input the geometry in this format.  You can use Python script to
+construct the geometry:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;O&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span><span class="o">.</span><span class="n">extend</span><span class="p">([[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>Besides Python list, tuple and numpy.ndarray are all supported by the internal
+format:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="p">((</span><span class="s1">&#39;O&#39;</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>Also, <code class="xref py py-attr docutils literal"><span class="pre">atom</span></code> can be a string of Cartesian format or Z-matrix format:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">O 0 0 0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">H 0 1 0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">H 0 0 1;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;&#39;&#39;</span>
+</pre></div>
+</div>
+<p>There are a few requirements for the string format.  The string input
+takes <code class="docutils literal"><span class="pre">;</span></code> or <code class="docutils literal"><span class="pre">\n</span></code> to partition atoms. White space and <code class="docutils literal"><span class="pre">,</span></code> are used to
+divide items for each atom.  Blank lines or lines started with <code class="docutils literal"><span class="pre">#</span></code> will be
+ignored:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
+<span class="gp">... </span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">#O 0 0 0</span>
+<span class="gp">... </span><span class="s1">H 0 1 0</span>
+<span class="gp">...</span><span class="s1"></span>
+<span class="gp">... </span><span class="s1">H 0 0 1;</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">natm</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p>The geometry string is case-insensitive.  It also supports to input the nuclear
+charges of elements:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">8</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="p">[</span><span class="s1">&#39;h&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]]</span>
+</pre></div>
+</div>
+<p>If you need to label an atom to distinguish it from the rest, you can prefix
+or suffix number or special characters <code class="docutils literal"><span class="pre">1234567890~!&#64;#$%^&amp;*()_+.?:&lt;&gt;[]{}|</span></code>
+(except <code class="docutils literal"><span class="pre">,</span></code> and <code class="docutils literal"><span class="pre">;</span></code>) to an atomic symbol.  With this decoration, you can
+specify different basis sets, or masses, or nuclear models for different atoms:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;8 0 0 0; h:1 0 1 0; H@2 0 0&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="s1">&#39;sto-3g&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="s1">&#39;cc-pvdz&#39;</span><span class="p">,</span> <span class="s1">&#39;H@2&#39;</span><span class="p">:</span> <span class="s1">&#39;6-31G&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span><span class="p">)</span>
+<span class="go">[[&#39;O&#39;, [0.0, 0.0, 0.0]], [&#39;H:1&#39;, [0.0, 1.0, 0.0]], [&#39;H@2&#39;, [0.0, 0.0]]]</span>
+</pre></div>
+</div>
+<p>No matter which format or symbols were used in the input, <code class="xref py py-func docutils literal"><span class="pre">Mole.build()</span></code>
+will convert <code class="xref py py-attr docutils literal"><span class="pre">Mole.atom</span></code> to the internal format:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="go">    O        0,   0, 0             ; 1 0.0 1 0</span>
+
+<span class="go">        H@2,0 0 1</span>
+<span class="go">    &#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span><span class="p">)</span>
+<span class="go">[[&#39;O&#39;, [0.0, 0.0, 0.0]], [&#39;H&#39;, [0.0, 1.0, 0.0]], [&#39;H@2&#39;, [0.0, 0.0, 1.0]]]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="input-basis">
+<span id="id1"></span><h3>Input Basis<a class="headerlink" href="#input-basis" title="Permalink to this headline">¶</a></h3>
+<p>There are various ways to input basis sets.  Besides the input of universal
+basis string and basis <code class="docutils literal"><span class="pre">dict</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;sto3g&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="s1">&#39;sto3g&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="s1">&#39;6-31g&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>basis can be input with helper functions.
+Function <code class="xref py py-func docutils literal"><span class="pre">basis.parse()</span></code> can parse a basis string of NWChem format
+(<a class="reference external" href="https://bse.pnl.gov/bse/portal">https://bse.pnl.gov/bse/portal</a>):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="n">gto</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">C    S</span>
+<span class="s1">     71.6168370              0.15432897</span>
+<span class="s1">     13.0450960              0.53532814</span>
+<span class="s1">      3.5305122              0.44463454</span>
+<span class="s1">C    SP</span>
+<span class="s1">      2.9412494             -0.09996723             0.15591627</span>
+<span class="s1">      0.6834831              0.39951283             0.60768372</span>
+<span class="s1">      0.2222899              0.70011547             0.39195739</span>
+<span class="s1">&#39;&#39;&#39;</span><span class="p">)}</span>
+</pre></div>
+</div>
+<p>Functions <code class="xref py py-func docutils literal"><span class="pre">basis.load()</span></code> can be load arbitrary basis from the database, even
+the basis which does not match the element.</p>
+<blockquote>
+<div>mol.basis = {&#8216;H&#8217;: gto.basis.load(&#8216;sto3g&#8217;, &#8216;C&#8217;)}</div></blockquote>
+<p>Both <code class="xref py py-func docutils literal"><span class="pre">basis.parse()</span></code> and <code class="xref py py-func docutils literal"><span class="pre">basis.load()</span></code> return the basis set in the
+internal format (See the <a class="reference internal" href="#gto-basis"><span class="std std-ref">basis</span></a>).</p>
+<p>Basis parser supports &#8220;Ghost&#8221; atom:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;GHOST&#39;</span><span class="p">:</span> <span class="n">gto</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;cc-pvdz&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">),</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="s1">&#39;sto3g&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>More examples of inputing ghost atoms can be found in
+<code class="file docutils literal"><span class="pre">examples/gto/03-ghost_atom.py</span></code></p>
+<p>Like the requirements of geometry input, you can use atomic symbol
+(case-insensitive) or the atomic nuclear charge, as the keyword of the
+<code class="xref py py-attr docutils literal"><span class="pre">basis</span></code> dict.  Prefix and suffix of numbers and special
+characters are allowed.  If the decorated atomic symbol is appeared in
+<code class="xref py py-attr docutils literal"><span class="pre">atom</span></code> but not <code class="xref py py-attr docutils literal"><span class="pre">basis</span></code>, the basis parser will
+remove all decorations then seek the pure atomic symbol in
+<code class="xref py py-attr docutils literal"><span class="pre">basis</span></code> dict.  In the following example, <code class="docutils literal"><span class="pre">6-31G</span></code> basis
+will be assigned to the second H atom, but <code class="docutils literal"><span class="pre">STO-3G</span></code> will be used for
+the third atom:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;8 0 0 0; h1 0 1 0; H2 0 0 1&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="s1">&#39;sto-3g&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="s1">&#39;sto3g&#39;</span><span class="p">,</span> <span class="s1">&#39;H1&#39;</span><span class="p">:</span> <span class="s1">&#39;6-31G&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="command-line">
+<h3>Command line<a class="headerlink" href="#command-line" title="Permalink to this headline">¶</a></h3>
+<p>Some of the input variables can be passed from command line:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ python example.py -o /path/to/my_log.txt -m 1000
+</pre></div>
+</div>
+<p>This command line specifies the output file and the maximum of memory for the
+calculation.  By default, command line has the highest priority, which means our
+settings in the script will be overwritten by the command line arguments.  To
+make the input parser ignore the command line arguments, you can call the
+<code class="xref py py-func docutils literal"><span class="pre">Mole.build()</span></code> with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The first 0 prevent <code class="xref py py-func docutils literal"><span class="pre">build()</span></code> dumping the input file.  The
+second 0 prevent <code class="xref py py-func docutils literal"><span class="pre">build()</span></code> parsing command line.</p>
+</div>
+</div>
+<div class="section" id="program-reference">
+<h2>Program reference<a class="headerlink" href="#program-reference" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="mole">
+<h3>mole<a class="headerlink" href="#mole" title="Permalink to this headline">¶</a></h3>
 <p><code class="xref py py-class docutils literal"><span class="pre">Mole</span></code> class handles three layers: input, internal format, libcint arguments.
 The relationship of the three layers are:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">.</span><span class="n">atom</span> <span class="p">(</span><span class="nb">input</span><span class="p">)</span>  <span class="o">&lt;=&gt;</span>  <span class="o">.</span><span class="n">_atom</span> <span class="p">(</span><span class="k">for</span> <span class="n">python</span><span class="p">)</span> <span class="o">&lt;=&gt;</span> <span class="o">.</span><span class="n">_atm</span> <span class="p">(</span><span class="k">for</span> <span class="n">libcint</span><span class="p">)</span>
@@ -857,22 +1014,22 @@ delimiter.  Then call compressor function to abstract each block.</p>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>&#8220;GTOval_sph&#8221;</td>
-<td><a href="#id1"><span class="problematic" id="id2">|</span></a>AO&gt;</td>
+<td><a href="#id2"><span class="problematic" id="id3">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-odd"><td>&#8220;GTOval_ip_sph&#8221;</td>
-<td>nabla <a href="#id3"><span class="problematic" id="id4">|</span></a>AO&gt;</td>
+<td>nabla <a href="#id4"><span class="problematic" id="id5">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-even"><td>&#8220;GTOval_ig_sph&#8221;</td>
-<td>(#C(0 1) g) <a href="#id5"><span class="problematic" id="id6">|</span></a>AO&gt;</td>
+<td>(#C(0 1) g) <a href="#id6"><span class="problematic" id="id7">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-odd"><td>&#8220;GTOval_ipig_sph&#8221;</td>
-<td>(#C(0 1) nabla g) <a href="#id7"><span class="problematic" id="id8">|</span></a>AO&gt;</td>
+<td>(#C(0 1) nabla g) <a href="#id8"><span class="problematic" id="id9">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-even"><td>&#8220;GTOval_cart&#8221;</td>
-<td><a href="#id9"><span class="problematic" id="id10">|</span></a>AO&gt;</td>
+<td><a href="#id10"><span class="problematic" id="id11">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-odd"><td>&#8220;GTOval_ip_cart&#8221;</td>
-<td>nabla <a href="#id11"><span class="problematic" id="id12">|</span></a>AO&gt;</td>
+<td>nabla <a href="#id12"><span class="problematic" id="id13">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-even"><td>&#8220;GTOval_ig_cart&#8221;</td>
 <td>(#C(0 1) g)|AO&gt;</td>
@@ -1011,7 +1168,7 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <code class="descname">format_basis</code><span class="sig-paren">(</span><em>basis_tab</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.format_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.format_basis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the input <code class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></code> to the internal data format.</p>
 <dl class="docutils">
-<dt><a href="#id13"><span class="problematic" id="id14">``</span></a>{ atom: [(l, ((-exp, c_1, c_2, ..),</dt>
+<dt><a href="#id14"><span class="problematic" id="id15">``</span></a>{ atom: [(l, ((-exp, c_1, c_2, ..),</dt>
 <dd><blockquote class="first">
 <div>(-exp, c_1, c_2, ..))),</div></blockquote>
 <dl class="last docutils">
@@ -1052,7 +1209,7 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <blockquote>
 <div><blockquote>
 <div><dl class="docutils">
-<dt>((l,  # l=-1 for UL, l&gt;=0 for Ul to indicate <a href="#id31"><span class="problematic" id="id32">|l&gt;&lt;l|</span></a></dt>
+<dt>((l,  # l=-1 for UL, l&gt;=0 for Ul to indicate <a href="#id32"><span class="problematic" id="id33">|l&gt;&lt;l|</span></a></dt>
 <dd><dl class="first last docutils">
 <dt>(((exp_1, c_1),  # for r^0</dt>
 <dd><blockquote class="first">
@@ -2027,7 +2184,7 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <code class="descclassname">pyscf.gto.mole.</code><code class="descname">format_basis</code><span class="sig-paren">(</span><em>basis_tab</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#format_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.format_basis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the input <code class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></code> to the internal data format.</p>
 <dl class="docutils">
-<dt><a href="#id15"><span class="problematic" id="id16">``</span></a>{ atom: [(l, ((-exp, c_1, c_2, ..),</dt>
+<dt><a href="#id16"><span class="problematic" id="id17">``</span></a>{ atom: [(l, ((-exp, c_1, c_2, ..),</dt>
 <dd><blockquote class="first">
 <div>(-exp, c_1, c_2, ..))),</div></blockquote>
 <dl class="last docutils">
@@ -2068,7 +2225,7 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <blockquote>
 <div><blockquote>
 <div><dl class="docutils">
-<dt>((l,  # l=-1 for UL, l&gt;=0 for Ul to indicate <a href="#id33"><span class="problematic" id="id34">|l&gt;&lt;l|</span></a></dt>
+<dt>((l,  # l=-1 for UL, l&gt;=0 for Ul to indicate <a href="#id34"><span class="problematic" id="id35">|l&gt;&lt;l|</span></a></dt>
 <dd><dl class="first last docutils">
 <dt>(((exp_1, c_1),  # for r^0</dt>
 <dd><blockquote class="first">
@@ -3194,22 +3351,22 @@ delimiter.  Then call compressor function to abstract each block.</p>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>&#8220;GTOval_sph&#8221;</td>
-<td><a href="#id17"><span class="problematic" id="id18">|</span></a>AO&gt;</td>
+<td><a href="#id18"><span class="problematic" id="id19">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-odd"><td>&#8220;GTOval_ip_sph&#8221;</td>
-<td>nabla <a href="#id19"><span class="problematic" id="id20">|</span></a>AO&gt;</td>
+<td>nabla <a href="#id20"><span class="problematic" id="id21">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-even"><td>&#8220;GTOval_ig_sph&#8221;</td>
-<td>(#C(0 1) g) <a href="#id21"><span class="problematic" id="id22">|</span></a>AO&gt;</td>
+<td>(#C(0 1) g) <a href="#id22"><span class="problematic" id="id23">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-odd"><td>&#8220;GTOval_ipig_sph&#8221;</td>
-<td>(#C(0 1) nabla g) <a href="#id23"><span class="problematic" id="id24">|</span></a>AO&gt;</td>
+<td>(#C(0 1) nabla g) <a href="#id24"><span class="problematic" id="id25">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-even"><td>&#8220;GTOval_cart&#8221;</td>
-<td><a href="#id25"><span class="problematic" id="id26">|</span></a>AO&gt;</td>
+<td><a href="#id26"><span class="problematic" id="id27">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-odd"><td>&#8220;GTOval_ip_cart&#8221;</td>
-<td>nabla <a href="#id27"><span class="problematic" id="id28">|</span></a>AO&gt;</td>
+<td>nabla <a href="#id28"><span class="problematic" id="id29">|</span></a>AO&gt;</td>
 </tr>
 <tr class="row-even"><td>&#8220;GTOval_ig_cart&#8221;</td>
 <td>(#C(0 1) g)|AO&gt;</td>
@@ -3348,7 +3505,7 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <code class="descname">format_basis</code><span class="sig-paren">(</span><em>basis_tab</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.format_basis"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Convert the input <code class="xref py py-attr docutils literal"><span class="pre">Mole.basis</span></code> to the internal data format.</p>
 <dl class="docutils">
-<dt><a href="#id29"><span class="problematic" id="id30">``</span></a>{ atom: [(l, ((-exp, c_1, c_2, ..),</dt>
+<dt><a href="#id30"><span class="problematic" id="id31">``</span></a>{ atom: [(l, ((-exp, c_1, c_2, ..),</dt>
 <dd><blockquote class="first">
 <div>(-exp, c_1, c_2, ..))),</div></blockquote>
 <dl class="last docutils">
@@ -3389,7 +3546,7 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <blockquote>
 <div><blockquote>
 <div><dl class="docutils">
-<dt>((l,  # l=-1 for UL, l&gt;=0 for Ul to indicate <a href="#id35"><span class="problematic" id="id36">|l&gt;&lt;l|</span></a></dt>
+<dt>((l,  # l=-1 for UL, l&gt;=0 for Ul to indicate <a href="#id36"><span class="problematic" id="id37">|l&gt;&lt;l|</span></a></dt>
 <dd><dl class="first last docutils">
 <dt>(((exp_1, c_1),  # for r^0</dt>
 <dd><blockquote class="first">
@@ -4049,7 +4206,7 @@ arguments for <a class="reference internal" href="#pyscf.gto.mole.Mole" title="p
 
 </div>
 <div class="section" id="module-pyscf.gto.moleintor">
-<span id="moleintor"></span><span id="gto-moleintor"></span><h2>moleintor<a class="headerlink" href="#module-pyscf.gto.moleintor" title="Permalink to this headline">¶</a></h2>
+<span id="moleintor"></span><span id="gto-moleintor"></span><h3>moleintor<a class="headerlink" href="#module-pyscf.gto.moleintor" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="pyscf.gto.moleintor.ascint3">
 <code class="descclassname">pyscf.gto.moleintor.</code><code class="descname">ascint3</code><span class="sig-paren">(</span><em>intor_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/moleintor.html#ascint3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.moleintor.ascint3" title="Permalink to this definition">¶</a></dt>
@@ -4536,8 +4693,39 @@ arguments for <a class="reference internal" href="#pyscf.gto.mole.Mole" title="p
 
 </div>
 <div class="section" id="basis">
-<span id="gto-basis"></span><h2>basis<a class="headerlink" href="#basis" title="Permalink to this headline">¶</a></h2>
-<p>Basis sets</p>
+<span id="gto-basis"></span><h3>basis<a class="headerlink" href="#basis" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="internal-format">
+<h4>Internal format<a class="headerlink" href="#internal-format" title="Permalink to this headline">¶</a></h4>
+<p>This module loads basis set and ECP data from basis database and parse the basis
+(mostly in NWChem format) and finally convert to internal format.  The internal
+format of basis set is:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="n">atom_type1</span><span class="p">:[[</span><span class="n">angular_momentum</span>
+                      <span class="p">(</span><span class="n">GTO</span><span class="o">-</span><span class="n">exp1</span><span class="p">,</span> <span class="n">contract</span><span class="o">-</span><span class="n">coeff11</span><span class="p">,</span> <span class="n">contract</span><span class="o">-</span><span class="n">coeff12</span><span class="p">),</span>
+                      <span class="p">(</span><span class="n">GTO</span><span class="o">-</span><span class="n">exp2</span><span class="p">,</span> <span class="n">contract</span><span class="o">-</span><span class="n">coeff21</span><span class="p">,</span> <span class="n">contract</span><span class="o">-</span><span class="n">coeff22</span><span class="p">),</span>
+                      <span class="p">(</span><span class="n">GTO</span><span class="o">-</span><span class="n">exp3</span><span class="p">,</span> <span class="n">contract</span><span class="o">-</span><span class="n">coeff31</span><span class="p">,</span> <span class="n">contract</span><span class="o">-</span><span class="n">coeff32</span><span class="p">),</span>
+                      <span class="o">...</span><span class="p">],</span>
+                     <span class="p">[</span><span class="n">angular_momentum</span>
+                      <span class="p">(</span><span class="n">GTO</span><span class="o">-</span><span class="n">exp1</span><span class="p">,</span> <span class="n">contract</span><span class="o">-</span><span class="n">coeff11</span><span class="p">,</span> <span class="n">contract</span><span class="o">-</span><span class="n">coeff12</span><span class="p">),</span>
+                      <span class="o">...</span><span class="p">],</span>
+                     <span class="o">...</span><span class="p">],</span>
+         <span class="n">atom_type2</span><span class="p">:[[</span><span class="n">angular_momentum</span><span class="p">,</span> <span class="p">(</span><span class="o">...</span><span class="p">),],</span>
+                     <span class="o">...</span><span class="p">],</span>
+</pre></div>
+</div>
+<p>For example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="p">(</span><span class="mf">19.2406000</span><span class="p">,</span> <span class="mf">0.0328280</span><span class="p">),</span>
+                    <span class="p">(</span><span class="mf">2.8992000</span><span class="p">,</span> <span class="mf">0.2312080</span><span class="p">),</span>
+                    <span class="p">(</span><span class="mf">0.6534000</span><span class="p">,</span> <span class="mf">0.8172380</span><span class="p">),],</span>
+                   <span class="p">[</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="p">(</span><span class="mf">0.1776000</span><span class="p">,</span> <span class="mf">1.0000000</span><span class="p">),],</span>
+                   <span class="p">[</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="p">(</span><span class="mf">1.0000000</span><span class="p">,</span> <span class="mf">1.0000000</span><span class="p">),]],</span>
+            <span class="p">}</span>
+</pre></div>
+</div>
+<p>Some basis sets, e.g. <code class="file docutils literal"><span class="pre">pyscf/gto/basis/dzp_dunning.py</span></code>, are saved in the
+internal format.</p>
 <span class="target" id="module-pyscf.gto.basis"></span><dl class="function">
 <dt id="pyscf.gto.basis.load">
 <code class="descclassname">pyscf.gto.basis.</code><code class="descname">load</code><span class="sig-paren">(</span><em>filename_or_basisname</em>, <em>symb</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/basis.html#load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.basis.load" title="Permalink to this definition">¶</a></dt>
@@ -4593,8 +4781,7 @@ format which can be assigned to <code class="xref py py-attr docutils literal"><
 </div>
 </dd></dl>
 
-<div class="section" id="optimized-contraction">
-<h3>Optimized contraction<a class="headerlink" href="#optimized-contraction" title="Permalink to this headline">¶</a></h3>
+</div>
 </div>
 </div>
 </div>
