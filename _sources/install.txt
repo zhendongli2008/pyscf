@@ -28,12 +28,24 @@ Then install PySCF::
 
 .. note::
 
+  BLAS library is required to install PySCF library.  In some systems, the
+  installation can automatically detect the installed BLAS libraries in the
+  system and choose one to be used in the program.  If BLAS library is existed
+  in the system but the install script couldn't find it, you can specify the
+  BLAS library either through the environment ``LDFLAGS``, eg
+  ``LDFLAGS="-L/path/to/blas -lblas" pip install pyscf`` or the environment
+  variable ``PYSCF_INC_DIR``, eg
+  ``PYSCF_INC_DIR=/path/to/blas:/path/to/other/lib pip install``.
+
+.. note::
+
   libxc library is not available in the PyPI repository.  pyscf.dft module is
   not working unless the libxc library was installed in the system.  You can
-  download libxc library from http://octopus-code.org/wiki/Libxc:download.
-  You need to add --enable-shared when compiling the libxc library.  Before
-  calling pip, the path where the libxc library is installed needs to be added
-  to the environment variable ``PYSCF_INC_DIR`` 
+  download libxc library from http://octopus-code.org/wiki/Libxc:download
+  (note you need to add --enable-shared when compiling the libxc library).
+  Before calling pip, the path where the libxc library is installed needs to be
+  added to the environment variable ``PYSCF_INC_DIR``, eg
+  ``export PYSCF_INC_DIR=/path/to/libxc``.
 
 
 Manual installation from github repo
@@ -60,7 +72,7 @@ Build the C extensions in :file:`pyscf/lib`::
 This will automatically download the analytical GTO integral library `libcint
 <https://github.com/sunqm/libcint.git>`_ and the DFT exchange correlation
 functional libraries `libxc <http://www.tddft.org/programs/Libxc>`_ and `xcfun
-<https://github.com/dftlibs/xcfun.git>`_.  Finally, to make Python able to find
+<https://github.com/dftlibs/xcfun.git>`_.  Finally, to make Python find
 the :code:`pyscf` package, add the top-level :code:`pyscf` directory (not
 the :code:`pyscf/pyscf` subdirectory) to :code:`PYTHONPATH`.  For example, if
 :code:`pyscf` is installed in ``/opt``, :code:`PYTHONPATH` should be like::
@@ -161,11 +173,10 @@ Finally update the ``PYTHONPATH`` environment for Python interpreter.
 Using optimized BLAS
 ====================
 
-The default installation does not require the user to identify external linear
-algebra libraries, but instead tries to find them automatically. This automated
-setup script may only find and link to slow BLAS/LAPACK libraries.  To improve
-performance, users can install the package with other BLAS vendors,
-such as the Intel Math Kernel Library (MKL), which can provide 10x speedup in many
+The default installation tries to find BLAS libraries automatically. This
+automated setup script may link the code to slow BLAS libraries.  You can
+compile the package with other BLAS vendors to improve performance, for example
+the Intel Math Kernel Library (MKL), which can provide 10x speedup in many
 modules::
 
   $ cd pyscf/lib/build
@@ -202,12 +213,11 @@ Using optimized integral library
 ================================
 
 The default integral library used by PySCF is
-libcint (https://github.com/sunqm/libcint).  To ensure the
-compatibility on various high performance computer systems, PySCF does
-not use the fast integral library by default.  For X86-64 platforms,
-libcint library has an efficient implementation Qcint
-https://github.com/sunqm/qcint.git
-which is heavily optimized against SSE3 instructions.
+libcint (https://github.com/sunqm/libcint).  This integral library was
+implemented in the model that ensures the compatibility on various high
+performance computer systems.  For X86-64 platforms, libcint library has an
+efficient counterpart Qcint (https://github.com/sunqm/qcint)
+which is heavily optimized against X86 SIMD instructions (AVX-512/AVX2/AVX/SSE3).
 To replace the default libcint library with qcint library, edit the URL
 of the integral library in lib/CMakeLists.txt file::
 
@@ -230,7 +240,7 @@ Barbry and Peter Koval.  You can enable this module with a cmake flag::
 
     $ cmake -DENABLE_NAO=1 ..
 
-More information of the compilcation can be found in :file:`pyscf/lib/nao/README.md`.
+More information of the compilation can be found in :file:`pyscf/lib/nao/README.md`.
 
 DMRG solver
 -----------
