@@ -606,35 +606,48 @@
 
 <span class="n">XC_KEYS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">XC_CODES</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
+<span class="k">def</span> <span class="nf">xc_type</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">hyb</span><span class="p">,</span> <span class="n">fn_facs</span> <span class="o">=</span> <span class="n">parse_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fn_facs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">xc_code</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>  <span class="c1"># mimic fn_facs</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fn_facs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;HF&#39;</span>
+    <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_is_lda</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xid</span><span class="p">))</span> <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">fac</span> <span class="ow">in</span> <span class="n">fn_facs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;LDA&#39;</span>
+    <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_is_meta_gga</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xid</span><span class="p">))</span> <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">fac</span> <span class="ow">in</span> <span class="n">fn_facs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;MGGA&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># any(_itrf.LIBXC_is_gga(ctypes.c_int(xid)) for xid, fac in fn_facs)</span>
+        <span class="c1"># include hybrid_xc</span>
+        <span class="k">return</span> <span class="s1">&#39;GGA&#39;</span>
+
 <span class="k">def</span> <span class="nf">is_lda</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
-    <span class="n">hyb</span><span class="p">,</span> <span class="n">fn_facs</span> <span class="o">=</span> <span class="n">parse_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_is_lda</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xid</span><span class="p">))</span> <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">fac</span> <span class="ow">in</span> <span class="n">fn_facs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xc_type</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;LDA&#39;</span>
 
 <span class="k">def</span> <span class="nf">is_hybrid_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">xc_code</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_is_hybrid</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xc_code</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;HF&#39;</span> <span class="ow">in</span> <span class="n">xc_code</span> <span class="ow">or</span>
-                    <span class="nb">any</span><span class="p">((</span><span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_is_hybrid</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xid</span><span class="p">))</span>
-                         <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">parse_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span> <span class="ow">or</span>
-                    <span class="nb">abs</span><span class="p">(</span><span class="n">parse_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">14</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;HF&#39;</span> <span class="ow">in</span> <span class="n">xc_code</span> <span class="ow">or</span> <span class="n">hybrid_coeff</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_is_hybrid</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xc_code</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">any</span><span class="p">((</span><span class="n">is_hybrid_xc</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xc_code</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">is_meta_gga</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
-    <span class="n">hyb</span><span class="p">,</span> <span class="n">fn_facs</span> <span class="o">=</span> <span class="n">parse_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_is_meta_gga</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xid</span><span class="p">))</span> <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">fac</span> <span class="ow">in</span> <span class="n">fn_facs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xc_type</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;MGGA&#39;</span>
 
 <span class="k">def</span> <span class="nf">is_gga</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
-    <span class="n">hyb</span><span class="p">,</span> <span class="n">fn_facs</span> <span class="o">=</span> <span class="n">parse_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_is_gga</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xid</span><span class="p">))</span> <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">fac</span> <span class="ow">in</span> <span class="n">fn_facs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xc_type</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;GGA&#39;</span>
 
 <span class="k">def</span> <span class="nf">max_deriv_order</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
     <span class="n">hyb</span><span class="p">,</span> <span class="n">fn_facs</span> <span class="o">=</span> <span class="n">parse_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">min</span><span class="p">((</span><span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_max_deriv_order</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xid</span><span class="p">)))</span> <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">fac</span> <span class="ow">in</span> <span class="n">fn_facs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fn_facs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_max_deriv_order</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xid</span><span class="p">))</span> <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">fac</span> <span class="ow">in</span> <span class="n">fn_facs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">4</span>
 
 <span class="k">def</span> <span class="nf">test_deriv_order</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="n">deriv</span><span class="p">,</span> <span class="n">raise_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="n">support</span> <span class="o">=</span> <span class="n">deriv</span> <span class="o">&lt;=</span> <span class="n">max_deriv_order</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span>
@@ -1011,14 +1024,7 @@
         <span class="n">ni</span><span class="o">.</span><span class="n">eval_xc</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">xc_code</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> \
                 <span class="n">eval_xc</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">ni</span><span class="o">.</span><span class="n">hybrid_coeff</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">hybrid_coeff</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">xc_type</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">is_lda</span><span class="p">(</span><span class="n">description</span><span class="p">):</span>
-                <span class="k">return</span> <span class="s1">&#39;LDA&#39;</span>
-            <span class="k">elif</span> <span class="n">is_meta_gga</span><span class="p">(</span><span class="n">description</span><span class="p">):</span>
-                <span class="k">return</span> <span class="s1">&#39;MGGA&#39;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="s1">&#39;GGA&#39;</span>
-        <span class="n">ni</span><span class="o">.</span><span class="n">_xc_type</span> <span class="o">=</span> <span class="n">xc_type</span>
+        <span class="n">ni</span><span class="o">.</span><span class="n">_xc_type</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">xc_type</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
 
     <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">description</span><span class="p">):</span>
         <span class="n">ni</span><span class="o">.</span><span class="n">eval_xc</span> <span class="o">=</span> <span class="n">description</span>

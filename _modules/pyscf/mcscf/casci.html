@@ -193,6 +193,7 @@
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">ao2mo</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">fci</span>
 <span class="kn">from</span> <span class="nn">pyscf.mcscf</span> <span class="k">import</span> <span class="n">addons</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">symm</span>
 
 
 <span class="k">def</span> <span class="nf">extract_orbs</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ncas</span><span class="p">,</span> <span class="n">nelecas</span><span class="p">,</span> <span class="n">ncore</span><span class="p">):</span>
@@ -362,9 +363,7 @@
 
 <span class="sd">    Kwargs:</span>
 <span class="sd">        sort : bool</span>
-<span class="sd">            Sort natural orbitals wrt the occupancy.  Be careful with this</span>
-<span class="sd">            option since the resultant natural orbitals might have the</span>
-<span class="sd">            different symmetry to the irreps indicated by CASSCF.orbsym</span>
+<span class="sd">            Sort natural orbitals wrt the occupancy.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A tuple, the first item is natural orbitals, the second is updated CI</span>
@@ -389,9 +388,9 @@
     <span class="c1"># orbital symmetry is reserved in this _eig call</span>
     <span class="n">occ</span><span class="p">,</span> <span class="n">ucas</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">_eig</span><span class="p">(</span><span class="o">-</span><span class="n">casdm1</span><span class="p">,</span> <span class="n">ncore</span><span class="p">,</span> <span class="n">nocc</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">sort</span><span class="p">:</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">occ</span><span class="p">)</span>
-        <span class="n">occ</span> <span class="o">=</span> <span class="n">occ</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-        <span class="n">ucas</span> <span class="o">=</span> <span class="n">ucas</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">casorb_idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">occ</span><span class="p">)</span>
+        <span class="n">occ</span> <span class="o">=</span> <span class="n">occ</span><span class="p">[</span><span class="n">casorb_idx</span><span class="p">]</span>
+        <span class="n">ucas</span> <span class="o">=</span> <span class="n">ucas</span><span class="p">[:,</span><span class="n">casorb_idx</span><span class="p">]</span>
 <span class="c1"># restore phase</span>
 <span class="c1"># where_natorb gives the location of the natural orbital for the input cas</span>
 <span class="c1"># orbitals.  gen_strings4orblist map thes sorted strings (on CAS orbital) to</span>
@@ -441,6 +440,12 @@
 
     <span class="n">mo_coeff1</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">mo_coeff1</span><span class="p">[:,</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">],</span> <span class="n">ucas</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="s1">&#39;orbsym&#39;</span><span class="p">):</span>
+        <span class="n">orbsym</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mo_coeff</span><span class="o">.</span><span class="n">orbsym</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sort</span><span class="p">:</span>
+            <span class="n">orbsym</span><span class="p">[</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">]</span> <span class="o">=</span> <span class="n">orbsym</span><span class="p">[</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">][</span><span class="n">casorb_idx</span><span class="p">]</span>
+        <span class="n">mo_coeff1</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">tag_array</span><span class="p">(</span><span class="n">mo_coeff1</span><span class="p">,</span> <span class="n">orbsym</span><span class="o">=</span><span class="n">orbsym</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span>
         <span class="n">ovlp_ao</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">()</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;where_natorb </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">where_natorb</span><span class="p">))</span>
@@ -513,6 +518,15 @@
             <span class="n">c1</span> <span class="o">=</span> <span class="n">c1</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span>
         <span class="n">mo_coeff1</span><span class="p">[:,</span><span class="n">nocc</span><span class="p">:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">[:,</span><span class="n">nocc</span><span class="p">:],</span> <span class="n">c1</span><span class="p">)</span>
         <span class="n">mo_energy</span><span class="p">[</span><span class="n">nocc</span><span class="p">:]</span> <span class="o">=</span> <span class="n">w</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="s1">&#39;orbsym&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sort</span><span class="p">:</span>
+            <span class="n">orbsym</span> <span class="o">=</span> <span class="n">symm</span><span class="o">.</span><span class="n">label_orb_symm</span><span class="p">(</span><span class="n">mc</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">mc</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">irrep_id</span><span class="p">,</span>
+                                         <span class="n">mc</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">symm_orb</span><span class="p">,</span> <span class="n">mo_coeff1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">orbsym</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="o">.</span><span class="n">orbsym</span>
+        <span class="n">mo_coeff1</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">tag_array</span><span class="p">(</span><span class="n">mo_coeff1</span><span class="p">,</span> <span class="n">orbsym</span><span class="o">=</span><span class="n">orbsym</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nmo</span><span class="p">):</span>
             <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;i = </span><span class="si">%d</span><span class="s1">  &lt;i|F|i&gt; = </span><span class="si">%12.8f</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">mo_energy</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
@@ -577,6 +591,9 @@
 <span class="sd">            which DMRG relies on.</span>
 <span class="sd">        canonicalization : bool</span>
 <span class="sd">            Whether to canonicalize orbitals.  Default is True.</span>
+<span class="sd">        sorting_mo_energy : bool</span>
+<span class="sd">            Whether to sort the orbitals based on the diagonal elements of the</span>
+<span class="sd">            general Fock matrix.  Default is False.</span>
 <span class="sd">        fcisolver : an instance of :class:`FCISolver`</span>
 <span class="sd">            The pyscf.fci module provides several FCISolver for different scenario.  Generally,</span>
 <span class="sd">            fci.direct_spin1.FCISolver can be used for all RHF-CASSCF.  However, a proper FCISolver</span>
@@ -642,6 +659,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">8</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">natorb</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">canonicalization</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sorting_mo_energy</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="c1">##################################################</span>
 <span class="c1"># don&#39;t modify the following attributes, they are not input options</span>
@@ -663,6 +681,7 @@
         <span class="k">assert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ncas</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;natorb = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">natorb</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;canonicalization = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">canonicalization</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;sorting_mo_energy = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sorting_mo_energy</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;max_memory </span><span class="si">%d</span><span class="s1"> (MB)&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_memory</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Orbital initial guess is not given.</span><span class="se">\n</span><span class="s1">&#39;</span>
@@ -742,9 +761,11 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">canonicalization</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_cas</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">number</span><span class="p">)):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">canonicalize_</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci</span><span class="p">,</span>
+                                   <span class="n">sort</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sorting_mo_energy</span><span class="p">,</span>
                                    <span class="n">cas_natorb</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">natorb</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">canonicalize_</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                   <span class="n">sort</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sorting_mo_energy</span><span class="p">,</span>
                                    <span class="n">cas_natorb</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">natorb</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">log</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="p">,</span> <span class="s1">&#39;converged&#39;</span><span class="p">):</span>
@@ -870,6 +891,8 @@
 <span class="sd">                S^2 expection value == s*(s+1)</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">fci</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">fix_spin_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">ss</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">fix_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">ss</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fix_spin_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">ss</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">density_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_df</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">pyscf.mcscf</span> <span class="k">import</span> <span class="n">df</span>
