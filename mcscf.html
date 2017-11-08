@@ -105,6 +105,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#symmetry-broken">Symmetry broken</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#initial-guess">Initial guess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#canonical-orbitals">Canonical orbitals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#program-reference">Program reference</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-pyscf.mcscf.casci">CASCI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-pyscf.mcscf.mc1step">CASSCF</a></li>
@@ -383,6 +384,95 @@ inbuilt methods to convert the mo_coeff to natural orbitals.
 </div>
 <div class="section" id="initial-guess">
 <h2>Initial guess<a class="headerlink" href="#initial-guess" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="canonical-orbitals">
+<h2>Canonical orbitals<a class="headerlink" href="#canonical-orbitals" title="Permalink to this headline">¶</a></h2>
+<p>There are two relevant parameters for orbital canonicalization.  They are
+<code class="xref py py-attr docutils literal"><span class="pre">mc.canonicalization</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code> (assuming the MCSCF object is <code class="docutils literal"><span class="pre">mc</span></code>).
+In the CASCI/CASSCF calculations, the resultant orbitals are stored in the
+attribute <code class="xref py py-attr docutils literal"><span class="pre">mc.mo_coeff</span></code>.  These orbitals may be identical or partially
+identical to the initial orbitals, depending on the values of
+<code class="xref py py-attr docutils literal"><span class="pre">mc.canonicalization</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code>.</p>
+<p><code class="xref py py-attr docutils literal"><span class="pre">mc.canonicalization</span></code> controls whether the resultant CASCI/CASSCF orbitals
+are canonicalized with respect to the general Fock matrix.  General Fock matrix
+is defined as</p>
+<div class="math">
+\[\begin{split}\mathbf{F} &amp;= \mathbf{h}_{core} + \mathbf{J} - \mathbf{K} \\
+J_{pq} &amp;= \sum_{rs} (pq|rs) \gamma_{sr} \\
+K_{pq} &amp;= \sum_{qr} (pq|rs) \gamma_{qr} \\\end{split}\]</div>
+<p><span class="math">\(\gamma\)</span> is the total density matrix which is the summation of doubly
+occupied core density matrix and correlated density matrix in active space.
+If <code class="xref py py-attr docutils literal"><span class="pre">mc.canonicalization</span></code> is enabled, the CASCI/CASSCF program will call
+the <code class="xref py py-func docutils literal"><span class="pre">mc.canonicalize()</span></code> function to diagonalize the core and external space
+wrt the general Fock matrix.  The eigenvalues of the core and external subspace
+are stored in attribute <code class="xref py py-attr docutils literal"><span class="pre">mc.mo_energy</span></code>.
+By default, <code class="xref py py-attr docutils literal"><span class="pre">mc.canonicalization</span></code> is enabled because the canonicalized
+MCSCF orbitals can simplify the algorithm of MRPT methods.</p>
+<p><code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code> controls whether the CASCI/CASSCF active space orbitals are
+transformed to natural orbitals of the correlated density matrix.  When this
+parameter is enabled, the natural orbitals will be stored in the active part of
+the attribute <code class="xref py py-attr docutils literal"><span class="pre">mc.mo_coeff</span></code> and the CI coefficients <code class="xref py py-attr docutils literal"><span class="pre">mc.ci</span></code> (if
+applicable) will be transformed accordingly.
+By default <code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code> is disabled and it is important for the MCSCF solver.
+Generally, the value of <code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code> does not affect (the default) FCI
+solver because an independent CASCI calculation following a previous MCSCF
+calculation should give the same solutions no matter <code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code> is enabled
+or not.  But this is not true for some external large active space solvers such
+as DMRG, selected CI methods.  The CASCI calculation may produce different
+answers depending on the value of <code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code>.  Therefore, it is
+recommended to disable <code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code> in your calculation.</p>
+<p>Following presents what the <code class="xref py py-attr docutils literal"><span class="pre">mc.mo_coeff</span></code> would be like for different
+combinations of <code class="xref py py-attr docutils literal"><span class="pre">mc.canonicalization</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code> in a
+CASCI calculation:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">mc.canonicalization</span> <span class="pre">=</span> <span class="pre">False</span></code> and <code class="docutils literal"><span class="pre">mc.natorb</span> <span class="pre">=</span> <span class="pre">False</span></code>:</li>
+</ul>
+<p>The resultant orbitals <code class="xref py py-attr docutils literal"><span class="pre">mc.mo_coeff</span></code> are identical to the input orbitals.
+If the CASCI was initialized with a RHF calculation,  <code class="xref py py-attr docutils literal"><span class="pre">mc.mo_coeff</span></code> points
+to RHF orbitals.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">mc.canonicalization</span> <span class="pre">=</span> <span class="pre">True</span></code> and <code class="docutils literal"><span class="pre">mc.natorb</span> <span class="pre">=</span> <span class="pre">False</span></code>:</li>
+</ul>
+<p>Core part and external part of <code class="xref py py-attr docutils literal"><span class="pre">mc.mo_coeff</span></code> are canonicalized orbitals,
+which diagonalize the core and external blocks of general Fock matrix.  The
+orbitals in active space are identical to the active orbitals in the input.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">mc.canonicalization</span> <span class="pre">=</span> <span class="pre">False</span></code> and <code class="docutils literal"><span class="pre">mc.natorb</span> <span class="pre">=</span> <span class="pre">True</span></code></li>
+</ul>
+<p>Core and external part of <code class="xref py py-attr docutils literal"><span class="pre">mc.mo_coeff</span></code> are identical to the core and
+external part of the input orbitals.  Active space orbitals are transformed to
+the natural orbitals of the correlated density matrix.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">mc.canonicalization</span> <span class="pre">=</span> <span class="pre">True</span></code> and <code class="docutils literal"><span class="pre">mc.natorb</span> <span class="pre">=</span> <span class="pre">True</span></code></li>
+</ul>
+<p><code class="xref py py-attr docutils literal"><span class="pre">mc.mo_coeff</span></code> are completely different to the input orbitals.</p>
+<p>There is another parameter <code class="xref py py-attr docutils literal"><span class="pre">mc.sorting_mo_energy</span></code> which may affect the
+ordering of MCSCF orbitals when <code class="xref py py-attr docutils literal"><span class="pre">mc.canonicalization</span></code> or <code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code>
+is enabled.  Generally, the canonical orbitals in the core and external space
+are sorted by the orbital energies (from low to high) and the natural orbitals
+in the active space are sorted by natural occupations (from large to small).
+This ordering may not be held if point group symmetry is enabled in the
+calculation.  When a system has high spatial symmetry and point group symmetry
+is enabled, each SCF orbital will be assigned to an irreducible representation
+label.  In the MCSCF calculation and the canonicalization, the irreducible
+representation label of the orbitals will not be changed.  They are always the
+same to the symmetry labels of the input orbitals.  Although the orbitals
+are still ordered within each irreducible representation, the orbital energies
+(or occupancies) for all orbitals are not strictly sorted.  Setting
+<code class="docutils literal"><span class="pre">mc.sorting_mo_energy</span> <span class="pre">=</span> <span class="pre">Trye</span></code> (though not recommended) can force the orbitals
+to be sorted regardless whether the point group symmetry is enabled.  In certain
+scenario, you may want to enable <code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">mc.sorting_mo_energy</span></code>.
+<code class="docutils literal"><span class="pre">examples/dmrg/31-cr2_scan/cr2-scan.py</span></code> provides one example that you need to
+enable the two parameters.  In that example, the dissociation curve of Cr dimer
+was scanned by heat-bath selected-CI method in which the active space of
+selected-CI-CASSCF was gradually enlarged in a series of CASSCF calculations.
+Since the selected-CI algorithm depends on the initial single determinant, the
+orbital ordering do have matters to the final CASSCF results. Thus
+<code class="xref py py-attr docutils literal"><span class="pre">mc.natorb</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">mc.sorting_mo_energy</span></code> have to be enabled to make
+sure that the each selected-CI starts from the similar initial reference for
+each point on the dissociation curve.  At some critical points, the difference
+in the orbital ordering in the active space can lead to discontinuous potential
+energy curve.</p>
 </div>
 <div class="section" id="program-reference">
 <h2>Program reference<a class="headerlink" href="#program-reference" title="Permalink to this headline">¶</a></h2>
