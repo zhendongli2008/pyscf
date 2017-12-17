@@ -315,7 +315,9 @@ accuracy (see <a class="reference internal" href="#with-df"><span class="std std
 <span class="c1">#</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">RKS</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">auxbasis</span><span class="o">=</span><span class="s1">&#39;weigend&#39;</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s1">&#39;bp86&#39;</span>
-<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">newton</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+<span class="c1"># You should first set mf.xc then apply newton method (see also</span>
+<span class="c1"># examples/scf/22-newton.py)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">newton</span><span class="p">()</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 
 <span class="c1">#</span>
@@ -455,14 +457,25 @@ and J/K matrices are computed based on the 4-index integrals.</dd>
 <dl class="method">
 <dt id="pyscf.pbc.scf.hf.SCF.get_j">
 <code class="descname">get_j</code><span class="sig-paren">(</span><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>kpt=None</em>, <em>kpts_band=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#SCF.get_j"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.SCF.get_j" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute J matrix for the given density matrix.</p>
+<dd><p>Compute J matrix for the given density matrix and k-point (kpt).
+When kpts_band is given, the J matrices on kpts_band are evaluated.</p>
+<blockquote>
+<div>J_{pq} = sum_{rs} (pq|rs) dm[s,r]</div></blockquote>
+<p>where r,s are orbitals on kpt. p and q are orbitals on kpts_band
+if kpts_band is given otherwise p and q are orbitals on kpt.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyscf.pbc.scf.hf.SCF.get_jk">
 <code class="descname">get_jk</code><span class="sig-paren">(</span><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>kpt=None</em>, <em>kpts_band=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyscf/pbc/scf/hf.html#SCF.get_jk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.pbc.scf.hf.SCF.get_jk" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get Coulomb (J) and exchange (K) following <code class="xref py py-func docutils literal"><span class="pre">scf.hf.RHF.get_jk_()</span></code>.</p>
-<p>Note the incore version, which initializes an _eri array in memory.</p>
+<dd><p>Get Coulomb (J) and exchange (K) following <code class="xref py py-func docutils literal"><span class="pre">scf.hf.RHF.get_jk_()</span></code>.
+for particular k-point (kpt).</p>
+<p>When kpts_band is given, the J, K matrices on kpts_band are evaluated.</p>
+<blockquote>
+<div>J_{pq} = sum_{rs} (pq|rs) dm[s,r]
+K_{pq} = sum_{rs} (pr|sq) dm[r,s]</div></blockquote>
+<p>where r,s are orbitals on kpt. p and q are orbitals on kpts_band
+if kpts_band is given otherwise p and q are orbitals on kpt.</p>
 </dd></dl>
 
 <dl class="method">
@@ -677,14 +690,25 @@ See <code class="xref py py-func docutils literal"><span class="pre">scf.hf.ener
 <dl class="method">
 <dt id="pyscf.pbc.scf.uhf.UHF.get_j">
 <code class="descname">get_j</code><span class="sig-paren">(</span><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>kpt=None</em>, <em>kpts_band=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.pbc.scf.uhf.UHF.get_j" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute J matrix for the given density matrix.</p>
+<dd><p>Compute J matrix for the given density matrix and k-point (kpt).
+When kpts_band is given, the J matrices on kpts_band are evaluated.</p>
+<blockquote>
+<div>J_{pq} = sum_{rs} (pq|rs) dm[s,r]</div></blockquote>
+<p>where r,s are orbitals on kpt. p and q are orbitals on kpts_band
+if kpts_band is given otherwise p and q are orbitals on kpt.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyscf.pbc.scf.uhf.UHF.get_jk">
 <code class="descname">get_jk</code><span class="sig-paren">(</span><em>cell=None</em>, <em>dm=None</em>, <em>hermi=1</em>, <em>kpt=None</em>, <em>kpts_band=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.pbc.scf.uhf.UHF.get_jk" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get Coulomb (J) and exchange (K) following <code class="xref py py-func docutils literal"><span class="pre">scf.hf.RHF.get_jk_()</span></code>.</p>
-<p>Note the incore version, which initializes an _eri array in memory.</p>
+<dd><p>Get Coulomb (J) and exchange (K) following <code class="xref py py-func docutils literal"><span class="pre">scf.hf.RHF.get_jk_()</span></code>.
+for particular k-point (kpt).</p>
+<p>When kpts_band is given, the J, K matrices on kpts_band are evaluated.</p>
+<blockquote>
+<div>J_{pq} = sum_{rs} (pq|rs) dm[s,r]
+K_{pq} = sum_{rs} (pr|sq) dm[r,s]</div></blockquote>
+<p>where r,s are orbitals on kpt. p and q are orbitals on kpts_band
+if kpts_band is given otherwise p and q are orbitals on kpt.</p>
 </dd></dl>
 
 <dl class="method">

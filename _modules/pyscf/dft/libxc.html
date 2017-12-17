@@ -692,20 +692,95 @@
 <span class="sd">      first part describes the exchange functional, the second is the correlation</span>
 <span class="sd">      functional.</span>
 
-<span class="sd">      - If &quot;,&quot; was not appeared in string, the entire string is considered as</span>
+<span class="sd">      - If &quot;,&quot; not presented in string, the entire string is treated as</span>
 <span class="sd">        X functional.</span>
 <span class="sd">      - To neglect X functional (just apply C functional), leave blank in the</span>
 <span class="sd">        first part, eg description=&#39;,vwn&#39; for pure VWN functional</span>
+<span class="sd">      - If compound XC functional (including both X and C functionals, such as</span>
+<span class="sd">        b3lyp) is specified, no matter whehter it is in the X part (the string</span>
+<span class="sd">        in front of comma) or the C part (the string behind comma), both X and C</span>
+<span class="sd">        functionals of the compound XC functional will be used.</span>
 
-<span class="sd">    * The functional name can be placed in arbitrary order.  Two names need to</span>
-<span class="sd">      be separated by operators &quot;+&quot; or &quot;-&quot;.  Blank spaces are ignored.</span>
-<span class="sd">      NOTE the parser only reads operators &quot;+&quot; &quot;-&quot; &quot;*&quot;.  &quot;/&quot; is not supported.</span>
+<span class="sd">    * The functional name can be placed in arbitrary order.  Two names needs to</span>
+<span class="sd">      be separated by operators + or -.  Blank spaces are ignored.</span>
+<span class="sd">      NOTE the parser only reads operators + - *.  / is not supported.</span>
 <span class="sd">    * A functional name is associated with one factor.  If the factor is not</span>
-<span class="sd">      given, it is assumed to equal 1.</span>
+<span class="sd">      given, it is assumed equaling 1.  Compound functional can be scaled as a</span>
+<span class="sd">      unit. For example &#39;0.5*b3lyp&#39; is equivalent to</span>
+<span class="sd">      &#39;HF*0.1 + .04*LDA + .36*B88, .405*LYP + .095*VWN&#39;</span>
 <span class="sd">    * String &quot;HF&quot; stands for exact exchange (HF K matrix).  It is allowed to</span>
-<span class="sd">      in the C functional part.</span>
+<span class="sd">      put &quot;HF&quot; in C (correlation) functional part.</span>
 <span class="sd">    * Be careful with the libxc convention on GGA functional, in which the LDA</span>
 <span class="sd">      contribution is included.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        xc_code : str</span>
+<span class="sd">            A string to describe the linear combination of different XC functionals.</span>
+<span class="sd">            The X and C functional are separated by comma like &#39;.8*LDA+.2*B86,VWN&#39;.</span>
+<span class="sd">            If &quot;HF&quot; was appeared in the string, it stands for the exact exchange.</span>
+<span class="sd">        rho : ndarray</span>
+<span class="sd">            Shape of ((*,N)) for electron density (and derivatives) if spin = 0;</span>
+<span class="sd">            Shape of ((*,N),(*,N)) for alpha/beta electron density (and derivatives) if spin &gt; 0;</span>
+<span class="sd">            where N is number of grids.</span>
+<span class="sd">            rho (*,N) are ordered as (den,grad_x,grad_y,grad_z,laplacian,tau)</span>
+<span class="sd">            where grad_x = d/dx den, laplacian = \nabla^2 den, tau = 1/2(\nabla f)^2</span>
+<span class="sd">            In spin unrestricted case,</span>
+<span class="sd">            rho is ((den_u,grad_xu,grad_yu,grad_zu,laplacian_u,tau_u)</span>
+<span class="sd">                    (den_d,grad_xd,grad_yd,grad_zd,laplacian_d,tau_d))</span>
+
+<span class="sd">    Kwargs:</span>
+<span class="sd">        spin : int</span>
+<span class="sd">            spin polarized if spin &gt; 0</span>
+<span class="sd">        relativity : int</span>
+<span class="sd">            No effects.</span>
+<span class="sd">        verbose : int or object of :class:`Logger`</span>
+<span class="sd">            No effects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ex, vxc, fxc, kxc</span>
+
+<span class="sd">        where</span>
+
+<span class="sd">        * vxc = (vrho, vsigma, vlapl, vtau) for restricted case</span>
+
+<span class="sd">        * vxc for unrestricted case</span>
+<span class="sd">          | vrho[:,2]   = (u, d)</span>
+<span class="sd">          | vsigma[:,3] = (uu, ud, dd)</span>
+<span class="sd">          | vlapl[:,2]  = (u, d)</span>
+<span class="sd">          | vtau[:,2]   = (u, d)</span>
+
+<span class="sd">        * fxc for restricted case:</span>
+<span class="sd">          (v2rho2, v2rhosigma, v2sigma2, v2lapl2, vtau2, v2rholapl, v2rhotau, v2lapltau, v2sigmalapl, v2sigmatau)</span>
+
+<span class="sd">        * fxc for unrestricted case:</span>
+<span class="sd">          | v2rho2[:,3]     = (u_u, u_d, d_d)</span>
+<span class="sd">          | v2rhosigma[:,6] = (u_uu, u_ud, u_dd, d_uu, d_ud, d_dd)</span>
+<span class="sd">          | v2sigma2[:,6]   = (uu_uu, uu_ud, uu_dd, ud_ud, ud_dd, dd_dd)</span>
+<span class="sd">          | v2lapl2[:,3]</span>
+<span class="sd">          | vtau2[:,3]</span>
+<span class="sd">          | v2rholapl[:,4]</span>
+<span class="sd">          | v2rhotau[:,4]</span>
+<span class="sd">          | v2lapltau[:,4]</span>
+<span class="sd">          | v2sigmalapl[:,6]</span>
+<span class="sd">          | v2sigmatau[:,6]</span>
+
+<span class="sd">        * kxc for restricted case:</span>
+<span class="sd">          v3rho3, v3rho2sigma, v3rhosigma2, v3sigma3,</span>
+<span class="sd">          v3rho2tau, v3rhosigmatau, v3rhotau2, v3sigma2tau, v3sigmatau2, v3tau3</span>
+
+<span class="sd">        * kxc for unrestricted case:</span>
+<span class="sd">          | v3rho3[:,4]       = (u_u_u, u_u_d, u_d_d, d_d_d)</span>
+<span class="sd">          | v3rho2sigma[:,9]  = (u_u_uu, u_u_ud, u_u_dd, u_d_uu, u_d_ud, u_d_dd, d_d_uu, d_d_ud, d_d_dd)</span>
+<span class="sd">          | v3rhosigma2[:,12] = (u_uu_uu, u_uu_ud, u_uu_dd, u_ud_ud, u_ud_dd, u_dd_dd, d_uu_uu, d_uu_ud, d_uu_dd, d_ud_ud, d_ud_dd, d_dd_dd)</span>
+<span class="sd">          | v3sigma3[:,10]     = (uu_uu_uu, uu_uu_ud, uu_uu_dd, uu_ud_ud, uu_ud_dd, uu_dd_dd, ud_ud_ud, ud_ud_dd, ud_dd_dd, dd_dd_dd)</span>
+<span class="sd">          | v3rho2tau</span>
+<span class="sd">          | v3rhosigmatau</span>
+<span class="sd">          | v3rhotau2</span>
+<span class="sd">          | v3sigma2tau</span>
+<span class="sd">          | v3sigmatau2</span>
+<span class="sd">          | v3tau3</span>
+
+<span class="sd">        see also libxc_itrf.c</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
@@ -743,9 +818,10 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Unknown key </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                    <span class="n">hyb1</span><span class="p">,</span> <span class="n">acc1</span> <span class="o">=</span> <span class="n">parse_xc</span><span class="p">(</span><span class="n">x_id</span><span class="p">)</span>
-                    <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">hyb1</span>
-                    <span class="n">fn_facs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">acc1</span><span class="p">)</span>
+                    <span class="n">hyb1</span><span class="p">,</span> <span class="n">fn_facs1</span> <span class="o">=</span> <span class="n">parse_xc</span><span class="p">(</span><span class="n">x_id</span><span class="p">)</span>
+<span class="c1"># Recursively scale the composed functional, to support &#39;0.5*b3lyp&#39;</span>
+                    <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">hyb1</span> <span class="o">*</span> <span class="n">fac</span>
+                    <span class="n">fn_facs</span><span class="o">.</span><span class="n">extend</span><span class="p">([(</span><span class="n">xid</span><span class="p">,</span> <span class="n">c</span><span class="o">*</span><span class="n">fac</span><span class="p">)</span> <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">fn_facs1</span><span class="p">])</span>
                 <span class="k">elif</span> <span class="n">x_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>

@@ -404,7 +404,7 @@ this cutoff value.  Default is 1e-7.</dd>
 </div></blockquote>
 <dl class="method">
 <dt id="pyscf.dft.rks.RKS.energy_elec">
-<code class="descname">energy_elec</code><span class="sig-paren">(</span><em>ks</em>, <em>dm</em>, <em>h1e=None</em>, <em>vhf=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.dft.rks.RKS.energy_elec" title="Permalink to this definition">¶</a></dt>
+<code class="descname">energy_elec</code><span class="sig-paren">(</span><em>ks</em>, <em>dm=None</em>, <em>h1e=None</em>, <em>vhf=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.dft.rks.RKS.energy_elec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Electronic part of RKS energy.</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -466,7 +466,7 @@ dm is a list of density matrices.</dd>
 
 <dl class="function">
 <dt id="pyscf.dft.rks.energy_elec">
-<code class="descclassname">pyscf.dft.rks.</code><code class="descname">energy_elec</code><span class="sig-paren">(</span><em>ks</em>, <em>dm</em>, <em>h1e=None</em>, <em>vhf=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/rks.html#energy_elec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.rks.energy_elec" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyscf.dft.rks.</code><code class="descname">energy_elec</code><span class="sig-paren">(</span><em>ks</em>, <em>dm=None</em>, <em>h1e=None</em>, <em>vhf=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/rks.html#energy_elec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.rks.energy_elec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Electronic part of RKS energy.</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -1464,28 +1464,114 @@ rho is ((den_u,grad_xu,grad_yu,grad_zu,laplacian_u,tau_u)</p>
 <dt id="pyscf.dft.libxc.parse_xc">
 <code class="descclassname">pyscf.dft.libxc.</code><code class="descname">parse_xc</code><span class="sig-paren">(</span><em>description</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/libxc.html#parse_xc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.parse_xc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rules to input functional description:</p>
-<ul class="simple">
+<blockquote>
+<div><ul class="simple">
 <li>The given functional description must be a one-line string.</li>
 <li>The functional description is case-insensitive.</li>
 <li>The functional description string has two parts, separated by &#8221;,&#8221;.  The
 first part describes the exchange functional, the second is the correlation
 functional.<ul>
-<li>If &#8221;,&#8221; was not appeared in string, the entire string is considered as
+<li>If &#8221;,&#8221; not presented in string, the entire string is treated as
 X functional.</li>
 <li>To neglect X functional (just apply C functional), leave blank in the
 first part, eg description=&#8217;,vwn&#8217; for pure VWN functional</li>
+<li>If compound XC functional (including both X and C functionals, such as
+b3lyp) is specified, no matter whehter it is in the X part (the string
+in front of comma) or the C part (the string behind comma), both X and C
+functionals of the compound XC functional will be used.</li>
 </ul>
 </li>
-<li>The functional name can be placed in arbitrary order.  Two names need to
-be separated by operators &#8220;+&#8221; or &#8220;-&#8221;.  Blank spaces are ignored.
-NOTE the parser only reads operators &#8220;+&#8221; &#8220;-&#8221; &#8220;*&#8221;.  &#8220;/&#8221; is not supported.</li>
+<li>The functional name can be placed in arbitrary order.  Two names needs to
+be separated by operators + or -.  Blank spaces are ignored.
+NOTE the parser only reads operators + - <a href="#id1"><span class="problematic" id="id2">*</span></a>.  / is not supported.</li>
 <li>A functional name is associated with one factor.  If the factor is not
-given, it is assumed to equal 1.</li>
+given, it is assumed equaling 1.  Compound functional can be scaled as a
+unit. For example &#8216;0.5*b3lyp&#8217; is equivalent to
+&#8216;HF*0.1 + .04*LDA + .36*B88, .405*LYP + .095*VWN&#8217;</li>
 <li>String &#8220;HF&#8221; stands for exact exchange (HF K matrix).  It is allowed to
-in the C functional part.</li>
+put &#8220;HF&#8221; in C (correlation) functional part.</li>
 <li>Be careful with the libxc convention on GGA functional, in which the LDA
 contribution is included.</li>
 </ul>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>xc_code</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd>A string to describe the linear combination of different XC functionals.
+The X and C functional are separated by comma like &#8216;.8*LDA+.2*B86,VWN&#8217;.
+If &#8220;HF&#8221; was appeared in the string, it stands for the exact exchange.</dd>
+<dt>rho</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span><dd>Shape of ((<em>,N)) for electron density (and derivatives) if spin = 0;
+Shape of ((</em>,N),(<em>,N)) for alpha/beta electron density (and derivatives) if spin &gt; 0;
+where N is number of grids.
+rho (</em>,N) are ordered as (den,grad_x,grad_y,grad_z,laplacian,tau)
+where grad_x = d/dx den, laplacian =</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p>abla^2 den, tau = 1/2(
+abla f)^2</p>
+<blockquote>
+<div><blockquote>
+<div><p>In spin unrestricted case,
+rho is ((den_u,grad_xu,grad_yu,grad_zu,laplacian_u,tau_u)</p>
+<blockquote>
+<div>(den_d,grad_xd,grad_yd,grad_zd,laplacian_d,tau_d))</div></blockquote>
+</div></blockquote>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>spin</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>spin polarized if spin &gt; 0</dd>
+<dt>relativity</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>No effects.</dd>
+<dt>verbose</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int or object of <code class="xref py py-class docutils literal"><span class="pre">Logger</span></code></span><dd>No effects.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><p class="first">ex, vxc, fxc, kxc</p>
+<p>where</p>
+<ul class="simple">
+<li>vxc = (vrho, vsigma, vlapl, vtau) for restricted case</li>
+<li>vxc for unrestricted case
+| vrho[:,2]   = (u, d)
+| vsigma[:,3] = (uu, ud, dd)
+| vlapl[:,2]  = (u, d)
+| vtau[:,2]   = (u, d)</li>
+<li>fxc for restricted case:
+(v2rho2, v2rhosigma, v2sigma2, v2lapl2, vtau2, v2rholapl, v2rhotau, v2lapltau, v2sigmalapl, v2sigmatau)</li>
+<li>fxc for unrestricted case:
+| v2rho2[:,3]     = (u_u, u_d, d_d)
+| v2rhosigma[:,6] = (u_uu, u_ud, u_dd, d_uu, d_ud, d_dd)
+| v2sigma2[:,6]   = (uu_uu, uu_ud, uu_dd, ud_ud, ud_dd, dd_dd)
+| v2lapl2[:,3]
+| vtau2[:,3]
+| v2rholapl[:,4]
+| v2rhotau[:,4]
+| v2lapltau[:,4]
+| v2sigmalapl[:,6]
+| v2sigmatau[:,6]</li>
+<li>kxc for restricted case:
+v3rho3, v3rho2sigma, v3rhosigma2, v3sigma3,
+v3rho2tau, v3rhosigmatau, v3rhotau2, v3sigma2tau, v3sigmatau2, v3tau3</li>
+<li>kxc for unrestricted case:
+| v3rho3[:,4]       = (u_u_u, u_u_d, u_d_d, d_d_d)
+| v3rho2sigma[:,9]  = (u_u_uu, u_u_ud, u_u_dd, u_d_uu, u_d_ud, u_d_dd, d_d_uu, d_d_ud, d_d_dd)
+| v3rhosigma2[:,12] = (u_uu_uu, u_uu_ud, u_uu_dd, u_ud_ud, u_ud_dd, u_dd_dd, d_uu_uu, d_uu_ud, d_uu_dd, d_ud_ud, d_ud_dd, d_dd_dd)
+| v3sigma3[:,10]     = (uu_uu_uu, uu_uu_ud, uu_uu_dd, uu_ud_ud, uu_ud_dd, uu_dd_dd, ud_ud_ud, ud_ud_dd, ud_dd_dd, dd_dd_dd)
+| v3rho2tau
+| v3rhosigmatau
+| v3rhotau2
+| v3sigma2tau
+| v3sigmatau2
+| v3tau3</li>
+</ul>
+<p class="last">see also libxc_itrf.c</p>
+</dd>
+</dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="function">

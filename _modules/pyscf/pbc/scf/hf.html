@@ -490,15 +490,24 @@
         <span class="k">return</span> <span class="n">get_ovlp</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">kpt</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SCF.get_jk"><a class="viewcode-back" href="../../../../pbc/scf.html#pyscf.pbc.scf.hf.SCF.get_jk">[docs]</a>    <span class="k">def</span> <span class="nf">get_jk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kpt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kpts_band</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Get Coulomb (J) and exchange (K) following :func:`scf.hf.RHF.get_jk_`.</span>
+        <span class="sd">r&#39;&#39;&#39;Get Coulomb (J) and exchange (K) following :func:`scf.hf.RHF.get_jk_`.</span>
+<span class="sd">        for particular k-point (kpt).</span>
 
-<span class="sd">        Note the incore version, which initializes an _eri array in memory.</span>
+<span class="sd">        When kpts_band is given, the J, K matrices on kpts_band are evaluated.</span>
+
+<span class="sd">            J_{pq} = \sum_{rs} (pq|rs) dm[s,r]</span>
+<span class="sd">            K_{pq} = \sum_{rs} (pr|sq) dm[r,s]</span>
+
+<span class="sd">        where r,s are orbitals on kpt. p and q are orbitals on kpts_band</span>
+<span class="sd">        if kpts_band is given otherwise p and q are orbitals on kpt.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span>
         <span class="k">if</span> <span class="n">dm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">kpt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">kpt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kpt</span>
 
         <span class="n">cpu0</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">(),</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+        <span class="n">dm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span>
+        <span class="n">nao</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="p">(</span><span class="n">kpts_band</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span>
             <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exxdiv</span> <span class="o">==</span> <span class="s1">&#39;ewald&#39;</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exxdiv</span><span class="p">)</span> <span class="ow">and</span>
@@ -512,18 +521,25 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exxdiv</span> <span class="o">==</span> <span class="s1">&#39;ewald&#39;</span><span class="p">:</span>
                 <span class="kn">from</span> <span class="nn">pyscf.pbc.df.df_jk</span> <span class="k">import</span> <span class="n">_ewald_exxdiv_for_G0</span>
                 <span class="c1"># G=0 is not inculded in the ._eri integrals</span>
-                <span class="n">nao</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
                 <span class="n">_ewald_exxdiv_for_G0</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">kpt</span><span class="p">,</span> <span class="n">dm</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">),</span>
                                      <span class="n">vk</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_df</span><span class="o">.</span><span class="n">get_jk</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">,</span> <span class="n">kpt</span><span class="p">,</span> <span class="n">kpts_band</span><span class="p">,</span>
-                                         <span class="n">exxdiv</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exxdiv</span><span class="p">)</span>
+            <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_df</span><span class="o">.</span><span class="n">get_jk</span><span class="p">(</span><span class="n">dm</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">),</span> <span class="n">hermi</span><span class="p">,</span>
+                                         <span class="n">kpt</span><span class="p">,</span> <span class="n">kpts_band</span><span class="p">,</span> <span class="n">exxdiv</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exxdiv</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;vj and vk&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">cpu0</span><span class="p">)</span>
+        <span class="n">vj</span> <span class="o">=</span> <span class="n">_format_jks</span><span class="p">(</span><span class="n">vj</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">kpts_band</span><span class="p">)</span>
+        <span class="n">vk</span> <span class="o">=</span> <span class="n">_format_jks</span><span class="p">(</span><span class="n">vk</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">kpts_band</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span></div>
 
 <div class="viewcode-block" id="SCF.get_j"><a class="viewcode-back" href="../../../../pbc/scf.html#pyscf.pbc.scf.hf.SCF.get_j">[docs]</a>    <span class="k">def</span> <span class="nf">get_j</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kpt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kpts_band</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Compute J matrix for the given density matrix.</span>
+        <span class="sd">r&#39;&#39;&#39;Compute J matrix for the given density matrix and k-point (kpt).</span>
+<span class="sd">        When kpts_band is given, the J matrices on kpts_band are evaluated.</span>
+
+<span class="sd">            J_{pq} = \sum_{rs} (pq|rs) dm[s,r]</span>
+
+<span class="sd">        where r,s are orbitals on kpt. p and q are orbitals on kpts_band</span>
+<span class="sd">        if kpts_band is given otherwise p and q are orbitals on kpt.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="c1">#return self.get_jk(cell, dm, hermi, kpt, kpts_band)[0]</span>
         <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span>
@@ -545,7 +561,7 @@
             <span class="n">vj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_df</span><span class="o">.</span><span class="n">get_jk</span><span class="p">(</span><span class="n">dm</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">),</span> <span class="n">hermi</span><span class="p">,</span>
                                      <span class="n">kpt</span><span class="p">,</span> <span class="n">kpts_band</span><span class="p">,</span> <span class="n">with_k</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;vj&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">cpu0</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">vj</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dm</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">_format_jks</span><span class="p">(</span><span class="n">vj</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">kpts_band</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SCF.get_k"><a class="viewcode-back" href="../../../../pbc/scf.html#pyscf.pbc.scf.hf.SCF.get_k">[docs]</a>    <span class="k">def</span> <span class="nf">get_k</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kpt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kpts_band</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Compute K matrix for the given density matrix.</span>
@@ -638,6 +654,15 @@
         <span class="k">return</span> <span class="n">x2c</span><span class="o">.</span><span class="n">sfx2c1e</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 <span class="n">RHF</span> <span class="o">=</span> <span class="n">SCF</span>
+
+<span class="k">def</span> <span class="nf">_format_jks</span><span class="p">(</span><span class="n">vj</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">kpts_band</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">kpts_band</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">vj</span> <span class="o">=</span> <span class="n">vj</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dm</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">kpts_band</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># a single k-point on bands</span>
+        <span class="n">vj</span> <span class="o">=</span> <span class="n">vj</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dm</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="s2">&quot;ndim&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dm</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">vj</span> <span class="o">=</span> <span class="n">vj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">vj</span>
 </pre></div>
 
            </div>

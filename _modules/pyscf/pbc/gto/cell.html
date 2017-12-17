@@ -750,10 +750,8 @@
         <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
     <span class="k">elif</span> <span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">gs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">gs</span> <span class="o">=</span> <span class="mi">5</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">gs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span>
-            <span class="n">gs</span><span class="p">[</span><span class="n">gs</span><span class="o">&gt;</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="mi">40</span>
+            <span class="n">gs</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">gs</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">_cut_gs_for_ewald</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">gs</span><span class="p">)</span>
         <span class="n">Gmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span> <span class="o">*</span> <span class="n">lib</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">reciprocal_vectors</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
         <span class="n">log_precision</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">precision</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">Gmax</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
         <span class="n">ew_eta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">Gmax</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">log_precision</span><span class="p">))</span>
@@ -765,6 +763,16 @@
         <span class="n">ew_cut</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">rcut</span>
         <span class="n">ew_eta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ew_cut</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">precision</span><span class="p">)</span><span class="o">/</span><span class="n">ew_cut</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">ew_eta</span><span class="p">,</span> <span class="n">ew_cut</span>
+
+<span class="c1"># roughly 4 grids per axis</span>
+<span class="k">def</span> <span class="nf">_cut_gs_for_ewald</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">gs</span><span class="p">):</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span>
+    <span class="n">gs_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">lattice_vectors</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">gs_max</span><span class="p">[</span><span class="n">cell</span><span class="o">.</span><span class="n">dimension</span><span class="p">:]</span> <span class="o">=</span> <span class="n">gs</span><span class="p">[</span><span class="n">cell</span><span class="o">.</span><span class="n">dimension</span><span class="p">:]</span>
+    <span class="n">gs_max</span><span class="p">[</span><span class="n">gs_max</span><span class="o">&lt;</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="mi">40</span>
+    <span class="n">gs</span><span class="p">[</span><span class="n">gs</span><span class="o">&gt;</span><span class="n">gs_max</span><span class="p">]</span> <span class="o">=</span> <span class="n">gs_max</span><span class="p">[</span><span class="n">gs</span><span class="o">&gt;</span><span class="n">gs_max</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">gs</span>
 
 <span class="k">def</span> <span class="nf">ewald</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">ew_eta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ew_cut</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Perform real (R) and reciprocal (G) space Ewald sum for the energy.</span>
@@ -816,8 +824,7 @@
     <span class="c1"># See also Eq. (32) of ewald.pdf at</span>
     <span class="c1">#   http://www.fisica.uniud.it/~giannozz/public/ewald.pdf</span>
 
-    <span class="n">gs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">gs</span><span class="p">)</span>
-    <span class="n">gs</span><span class="p">[</span><span class="n">gs</span><span class="o">&gt;</span><span class="mi">40</span><span class="p">]</span> <span class="o">=</span> <span class="mi">40</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">_cut_gs_for_ewald</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">gs</span><span class="p">)</span>
     <span class="n">Gv</span><span class="p">,</span> <span class="n">Gvbase</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get_Gv_weights</span><span class="p">(</span><span class="n">gs</span><span class="p">)</span>
     <span class="n">absG2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;gi,gi-&gt;g&#39;</span><span class="p">,</span> <span class="n">Gv</span><span class="p">,</span> <span class="n">Gv</span><span class="p">)</span>
     <span class="n">absG2</span><span class="p">[</span><span class="n">absG2</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e200</span>
@@ -834,8 +841,7 @@
 
 <span class="n">energy_nuc</span> <span class="o">=</span> <span class="n">ewald</span>
 
-
-<span class="k">def</span> <span class="nf">make_kpts</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">nks</span><span class="p">,</span> <span class="n">wrap_around</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">with_gamma_point</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">make_kpts</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">nks</span><span class="p">,</span> <span class="n">wrap_around</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">with_gamma_point</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">scaled_center</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Given number of kpoints along x,y,z , generate kpoints</span>
 
 <span class="sd">    Args:</span>
@@ -846,6 +852,11 @@
 <span class="sd">            To ensure all kpts are in first Brillouin zone.</span>
 <span class="sd">        with_gamma_point : bool</span>
 <span class="sd">            Whether to shift Monkhorst-pack grid to include gamma-point.</span>
+<span class="sd">        scaled_center : (3,) array</span>
+<span class="sd">            Shift all points in the Monkhorst-pack grid to be centered on</span>
+<span class="sd">            scaled_center, given as the zeroth index of the returned kpts.</span>
+<span class="sd">            Scaled meaning that the k-points are scaled to a grid from </span>
+<span class="sd">            [-1,1] x [-1,1] x [-1,1]</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        kpts in absolute value (unit 1/Bohr).  Gamma point is placed at the</span>
@@ -857,14 +868,17 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">ks_each_axis</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nks</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">with_gamma_point</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">with_gamma_point</span> <span class="ow">or</span> <span class="n">scaled_center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ks</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">+.</span><span class="mi">5</span><span class="p">)</span><span class="o">/</span><span class="n">n</span><span class="o">-.</span><span class="mi">5</span>
         <span class="k">if</span> <span class="n">wrap_around</span><span class="p">:</span>
             <span class="n">ks</span><span class="p">[</span><span class="n">ks</span><span class="o">&gt;=.</span><span class="mi">5</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
         <span class="n">ks_each_axis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ks</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scaled_center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">scaled_center</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]</span>
     <span class="n">scaled_kpts</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">cartesian_prod</span><span class="p">(</span><span class="n">ks_each_axis</span><span class="p">)</span>
+    <span class="n">scaled_kpts</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scaled_center</span><span class="p">)</span>
     <span class="n">kpts</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get_abs_kpts</span><span class="p">(</span><span class="n">scaled_kpts</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">kpts</span>
 
