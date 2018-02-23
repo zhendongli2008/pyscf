@@ -184,6 +184,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy.linalg</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">pyscf.pbc.lib.kpts_helper</span> <span class="k">import</span> <span class="n">get_kconserv</span><span class="p">,</span> <span class="n">get_kconserv3</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">pyfftw</span>
@@ -560,104 +561,6 @@
     <span class="n">supcell</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">supcell</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">verbose</span>
     <span class="k">return</span> <span class="n">supcell</span>
-
-
-<span class="k">def</span> <span class="nf">get_kconserv</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">kpts</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Get the momentum conservation array for a set of k-points.</span>
-
-<span class="sd">    Given k-point indices (k, l, m) the array kconserv[k,l,m] returns</span>
-<span class="sd">    the index n that satifies momentum conservation,</span>
-
-<span class="sd">       k(k) - k(l) = - k(m) + k(n)</span>
-
-<span class="sd">    This is used for symmetry e.g. integrals of the form</span>
-<span class="sd">        [\phi*[k](1) \phi[l](1) | \phi*[m](2) \phi[n](2)]</span>
-<span class="sd">    are zero unless n satisfies the above.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">nkpts</span> <span class="o">=</span> <span class="n">kpts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">KLMN</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">nkpts</span><span class="p">,</span><span class="n">nkpts</span><span class="p">,</span><span class="n">nkpts</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
-    <span class="n">kvecs</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">reciprocal_vectors</span><span class="p">()</span>
-
-    <span class="k">for</span> <span class="n">K</span><span class="p">,</span> <span class="n">kvK</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">kpts</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">L</span><span class="p">,</span> <span class="n">kvL</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">kpts</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">M</span><span class="p">,</span> <span class="n">kvM</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">kpts</span><span class="p">):</span>
-                <span class="c1"># Here we find where kvN = kvM + kvL - kvK (mod K)</span>
-                <span class="n">temp</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
-                <span class="n">xyz</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">cartesian_prod</span><span class="p">((</span><span class="n">temp</span><span class="p">,</span><span class="n">temp</span><span class="p">,</span><span class="n">temp</span><span class="p">))</span>
-                <span class="n">found</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="n">kvMLK</span> <span class="o">=</span> <span class="n">kvK</span> <span class="o">-</span> <span class="n">kvL</span> <span class="o">+</span> <span class="n">kvM</span>
-                <span class="n">kvN</span> <span class="o">=</span> <span class="n">kvMLK</span>
-                <span class="k">for</span> <span class="n">ishift</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">)):</span>
-                    <span class="n">kvN</span> <span class="o">=</span> <span class="n">kvMLK</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xyz</span><span class="p">[</span><span class="n">ishift</span><span class="p">],</span><span class="n">kvecs</span><span class="p">)</span>
-                    <span class="n">finder</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">kpts</span> <span class="o">&lt;</span> <span class="n">kvN</span> <span class="o">+</span> <span class="mf">1.e-12</span><span class="p">,</span>
-                                                     <span class="n">kpts</span> <span class="o">&gt;</span> <span class="n">kvN</span> <span class="o">-</span> <span class="mf">1.e-12</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="mi">3</span><span class="p">)</span>
-                    <span class="c1"># The k-point should be the same in all 3 indices as kvN</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">finder</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="n">KLMN</span><span class="p">[</span><span class="n">K</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">M</span><span class="p">]</span> <span class="o">=</span> <span class="n">finder</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-                        <span class="n">found</span> <span class="o">=</span> <span class="mi">1</span>
-                        <span class="k">break</span>
-
-                <span class="k">if</span> <span class="n">found</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;** ERROR: Problem in get_kconserv. Quitting.&quot;</span><span class="p">)</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="n">kvMLK</span><span class="p">)</span>
-                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">KLMN</span>
-
-<span class="k">def</span> <span class="nf">get_kconserv3</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">kpts</span><span class="p">,</span> <span class="n">kijkab</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Get the momentum conservation array for a set of k-points.</span>
-
-<span class="sd">    This function is similar to get_kconserv, but instead finds the &#39;kc&#39;</span>
-<span class="sd">    that satisfies momentum conservation for 5 k-points,</span>
-
-<span class="sd">    kc = ki + kj + kk - ka - kb (mod G),</span>
-
-<span class="sd">    where these kpoints are stored in kijkab[ki,kj,kk,ka,kb].</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">nkpts</span> <span class="o">=</span> <span class="n">kpts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">KLMN</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">nkpts</span><span class="p">,</span><span class="n">nkpts</span><span class="p">,</span><span class="n">nkpts</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
-    <span class="n">kvecs</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">_h</span><span class="p">)</span>
-    <span class="n">kijkab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">kijkab</span><span class="p">)</span>
-
-    <span class="c1"># Finds which indices in ijkab are integers and which are lists</span>
-    <span class="c1"># TODO: try to see if it works for more than 1 list</span>
-    <span class="n">idx_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="ow">not</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">kijkab</span><span class="p">])</span>
-    <span class="n">idx_range</span> <span class="o">=</span> <span class="n">kijkab</span><span class="p">[</span><span class="n">idx_sum</span><span class="p">]</span>
-    <span class="n">min_idx_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">min_idx_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">idx_range</span><span class="p">])</span>
-    <span class="n">out_array_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">idx_range</span><span class="p">])</span>
-    <span class="n">out_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">out_array_shape</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">kpqrst_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-
-    <span class="c1"># Order here matters! Search for most ``obvious&quot; translation first to</span>
-    <span class="c1"># get into 1st BZ, i.e. no translation!</span>
-    <span class="n">temp</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">xyz</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">cartesian_prod</span><span class="p">((</span><span class="n">temp</span><span class="p">,</span><span class="n">temp</span><span class="p">,</span><span class="n">temp</span><span class="p">))</span>
-    <span class="n">kshift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span><span class="n">kvecs</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">L</span><span class="p">,</span> <span class="n">kvL</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">cartesian_prod</span><span class="p">(</span><span class="n">idx_range</span><span class="p">)):</span>
-        <span class="n">kpqrst_idx</span><span class="p">[</span><span class="n">idx_sum</span><span class="p">],</span> <span class="n">kpqrst_idx</span><span class="p">[</span><span class="o">~</span><span class="n">idx_sum</span><span class="p">]</span> <span class="o">=</span> <span class="n">kvL</span><span class="p">,</span> <span class="n">kijkab</span><span class="p">[</span><span class="o">~</span><span class="n">idx_sum</span><span class="p">]</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">kpqrst_idx</span><span class="p">[</span><span class="n">idx_sum</span><span class="p">]</span><span class="o">-</span><span class="n">min_idx_range</span><span class="p">)</span>
-
-        <span class="n">kvec</span> <span class="o">=</span> <span class="n">kpts</span><span class="p">[</span><span class="n">kpqrst_idx</span><span class="p">]</span>
-        <span class="n">kvec</span> <span class="o">=</span> <span class="n">kvec</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">kvec</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-        <span class="n">found</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">kvNs</span> <span class="o">=</span> <span class="n">kvec</span> <span class="o">+</span> <span class="n">kshift</span>
-        <span class="k">for</span> <span class="n">ishift</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">)):</span>
-            <span class="n">kvN</span> <span class="o">=</span> <span class="n">kvNs</span><span class="p">[</span><span class="n">ishift</span><span class="p">]</span>
-            <span class="n">finder</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">kpts</span> <span class="o">&lt;</span> <span class="n">kvN</span> <span class="o">+</span> <span class="mf">1.e-12</span><span class="p">,</span> <span class="n">kpts</span> <span class="o">&gt;</span> <span class="n">kvN</span> <span class="o">-</span> <span class="mf">1.e-12</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="mi">3</span><span class="p">)</span>
-            <span class="c1"># The k-point kvN is the one that conserves momentum</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">finder</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">found</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="n">out_array</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">finder</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-                <span class="k">break</span>
-
-        <span class="k">if</span> <span class="n">found</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span> <span class="s2">&quot;** ERROR: Problem in get_kconserv3. Quitting.&quot;</span>
-            <span class="nb">print</span> <span class="n">kijkab</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">out_array</span>
-
 
 
 <span class="k">def</span> <span class="nf">cutoff_to_gs</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">):</span>

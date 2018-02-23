@@ -453,9 +453,14 @@
                 <span class="k">yield</span> <span class="n">u</span><span class="p">,</span> <span class="n">g_kf</span><span class="p">,</span> <span class="n">ihop</span><span class="o">+</span><span class="n">jkcount</span><span class="p">,</span> <span class="n">dxi</span>
 
                 <span class="n">t3m</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">(),</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
-                <span class="c1">#g_kf1, gorb_update, h_op, h_diag = \</span>
-                <span class="c1">#        casscf.gen_g_hop(mo, u, fcasdm1(), fcasdm2(), eris)</span>
-                <span class="c1">#g_kf1 = gorb_update(u, casscf.with_dep4)</span>
+<span class="c1"># TODO: test whether to update h_op, h_diag to change the orbital hessian.</span>
+<span class="c1"># It leads to the different hessian operations in the same davidson</span>
+<span class="c1"># diagonalization procedure.  This is generally a bad approximation because it</span>
+<span class="c1"># results in ill-defined hessian eigenvalue in the davidson algorithm.  But in</span>
+<span class="c1"># certain cases, it is a small perturbation that help the mcscf optimization</span>
+<span class="c1"># algorithm move out of local minimum</span>
+<span class="c1">#                h_op, h_diag = \</span>
+<span class="c1">#                        casscf.gen_g_hop(mo, u, fcasdm1(), fcasdm2(), eris)[2:4]</span>
                 <span class="n">g_kf1</span> <span class="o">=</span> <span class="n">gorb_update</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">fcivec</span><span class="p">())</span>
                 <span class="n">jkcount</span> <span class="o">+=</span> <span class="mi">1</span>
 
@@ -471,8 +476,12 @@
                     <span class="n">norm_gkf1</span> <span class="o">&gt;</span> <span class="n">norm_gkf</span><span class="o">*</span><span class="n">casscf</span><span class="o">.</span><span class="n">ah_grad_trust_region</span><span class="p">):</span>
                     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;    Keyframe |g|=</span><span class="si">%5.3g</span><span class="s1">  |g_last| =</span><span class="si">%5.3g</span><span class="s1"> out of trust region&#39;</span><span class="p">,</span>
                               <span class="n">norm_gkf1</span><span class="p">,</span> <span class="n">norm_gorb</span><span class="p">)</span>
-                    <span class="n">dr</span> <span class="o">=</span> <span class="o">-</span><span class="n">dxi</span>
-                    <span class="n">g_kf</span> <span class="o">=</span> <span class="n">g_kf1</span> <span class="o">-</span> <span class="n">hdxi</span>
+<span class="c1"># Slightly moving forward, not completely restoring last step.</span>
+<span class="c1"># In some cases, the optimization moves out of trust region in the first micro</span>
+<span class="c1"># iteration.  The small forward step can ensure the orbital changes in the</span>
+<span class="c1"># current iteration.</span>
+                    <span class="n">dr</span> <span class="o">=</span> <span class="o">-</span><span class="n">dxi</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+                    <span class="n">g_kf</span> <span class="o">=</span> <span class="n">g_kf1</span>
                     <span class="k">break</span>
                 <span class="n">t3m</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s1">&#39;gen h_op&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t3m</span><span class="p">)</span>
                 <span class="n">g_orb</span> <span class="o">=</span> <span class="n">g_kf</span> <span class="o">=</span> <span class="n">g_kf1</span>

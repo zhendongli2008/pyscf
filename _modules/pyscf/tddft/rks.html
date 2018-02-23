@@ -194,6 +194,7 @@
 <span class="kn">from</span> <span class="nn">pyscf.dft</span> <span class="k">import</span> <span class="n">numint</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">dft</span>
 <span class="kn">from</span> <span class="nn">pyscf.tddft</span> <span class="k">import</span> <span class="n">rhf</span>
+<span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="k">import</span> <span class="n">hf_symm</span>
 <span class="kn">from</span> <span class="nn">pyscf.ao2mo</span> <span class="k">import</span> <span class="n">_ao2mo</span>
 <span class="kn">from</span> <span class="nn">pyscf.scf.newton_ah</span> <span class="k">import</span> <span class="n">_gen_rhf_response</span>
 
@@ -201,7 +202,6 @@
 <span class="n">TDA</span> <span class="o">=</span> <span class="n">rhf</span><span class="o">.</span><span class="n">TDA</span>
 
 <span class="n">RPA</span> <span class="o">=</span> <span class="n">TDDFT</span> <span class="o">=</span> <span class="n">rhf</span><span class="o">.</span><span class="n">TDHF</span>
-
 
 <div class="viewcode-block" id="TDDFTNoHybrid"><a class="viewcode-back" href="../../../tddft.html#pyscf.tddft.rks.TDDFTNoHybrid">[docs]</a><span class="k">class</span> <span class="nc">TDDFTNoHybrid</span><span class="p">(</span><span class="n">TDA</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39; Solve (A-B)(A+B)(X+Y) = (X+Y)w^2</span>
@@ -294,6 +294,17 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">e</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xy</span></div></div>
 
 
+<span class="k">class</span> <span class="nc">dRPA</span><span class="p">(</span><span class="n">TDDFTNoHybrid</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mf</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s1">&#39;xc&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;direct RPA can only be applied with DFT; for HF+dRPA, use .xc=&#39;hf&#39;&quot;</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">scf</span>
+        <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">convert_to_rhf</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">TDDFTNoHybrid</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mf</span><span class="p">)</span>
+
+<span class="n">TDH</span> <span class="o">=</span> <span class="n">dRPA</span>
+
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span>
     <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">scf</span>
@@ -343,6 +354,13 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">kernel</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">27.2114</span><span class="p">)</span>
 <span class="c1"># [  9.0139312    9.0139312   12.42444659]</span>
 
+    <span class="n">mf</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">RKS</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s1">&#39;lda,vwn&#39;</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">scf</span><span class="p">()</span>
+    <span class="n">td</span> <span class="o">=</span> <span class="n">dRPA</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+    <span class="n">td</span><span class="o">.</span><span class="n">nstates</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">kernel</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">27.2114</span><span class="p">)</span>
+<span class="c1"># [ 10.00343861  10.00343861  15.62586305  30.69238874  30.69238874]</span>
 
 </pre></div>
 

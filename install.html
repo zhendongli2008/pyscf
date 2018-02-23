@@ -91,8 +91,8 @@
 <li class="toctree-l1"><a class="reference internal" href="overview.html">An overview of PySCF</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#installation-with-conda">Installation with conda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation-with-pip">Installation with pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-with-conda">Installation with conda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#manual-installation-from-github-repo">Manual installation from github repo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation-without-network">Installation without network</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#using-optimized-blas">Using optimized BLAS</a></li>
@@ -200,64 +200,50 @@
   <div class="section" id="installation">
 <span id="installing"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>We provide three ways to install PySCF package.</p>
+<div class="section" id="installation-with-pip">
+<h2>Installation with pip<a class="headerlink" href="#installation-with-pip" title="Permalink to this headline">¶</a></h2>
+<p>This is the recommended way to install PySCF:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ pip install pyscf
+</pre></div>
+</div>
+<p>Pypi provides a precompiled PySCF code (python wheel) which works on almost all
+Linux systems, and most of Mac OS X systems, and the ubuntu subsystems on Windows 10.</p>
+<p>Note we observed that our precompiled python wheels sometimes does not work with
+certain version of Python (python-3.4 and python-3.5).  If you&#8217;re using mac OS X
+with python-3.4 or python-3.5, pip may execute the setup.py file in the source
+code and it may be terminated due to an error of library path of BLAS library.
+BLAS library is required to install PySCF library.  The installation script can
+detect the installed BLAS libraries in the system and choose one for the
+program.  If BLAS library is existed but wasn&#8217;t found by the installation
+script, you can specify the BLAS library either through the environment
+<code class="docutils literal"><span class="pre">LDFLAGS</span></code>, e.g. <code class="docutils literal"><span class="pre">LDFLAGS=&quot;-L/path/to/blas</span> <span class="pre">-lblas&quot;</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pyscf</span></code> or the
+environment variable <code class="docutils literal"><span class="pre">PYSCF_INC_DIR</span></code>, e.g.
+<code class="docutils literal"><span class="pre">PYSCF_INC_DIR=/path/to/blas:/path/to/other/lib</span> <span class="pre">pip</span> <span class="pre">install</span></code> to tell the
+installation script which BLAS libraries to link against.
+Another issue of the installation script you may get is that pyscf.dft module is
+not working.  pyscf.dft module requires the exchange-correlation functional
+library <code class="docutils literal"><span class="pre">libxc</span></code> which was not yet available in the PyPI repository. To enable
+pyscf.dft module, you can download and manually compile libxc library and set
+the environment variable <code class="docutils literal"><span class="pre">PYSCF_INC_DIR</span></code>, e.g. <code class="docutils literal"><span class="pre">export</span> <span class="pre">PYSCF_INC_DIR=/path/to/libxc</span></code>
+before calling <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span></code> command.  Libxc library can be found in
+<a class="reference external" href="http://octopus-code.org/wiki/Libxc:download">http://octopus-code.org/wiki/Libxc:download</a>.  When compiling the libxc library,
+you need to add &#8211;enable-shared flag.</p>
+</div>
 <div class="section" id="installation-with-conda">
 <h2>Installation with conda<a class="headerlink" href="#installation-with-conda" title="Permalink to this headline">¶</a></h2>
 <p>If you have <a class="reference external" href="https://conda.io/docs/">Conda</a>
 (or <a class="reference external" href="https://www.continuum.io/downloads#linux">Anaconda</a>)
-environment, PySCF package can be installed with the command as bellow:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ conda install -c pyqc libxc
-$ conda install -c pyscf pyscf
+environment, PySCF package can be installed through Conda cloud:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ conda install -c pyscf pyscf
 </pre></div>
-</div>
-</div>
-<div class="section" id="installation-with-pip">
-<h2>Installation with pip<a class="headerlink" href="#installation-with-pip" title="Permalink to this headline">¶</a></h2>
-<p>You have to first install the dependent libraries (due to the missing of
-build-time dependency in pip <a class="reference external" href="https://www.python.org/dev/peps/pep-0518/">PEP 518</a>):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ pip install numpy scipy h5py
-</pre></div>
-</div>
-<p>Then install PySCF:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ pip install pyscf
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">BLAS library is required to install PySCF library.  In some systems, the
-installation can automatically detect the installed BLAS libraries in the
-system and choose one for the program.  If BLAS library is existed
-in the system but the install script couldn&#8217;t find it, you can specify the
-BLAS library either through the environment <code class="docutils literal"><span class="pre">LDFLAGS</span></code>, eg
-<code class="docutils literal"><span class="pre">LDFLAGS=&quot;-L/path/to/blas</span> <span class="pre">-lblas&quot;</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pyscf</span></code> or the environment
-variable <code class="docutils literal"><span class="pre">PYSCF_INC_DIR</span></code>, eg
-<code class="docutils literal"><span class="pre">PYSCF_INC_DIR=/path/to/blas:/path/to/other/lib</span> <span class="pre">pip</span> <span class="pre">install</span></code>.</p>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">libxc library is not available in the PyPI repository.  pyscf.dft module is
-not working unless the libxc library was installed in the system.  You can
-download libxc library from <a class="reference external" href="http://octopus-code.org/wiki/Libxc:download">http://octopus-code.org/wiki/Libxc:download</a>
-(note you need to add &#8211;enable-shared when compiling the libxc library).
-Before calling pip, the path where the libxc library is installed needs to be
-added to the environment variable <code class="docutils literal"><span class="pre">PYSCF_INC_DIR</span></code>, eg
-<code class="docutils literal"><span class="pre">export</span> <span class="pre">PYSCF_INC_DIR=/path/to/libxc</span></code>.</p>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Depending on the operator systems, you may fail to <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">h5py</span></code> due to
-the missing of Python header files and HDF5 libraries.  For Linux OS, you can
-get Python header files by installing <code class="docutils literal"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python-dev</span></code>
-(<code class="docutils literal"><span class="pre">yum</span> <span class="pre">install</span> <span class="pre">python-devel</span></code> for redhat) and HDF5 libraries
-<code class="docutils literal"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">libhdf5-dev</span></code> (<code class="docutils literal"><span class="pre">yum</span> <span class="pre">install</span> <span class="pre">hdf5-devel</span></code> for redhat).</p>
 </div>
 </div>
 <div class="section" id="manual-installation-from-github-repo">
 <h2>Manual installation from github repo<a class="headerlink" href="#manual-installation-from-github-repo" title="Permalink to this headline">¶</a></h2>
-<p>You can manually install PySCF from the PySCF github repo.
-Manual installation requires <a class="reference external" href="http://www.cmake.org">cmake</a>,
+<p>Manual installation requires <a class="reference external" href="http://www.cmake.org">cmake</a>,
 <a class="reference external" href="http://www.numpy.org/">numpy</a>, <a class="reference external" href="http://www.scipy.org/">scipy</a>
 and <a class="reference external" href="http://www.h5py.org/">h5py</a> libraries.
-You can download the latest PySCF version (or the development branch) from github:</p>
+You can download the latest PySCF (or the development branch) from github:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>$ git clone https://github.com/sunqm/pyscf
 $ cd pyscf
 $ git checkout dev  # optional if you&#39;d like to try out the development branch
@@ -486,7 +472,7 @@ future/fciqmc/settings.py to store the path where NECI was installed.</p>
 <h3>Libxc<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>By default, building PySCF will automatically download and install
 <a class="reference external" href="http://www.tddft.org/programs/octopus/wiki/index.php/Libxc:download">Libxc 3.0.0</a>.
-<a class="reference internal" href="dft.html#module-pyscf.dft.libxc" title="pyscf.dft.libxc"><code class="xref py py-mod docutils literal"><span class="pre">pyscf.dft.libxc</span></code></a> module provided a general interface to access Libxc functionals.</p>
+<code class="xref py py-mod docutils literal"><span class="pre">pyscf.dft.libxc</span></code> module provided a general interface to access Libxc functionals.</p>
 </div>
 <div class="section" id="id2">
 <h3>Xcfun<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>

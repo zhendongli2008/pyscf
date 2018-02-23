@@ -185,6 +185,7 @@
 <span class="c1">#         Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
 <span class="c1">#</span>
 
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">ctypes</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
@@ -813,15 +814,14 @@
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcisolver</span><span class="p">,</span> <span class="s1">&#39;nevpt_intermediate&#39;</span><span class="p">):</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Use compressed mps perturber as an approximation&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Compressed mps perturber can be only used for DMRG wave function&#39;</span><span class="p">)</span>
-            <span class="n">exit</span><span class="p">()</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Compressed mps perturber can be only used with DMRG wave function&#39;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="kn">from</span> <span class="nn">pyscf.dmrgscf.nevpt_mpi</span> <span class="k">import</span> <span class="n">DMRG_COMPRESS_NEVPT</span>
-        <span class="k">if</span> <span class="n">stored_integral</span><span class="p">:</span> <span class="c1">#Stored perturbation integral and read them again. For debugging purpose.</span>
-            <span class="n">DMRG_COMPRESS_NEVPT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="n">maxM</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">nevptsolver</span><span class="o">=</span><span class="n">nevptsolver</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
-                                <span class="n">nevpt_integral</span><span class="o">=</span><span class="s1">&#39;nevpt_perturb_integral&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">DMRG_COMPRESS_NEVPT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="n">maxM</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">nevptsolver</span><span class="o">=</span><span class="n">nevptsolver</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nevptsolver</span> <span class="o">=</span> <span class="n">nevptsolver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxM</span> <span class="o">=</span> <span class="n">maxM</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stored_integral</span> <span class="o">=</span> <span class="n">stored_integral</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">canonicalized</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compressed_mps</span> <span class="o">=</span> <span class="kc">True</span>
@@ -877,7 +877,17 @@
         <span class="n">time1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s1">&#39;eri-4pdm contraction&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">time1</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compressed_mps</span><span class="p">:</span>
-            <span class="n">fh5</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s1">&#39;Perturbation_</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+            <span class="kn">from</span> <span class="nn">pyscf.dmrgscf.nevpt_mpi</span> <span class="k">import</span> <span class="n">DMRG_COMPRESS_NEVPT</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stored_integral</span><span class="p">:</span> <span class="c1">#Stored perturbation integral and read them again. For debugging purpose.</span>
+                <span class="n">perturb_file</span> <span class="o">=</span> <span class="n">DMRG_COMPRESS_NEVPT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">maxM</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span>
+                                                   <span class="n">nevptsolver</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nevptsolver</span><span class="p">,</span>
+                                                   <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span>
+                                                   <span class="n">nevpt_integral</span><span class="o">=</span><span class="s1">&#39;nevpt_perturb_integral&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">perturb_file</span> <span class="o">=</span> <span class="n">DMRG_COMPRESS_NEVPT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">maxM</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span>
+                                                   <span class="n">nevptsolver</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nevptsolver</span><span class="p">,</span>
+                                                   <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+            <span class="n">fh5</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">perturb_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
             <span class="n">e_Si</span>     <span class="o">=</span>   <span class="n">fh5</span><span class="p">[</span><span class="s1">&#39;Vi/energy&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
             <span class="c1">#The definition of norm changed.</span>
             <span class="c1">#However, there is no need to print out it.</span>
