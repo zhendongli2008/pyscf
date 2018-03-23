@@ -180,6 +180,19 @@
             
   <h1>Source code for pyscf.df.outcore</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># Copyright 2014-2018 The PySCF Developers. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 <span class="c1"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
 <span class="c1">#</span>
@@ -195,6 +208,10 @@
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">ao2mo</span>
 <span class="kn">from</span> <span class="nn">pyscf.ao2mo</span> <span class="k">import</span> <span class="n">_ao2mo</span>
 <span class="kn">from</span> <span class="nn">pyscf.df.addons</span> <span class="k">import</span> <span class="n">make_auxmol</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">__config__</span>
+
+<span class="n">IOBLK_SIZE</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;df_outcore_ioblk_size&#39;</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>  <span class="c1"># 256 MB</span>
+<span class="n">MAX_MEMORY</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;df_outcore_max_memory&#39;</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>  <span class="c1"># 2GB</span>
 
 <span class="c1">#</span>
 <span class="c1"># for auxe1 (P|ij)</span>
@@ -202,7 +219,7 @@
 
 <div class="viewcode-block" id="cholesky_eri"><a class="viewcode-back" href="../../../df.html#pyscf.df.outcore.cholesky_eri">[docs]</a><span class="k">def</span> <span class="nf">cholesky_eri</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">erifile</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s1">&#39;weigend+etb&#39;</span><span class="p">,</span> <span class="n">dataname</span><span class="o">=</span><span class="s1">&#39;j3c&#39;</span><span class="p">,</span> <span class="n">tmpdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">int3c</span><span class="o">=</span><span class="s1">&#39;int3c2e_sph&#39;</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="s1">&#39;s2ij&#39;</span><span class="p">,</span> <span class="n">int2c</span><span class="o">=</span><span class="s1">&#39;int2c2e_sph&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">max_memory</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">ioblk_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">auxmol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+                 <span class="n">max_memory</span><span class="o">=</span><span class="n">MAX_MEMORY</span><span class="p">,</span> <span class="n">ioblk_size</span><span class="o">=</span><span class="n">IOBLK_SIZE</span><span class="p">,</span> <span class="n">auxmol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;3-center 2-electron AO integrals</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">assert</span><span class="p">(</span><span class="n">aosym</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;s1&#39;</span><span class="p">,</span> <span class="s1">&#39;s2ij&#39;</span><span class="p">))</span>
@@ -279,7 +296,8 @@
 <span class="c1"># store cderi in blocks</span>
 <div class="viewcode-block" id="cholesky_eri_b"><a class="viewcode-back" href="../../../df.html#pyscf.df.outcore.cholesky_eri_b">[docs]</a><span class="k">def</span> <span class="nf">cholesky_eri_b</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">erifile</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s1">&#39;weigend+etb&#39;</span><span class="p">,</span> <span class="n">dataname</span><span class="o">=</span><span class="s1">&#39;j3c&#39;</span><span class="p">,</span>
                    <span class="n">int3c</span><span class="o">=</span><span class="s1">&#39;int3c2e_sph&#39;</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="s1">&#39;s2ij&#39;</span><span class="p">,</span> <span class="n">int2c</span><span class="o">=</span><span class="s1">&#39;int2c2e_sph&#39;</span><span class="p">,</span>
-                   <span class="n">comp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ioblk_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">auxmol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">logger</span><span class="o">.</span><span class="n">NOTE</span><span class="p">):</span>
+                   <span class="n">comp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ioblk_size</span><span class="o">=</span><span class="n">IOBLK_SIZE</span><span class="p">,</span> <span class="n">auxmol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">verbose</span><span class="o">=</span><span class="n">logger</span><span class="o">.</span><span class="n">NOTE</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;3-center 2-electron AO integrals</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">assert</span><span class="p">(</span><span class="n">aosym</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;s1&#39;</span><span class="p">,</span> <span class="s1">&#39;s2ij&#39;</span><span class="p">))</span>
@@ -361,7 +379,7 @@
 
 <div class="viewcode-block" id="general"><a class="viewcode-back" href="../../../df.html#pyscf.df.outcore.general">[docs]</a><span class="k">def</span> <span class="nf">general</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mo_coeffs</span><span class="p">,</span> <span class="n">erifile</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s1">&#39;weigend+etb&#39;</span><span class="p">,</span> <span class="n">dataname</span><span class="o">=</span><span class="s1">&#39;eri_mo&#39;</span><span class="p">,</span> <span class="n">tmpdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">int3c</span><span class="o">=</span><span class="s1">&#39;int3c2e_sph&#39;</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="s1">&#39;s2ij&#39;</span><span class="p">,</span> <span class="n">int2c</span><span class="o">=</span><span class="s1">&#39;int2c2e_sph&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">max_memory</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">ioblk_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">compact</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">max_memory</span><span class="o">=</span><span class="n">MAX_MEMORY</span><span class="p">,</span> <span class="n">ioblk_size</span><span class="o">=</span><span class="n">IOBLK_SIZE</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">compact</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39; Transform ij of (ij|L) to MOs.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">assert</span><span class="p">(</span><span class="n">aosym</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;s1&#39;</span><span class="p">,</span> <span class="s1">&#39;s2ij&#39;</span><span class="p">))</span>
@@ -471,6 +489,8 @@
         <span class="k">return</span> <span class="n">sym</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="s1">&#39;s&#39;</span> <span class="o">+</span> <span class="n">sym</span>
+
+<span class="k">del</span><span class="p">(</span><span class="n">MAX_MEMORY</span><span class="p">)</span>
 
 
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

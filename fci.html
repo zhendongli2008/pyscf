@@ -276,6 +276,10 @@ and direct_spin0_symm solver.</dd>
 <p>Saved results</p>
 <blockquote>
 <div><dl class="docutils">
+<dt>eci</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float or a list of float</span><dd>FCI energy(ies)</dd>
+<dt>ci</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">nparray</span><dd>FCI wfn vector(s)</dd>
 <dt>converged</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool (or a list of bool for multiple roots)</span><dd>Whether davidson iteration is converged</dd>
 </dl>
@@ -344,32 +348,55 @@ vector.</p>
 <dl class="method">
 <dt id="pyscf.fci.direct_spin1.FCISolver.make_rdm1">
 <code class="descname">make_rdm1</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#FCISolver.make_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.FCISolver.make_rdm1" title="Permalink to this definition">¶</a></dt>
-<dd><p>spin-traced 1-particle density matrix</p>
+<dd><p>Spin-traced one-particle density matrix</p>
+<p>dm1[p,q] = &lt;q_alpha^dagger p_alpha&gt; + &lt;q_beta^dagger p_beta&gt;</p>
+<p>The convention is based on McWeeney&#8217;s book, Eq (5.4.20)
+The contraction between 1-particle Hamiltonian and rdm1 is
+E = einsum(&#8216;pq,qp&#8217;, h1, rdm1)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyscf.fci.direct_spin1.FCISolver.make_rdm12">
 <code class="descname">make_rdm12</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#FCISolver.make_rdm12"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.FCISolver.make_rdm12" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin traced 1- and 2-particle density matrices,</p>
-<p>NOTE the 2pdm is <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span> but is
-stored as [p,r,q,s]</p>
+<dd><p>Spin traced 1- and 2-particle density matrices.</p>
+<dl class="docutils">
+<dt>1pdm[p,q] = :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>langle <a href="#id21"><span class="problematic" id="id22">q_</span></a>alpha^dagger <a href="#id23"><span class="problematic" id="id24">p_</span></a>alpha rangle +</dt>
+<dd>langle <a href="#id25"><span class="problematic" id="id26">q_</span></a>beta^dagger  <a href="#id27"><span class="problematic" id="id28">p_</span></a>beta rangle`;</dd>
+<dt>2pdm[p,q,r,s] = :math:<a href="#id3"><span class="problematic" id="id4">`</span></a>langle <a href="#id29"><span class="problematic" id="id30">p_</span></a>alpha^dagger <a href="#id31"><span class="problematic" id="id32">r_</span></a>alpha^dagger <a href="#id33"><span class="problematic" id="id34">s_</span></a>alpha <a href="#id35"><span class="problematic" id="id36">q_</span></a>alpharangle +</dt>
+<dd>langle <a href="#id37"><span class="problematic" id="id38">p_</span></a>beta^dagger  <a href="#id39"><span class="problematic" id="id40">r_</span></a>alpha^dagger <a href="#id41"><span class="problematic" id="id42">s_</span></a>alpha <a href="#id43"><span class="problematic" id="id44">q_</span></a>betarangle +
+langle <a href="#id45"><span class="problematic" id="id46">p_</span></a>alpha^dagger <a href="#id47"><span class="problematic" id="id48">r_</span></a>beta^dagger  <a href="#id49"><span class="problematic" id="id50">s_</span></a>beta  <a href="#id51"><span class="problematic" id="id52">q_</span></a>alpharangle +
+langle <a href="#id53"><span class="problematic" id="id54">p_</span></a>beta^dagger  <a href="#id55"><span class="problematic" id="id56">r_</span></a>beta^dagger  <a href="#id57"><span class="problematic" id="id58">s_</span></a>beta  <a href="#id59"><span class="problematic" id="id60">q_</span></a>betarangle`.</dd>
+</dl>
+<p>Energy should be computed as
+E = einsum(&#8216;pq,qp&#8217;, h1, 1pdm) + 1/2 * einsum(&#8216;pqrs,pqrs&#8217;, eri, 2pdm)
+where h1[p,q] = &lt;p|h|q&gt; and eri[p,q,r,s] = (pq|rs)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyscf.fci.direct_spin1.FCISolver.make_rdm12s">
 <code class="descname">make_rdm12s</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#FCISolver.make_rdm12s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.FCISolver.make_rdm12s" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin searated 1- and 2-particle density matrices,
-(alpha,beta) for 1-particle density matrices.
+<dd><p>Spin separated 1- and 2-particle density matrices.
+The return values include two lists, a list of 1-particle density matrices
+and a list of 2-particle density matrices.  The density matrices are:
+(alpha,alpha), (beta,beta) for 1-particle density matrices;
 (alpha,alpha,alpha,alpha), (alpha,alpha,beta,beta),
 (beta,beta,beta,beta) for 2-particle density matrices.</p>
-<p>NOTE the 2pdm is <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span> but is
-stored as [p,r,q,s]</p>
+<p>1pdm[p,q] = <span class="math">\(\langle q^\dagger p\rangle\)</span>;
+2pdm[p,q,r,s] = <span class="math">\(\langle p^\dagger r^\dagger s q\rangle\)</span>.</p>
+<p>Energy should be computed as
+E = einsum(&#8216;pq,qp&#8217;, h1, 1pdm) + 1/2 * einsum(&#8216;pqrs,pqrs&#8217;, eri, 2pdm)
+where h1[p,q] = &lt;p|h|q&gt; and eri[p,q,r,s] = (pq|rs)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyscf.fci.direct_spin1.FCISolver.make_rdm1s">
 <code class="descname">make_rdm1s</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#FCISolver.make_rdm1s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.FCISolver.make_rdm1s" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin searated 1-particle density matrices, (alpha,beta)</p>
+<dd><p>Spin separated 1-particle density matrices.
+The return values include two density matrices: (alpha,alpha), (beta,beta)</p>
+<p>dm1[p,q] = &lt;q^dagger p&gt;</p>
+<p>The convention is based on McWeeney&#8217;s book, Eq (5.4.20).
+The contraction between 1-particle Hamiltonian and rdm1 is
+E = einsum(&#8216;pq,qp&#8217;, h1, rdm1)</p>
 </dd></dl>
 
 <dl class="method">
@@ -396,25 +423,46 @@ Hamiltonian)</p>
 <dl class="method">
 <dt id="pyscf.fci.direct_spin1.FCISolver.trans_rdm1">
 <code class="descname">trans_rdm1</code><span class="sig-paren">(</span><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#FCISolver.trans_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.FCISolver.trans_rdm1" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin traced transition 1-particle density matrices</p>
+<dd><p>Spin traced transition 1-particle transition density matrices.</p>
+<dl class="docutils">
+<dt>1pdm[p,q] = :math:<a href="#id5"><span class="problematic" id="id6">`</span></a>langle <a href="#id61"><span class="problematic" id="id62">q_</span></a>alpha^dagger <a href="#id63"><span class="problematic" id="id64">p_</span></a>alpha rangle</dt>
+<dd><ul class="first last simple">
+<li>langle <a href="#id65"><span class="problematic" id="id66">q_</span></a>beta^dagger <a href="#id67"><span class="problematic" id="id68">p_</span></a>beta rangle`</li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyscf.fci.direct_spin1.FCISolver.trans_rdm12">
 <code class="descname">trans_rdm12</code><span class="sig-paren">(</span><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#FCISolver.trans_rdm12"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.FCISolver.trans_rdm12" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin traced transition 1- and 2-particle density matrices.</p>
+<dd><p>Spin traced transition 1- and 2-particle transition density matrices.</p>
+<p>1pdm[p,q] = <span class="math">\(\langle q^\dagger p\rangle\)</span>;
+2pdm[p,q,r,s] = <span class="math">\(\langle p^\dagger r^\dagger s q\rangle\)</span>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyscf.fci.direct_spin1.FCISolver.trans_rdm12s">
 <code class="descname">trans_rdm12s</code><span class="sig-paren">(</span><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#FCISolver.trans_rdm12s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.FCISolver.trans_rdm12s" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin separated transition 1- and 2-particle density matrices.</p>
+<dd><p>Spin separated 1- and 2-particle transition density matrices.
+The return values include two lists, a list of 1-particle transition
+density matrices and a list of 2-particle transition density matrices.
+The density matrices are:
+(alpha,alpha), (beta,beta) for 1-particle transition density matrices;
+(alpha,alpha,alpha,alpha), (alpha,alpha,beta,beta),
+(beta,beta,alpha,alpha), (beta,beta,beta,beta) for 2-particle transition
+density matrices.</p>
+<p>1pdm[p,q] = <span class="math">\(\langle q^\dagger p\rangle\)</span>;
+2pdm[p,q,r,s] = <span class="math">\(\langle p^\dagger r^\dagger s q\rangle\)</span>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyscf.fci.direct_spin1.FCISolver.trans_rdm1s">
 <code class="descname">trans_rdm1s</code><span class="sig-paren">(</span><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#FCISolver.trans_rdm1s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.FCISolver.trans_rdm1s" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin separated transition 1-particle density matrices</p>
+<dd><p>Spin separated transition 1-particle density matrices.
+The return values include two density matrices: (alpha,alpha), (beta,beta).
+See also function <a class="reference internal" href="#pyscf.fci.direct_spin1.make_rdm1s" title="pyscf.fci.direct_spin1.make_rdm1s"><code class="xref py py-func docutils literal"><span class="pre">make_rdm1s()</span></code></a></p>
+<p>1pdm[p,q] = <span class="math">\(\langle q^\dagger p \rangle\)</span></p>
 </dd></dl>
 
 </dd></dl>
@@ -471,32 +519,55 @@ vector.</p>
 <dl class="function">
 <dt id="pyscf.fci.direct_spin1.make_rdm1">
 <code class="descclassname">pyscf.fci.direct_spin1.</code><code class="descname">make_rdm1</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#make_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.make_rdm1" title="Permalink to this definition">¶</a></dt>
-<dd><p>spin-traced 1-particle density matrix</p>
+<dd><p>Spin-traced one-particle density matrix</p>
+<p>dm1[p,q] = &lt;q_alpha^dagger p_alpha&gt; + &lt;q_beta^dagger p_beta&gt;</p>
+<p>The convention is based on McWeeney&#8217;s book, Eq (5.4.20)
+The contraction between 1-particle Hamiltonian and rdm1 is
+E = einsum(&#8216;pq,qp&#8217;, h1, rdm1)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.fci.direct_spin1.make_rdm12">
 <code class="descclassname">pyscf.fci.direct_spin1.</code><code class="descname">make_rdm12</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#make_rdm12"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.make_rdm12" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin traced 1- and 2-particle density matrices,</p>
-<p>NOTE the 2pdm is <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span> but is
-stored as [p,r,q,s]</p>
+<dd><p>Spin traced 1- and 2-particle density matrices.</p>
+<dl class="docutils">
+<dt>1pdm[p,q] = :math:<a href="#id7"><span class="problematic" id="id8">`</span></a>langle <a href="#id69"><span class="problematic" id="id70">q_</span></a>alpha^dagger <a href="#id71"><span class="problematic" id="id72">p_</span></a>alpha rangle +</dt>
+<dd>langle <a href="#id73"><span class="problematic" id="id74">q_</span></a>beta^dagger  <a href="#id75"><span class="problematic" id="id76">p_</span></a>beta rangle`;</dd>
+<dt>2pdm[p,q,r,s] = :math:<a href="#id9"><span class="problematic" id="id10">`</span></a>langle <a href="#id77"><span class="problematic" id="id78">p_</span></a>alpha^dagger <a href="#id79"><span class="problematic" id="id80">r_</span></a>alpha^dagger <a href="#id81"><span class="problematic" id="id82">s_</span></a>alpha <a href="#id83"><span class="problematic" id="id84">q_</span></a>alpharangle +</dt>
+<dd>langle <a href="#id85"><span class="problematic" id="id86">p_</span></a>beta^dagger  <a href="#id87"><span class="problematic" id="id88">r_</span></a>alpha^dagger <a href="#id89"><span class="problematic" id="id90">s_</span></a>alpha <a href="#id91"><span class="problematic" id="id92">q_</span></a>betarangle +
+langle <a href="#id93"><span class="problematic" id="id94">p_</span></a>alpha^dagger <a href="#id95"><span class="problematic" id="id96">r_</span></a>beta^dagger  <a href="#id97"><span class="problematic" id="id98">s_</span></a>beta  <a href="#id99"><span class="problematic" id="id100">q_</span></a>alpharangle +
+langle <a href="#id101"><span class="problematic" id="id102">p_</span></a>beta^dagger  <a href="#id103"><span class="problematic" id="id104">r_</span></a>beta^dagger  <a href="#id105"><span class="problematic" id="id106">s_</span></a>beta  <a href="#id107"><span class="problematic" id="id108">q_</span></a>betarangle`.</dd>
+</dl>
+<p>Energy should be computed as
+E = einsum(&#8216;pq,qp&#8217;, h1, 1pdm) + 1/2 * einsum(&#8216;pqrs,pqrs&#8217;, eri, 2pdm)
+where h1[p,q] = &lt;p|h|q&gt; and eri[p,q,r,s] = (pq|rs)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.fci.direct_spin1.make_rdm12s">
 <code class="descclassname">pyscf.fci.direct_spin1.</code><code class="descname">make_rdm12s</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#make_rdm12s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.make_rdm12s" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin searated 1- and 2-particle density matrices,
-(alpha,beta) for 1-particle density matrices.
+<dd><p>Spin separated 1- and 2-particle density matrices.
+The return values include two lists, a list of 1-particle density matrices
+and a list of 2-particle density matrices.  The density matrices are:
+(alpha,alpha), (beta,beta) for 1-particle density matrices;
 (alpha,alpha,alpha,alpha), (alpha,alpha,beta,beta),
 (beta,beta,beta,beta) for 2-particle density matrices.</p>
-<p>NOTE the 2pdm is <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span> but is
-stored as [p,r,q,s]</p>
+<p>1pdm[p,q] = <span class="math">\(\langle q^\dagger p\rangle\)</span>;
+2pdm[p,q,r,s] = <span class="math">\(\langle p^\dagger r^\dagger s q\rangle\)</span>.</p>
+<p>Energy should be computed as
+E = einsum(&#8216;pq,qp&#8217;, h1, 1pdm) + 1/2 * einsum(&#8216;pqrs,pqrs&#8217;, eri, 2pdm)
+where h1[p,q] = &lt;p|h|q&gt; and eri[p,q,r,s] = (pq|rs)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.fci.direct_spin1.make_rdm1s">
 <code class="descclassname">pyscf.fci.direct_spin1.</code><code class="descname">make_rdm1s</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#make_rdm1s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.make_rdm1s" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin searated 1-particle density matrices, (alpha,beta)</p>
+<dd><p>Spin separated 1-particle density matrices.
+The return values include two density matrices: (alpha,alpha), (beta,beta)</p>
+<p>dm1[p,q] = &lt;q^dagger p&gt;</p>
+<p>The convention is based on McWeeney&#8217;s book, Eq (5.4.20).
+The contraction between 1-particle Hamiltonian and rdm1 is
+E = einsum(&#8216;pq,qp&#8217;, h1, rdm1)</p>
 </dd></dl>
 
 <dl class="function">
@@ -508,25 +579,46 @@ stored as [p,r,q,s]</p>
 <dl class="function">
 <dt id="pyscf.fci.direct_spin1.trans_rdm1">
 <code class="descclassname">pyscf.fci.direct_spin1.</code><code class="descname">trans_rdm1</code><span class="sig-paren">(</span><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#trans_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.trans_rdm1" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin traced transition 1-particle density matrices</p>
+<dd><p>Spin traced transition 1-particle transition density matrices.</p>
+<dl class="docutils">
+<dt>1pdm[p,q] = :math:<a href="#id11"><span class="problematic" id="id12">`</span></a>langle <a href="#id109"><span class="problematic" id="id110">q_</span></a>alpha^dagger <a href="#id111"><span class="problematic" id="id112">p_</span></a>alpha rangle</dt>
+<dd><ul class="first last simple">
+<li>langle <a href="#id113"><span class="problematic" id="id114">q_</span></a>beta^dagger <a href="#id115"><span class="problematic" id="id116">p_</span></a>beta rangle`</li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.fci.direct_spin1.trans_rdm12">
 <code class="descclassname">pyscf.fci.direct_spin1.</code><code class="descname">trans_rdm12</code><span class="sig-paren">(</span><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#trans_rdm12"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.trans_rdm12" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin traced transition 1- and 2-particle density matrices.</p>
+<dd><p>Spin traced transition 1- and 2-particle transition density matrices.</p>
+<p>1pdm[p,q] = <span class="math">\(\langle q^\dagger p\rangle\)</span>;
+2pdm[p,q,r,s] = <span class="math">\(\langle p^\dagger r^\dagger s q\rangle\)</span>.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.fci.direct_spin1.trans_rdm12s">
 <code class="descclassname">pyscf.fci.direct_spin1.</code><code class="descname">trans_rdm12s</code><span class="sig-paren">(</span><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#trans_rdm12s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.trans_rdm12s" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin separated transition 1- and 2-particle density matrices.</p>
+<dd><p>Spin separated 1- and 2-particle transition density matrices.
+The return values include two lists, a list of 1-particle transition
+density matrices and a list of 2-particle transition density matrices.
+The density matrices are:
+(alpha,alpha), (beta,beta) for 1-particle transition density matrices;
+(alpha,alpha,alpha,alpha), (alpha,alpha,beta,beta),
+(beta,beta,alpha,alpha), (beta,beta,beta,beta) for 2-particle transition
+density matrices.</p>
+<p>1pdm[p,q] = <span class="math">\(\langle q^\dagger p\rangle\)</span>;
+2pdm[p,q,r,s] = <span class="math">\(\langle p^\dagger r^\dagger s q\rangle\)</span>.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.fci.direct_spin1.trans_rdm1s">
 <code class="descclassname">pyscf.fci.direct_spin1.</code><code class="descname">trans_rdm1s</code><span class="sig-paren">(</span><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin1.html#trans_rdm1s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin1.trans_rdm1s" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin separated transition 1-particle density matrices</p>
+<dd><p>Spin separated transition 1-particle density matrices.
+The return values include two density matrices: (alpha,alpha), (beta,beta).
+See also function <a class="reference internal" href="#pyscf.fci.direct_spin1.make_rdm1s" title="pyscf.fci.direct_spin1.make_rdm1s"><code class="xref py py-func docutils literal"><span class="pre">make_rdm1s()</span></code></a></p>
+<p>1pdm[p,q] = <span class="math">\(\langle q^\dagger p \rangle\)</span></p>
 </dd></dl>
 
 <span class="target" id="module-pyscf.fci.direct_spin1_symm"></span><dl class="docutils">
@@ -594,39 +686,69 @@ vector.</p>
 <dl class="function">
 <dt id="pyscf.fci.direct_spin0.make_rdm1">
 <code class="descclassname">pyscf.fci.direct_spin0.</code><code class="descname">make_rdm1</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#make_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.make_rdm1" title="Permalink to this definition">¶</a></dt>
-<dd><p>spin-traced 1-particle density matrix</p>
+<dd><p>Spin-traced one-particle density matrix</p>
+<p>dm1[p,q] = &lt;q_alpha^dagger p_alpha&gt; + &lt;q_beta^dagger p_beta&gt;</p>
+<p>The convention is based on McWeeney&#8217;s book, Eq (5.4.20)
+The contraction between 1-particle Hamiltonian and rdm1 is
+E = einsum(&#8216;pq,qp&#8217;, h1, rdm1)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.fci.direct_spin0.make_rdm12">
 <code class="descclassname">pyscf.fci.direct_spin0.</code><code class="descname">make_rdm12</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#make_rdm12"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.make_rdm12" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin traced 1- and 2-particle density matrices,</p>
-<p>NOTE the 2pdm is <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span> but is
-stored as [p,r,q,s]</p>
+<dd><p>Spin traced 1- and 2-particle density matrices.</p>
+<dl class="docutils">
+<dt>1pdm[p,q] = :math:<a href="#id13"><span class="problematic" id="id14">`</span></a>langle <a href="#id117"><span class="problematic" id="id118">q_</span></a>alpha^dagger <a href="#id119"><span class="problematic" id="id120">p_</span></a>alpha rangle +</dt>
+<dd>langle <a href="#id121"><span class="problematic" id="id122">q_</span></a>beta^dagger  <a href="#id123"><span class="problematic" id="id124">p_</span></a>beta rangle`;</dd>
+<dt>2pdm[p,q,r,s] = :math:<a href="#id15"><span class="problematic" id="id16">`</span></a>langle <a href="#id125"><span class="problematic" id="id126">p_</span></a>alpha^dagger <a href="#id127"><span class="problematic" id="id128">r_</span></a>alpha^dagger <a href="#id129"><span class="problematic" id="id130">s_</span></a>alpha <a href="#id131"><span class="problematic" id="id132">q_</span></a>alpharangle +</dt>
+<dd>langle <a href="#id133"><span class="problematic" id="id134">p_</span></a>beta^dagger  <a href="#id135"><span class="problematic" id="id136">r_</span></a>alpha^dagger <a href="#id137"><span class="problematic" id="id138">s_</span></a>alpha <a href="#id139"><span class="problematic" id="id140">q_</span></a>betarangle +
+langle <a href="#id141"><span class="problematic" id="id142">p_</span></a>alpha^dagger <a href="#id143"><span class="problematic" id="id144">r_</span></a>beta^dagger  <a href="#id145"><span class="problematic" id="id146">s_</span></a>beta  <a href="#id147"><span class="problematic" id="id148">q_</span></a>alpharangle +
+langle <a href="#id149"><span class="problematic" id="id150">p_</span></a>beta^dagger  <a href="#id151"><span class="problematic" id="id152">r_</span></a>beta^dagger  <a href="#id153"><span class="problematic" id="id154">s_</span></a>beta  <a href="#id155"><span class="problematic" id="id156">q_</span></a>betarangle`.</dd>
+</dl>
+<p>Energy should be computed as
+E = einsum(&#8216;pq,qp&#8217;, h1, 1pdm) + 1/2 * einsum(&#8216;pqrs,pqrs&#8217;, eri, 2pdm)
+where h1[p,q] = &lt;p|h|q&gt; and eri[p,q,r,s] = (pq|rs)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.fci.direct_spin0.make_rdm1s">
 <code class="descclassname">pyscf.fci.direct_spin0.</code><code class="descname">make_rdm1s</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#make_rdm1s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.make_rdm1s" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin searated 1-particle density matrices, (alpha,beta)</p>
+<dd><p>Spin separated 1-particle density matrices.
+The return values include two density matrices: (alpha,alpha), (beta,beta)</p>
+<p>dm1[p,q] = &lt;q^dagger p&gt;</p>
+<p>The convention is based on McWeeney&#8217;s book, Eq (5.4.20).
+The contraction between 1-particle Hamiltonian and rdm1 is
+E = einsum(&#8216;pq,qp&#8217;, h1, rdm1)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.fci.direct_spin0.trans_rdm1">
 <code class="descclassname">pyscf.fci.direct_spin0.</code><code class="descname">trans_rdm1</code><span class="sig-paren">(</span><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#trans_rdm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.trans_rdm1" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin traced transition 1-particle density matrices</p>
+<dd><p>Spin traced transition 1-particle transition density matrices.</p>
+<dl class="docutils">
+<dt>1pdm[p,q] = :math:<a href="#id17"><span class="problematic" id="id18">`</span></a>langle <a href="#id157"><span class="problematic" id="id158">q_</span></a>alpha^dagger <a href="#id159"><span class="problematic" id="id160">p_</span></a>alpha rangle</dt>
+<dd><ul class="first last simple">
+<li>langle <a href="#id161"><span class="problematic" id="id162">q_</span></a>beta^dagger <a href="#id163"><span class="problematic" id="id164">p_</span></a>beta rangle`</li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.fci.direct_spin0.trans_rdm12">
 <code class="descclassname">pyscf.fci.direct_spin0.</code><code class="descname">trans_rdm12</code><span class="sig-paren">(</span><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em>, <em>reorder=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#trans_rdm12"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.trans_rdm12" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin traced transition 1- and 2-particle density matrices.</p>
+<dd><p>Spin traced transition 1- and 2-particle transition density matrices.</p>
+<p>1pdm[p,q] = <span class="math">\(\langle q^\dagger p\rangle\)</span>;
+2pdm[p,q,r,s] = <span class="math">\(\langle p^\dagger r^\dagger s q\rangle\)</span>.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.fci.direct_spin0.trans_rdm1s">
 <code class="descclassname">pyscf.fci.direct_spin0.</code><code class="descname">trans_rdm1s</code><span class="sig-paren">(</span><em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em>, <em>link_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/direct_spin0.html#trans_rdm1s"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.direct_spin0.trans_rdm1s" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin separated transition 1-particle density matrices</p>
+<dd><p>Spin separated transition 1-particle density matrices.
+The return values include two density matrices: (alpha,alpha), (beta,beta).
+See also function <a class="reference internal" href="#pyscf.fci.direct_spin0.make_rdm1s" title="pyscf.fci.direct_spin0.make_rdm1s"><code class="xref py py-func docutils literal"><span class="pre">make_rdm1s()</span></code></a></p>
+<p>1pdm[p,q] = <span class="math">\(\langle q^\dagger p \rangle\)</span></p>
 </dd></dl>
 
 <span class="target" id="module-pyscf.fci.direct_spin0_symm"></span><dl class="docutils">
@@ -799,7 +921,7 @@ n=2 (T2) has nvir*(nvir-1)/2 * nocc*(nocc-1)/2 strings.</p>
 <code class="descclassname">pyscf.fci.spin_op.</code><code class="descname">local_spin</code><span class="sig-paren">(</span><em>fcivec</em>, <em>norb</em>, <em>nelec</em>, <em>mo_coeff=None</em>, <em>ovlp=1</em>, <em>aolst=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/spin_op.html#local_spin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.spin_op.local_spin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Local spin expectation value, which is defined as</p>
 <p>&lt;CI|ao&gt;&lt;ao|S^2|CI&gt;</p>
-<p>For a complete list of AOs, I = sum <a href="#id1"><span class="problematic" id="id2">|ao&gt;&lt;ao|</span></a>, it becomes &lt;CI|S^2|CI&gt;</p>
+<p>For a complete list of AOs, I = sum <a href="#id19"><span class="problematic" id="id20">|ao&gt;&lt;ao|</span></a>, it becomes &lt;CI|S^2|CI&gt;</p>
 </dd></dl>
 
 <dl class="function">
@@ -832,20 +954,28 @@ Hamiltonian)</p>
 <div class="section" id="module-pyscf.fci.rdm">
 <span id="rdm"></span><h2>rdm<a class="headerlink" href="#module-pyscf.fci.rdm" title="Permalink to this headline">¶</a></h2>
 <p>FCI 1, 2, 3, 4-particle density matrices.</p>
+<p>Note the 1-particle density matrix has the same convention as the mean-field
+1-particle density matrix (see McWeeney&#8217;s book Eq 5.4.20), which is</p>
+<blockquote>
+<div>dm[p,q] = &lt; q^+ p &gt;</div></blockquote>
+<dl class="docutils">
+<dt>The contraction between 1-particle Hamiltonian and 1-pdm is</dt>
+<dd>E = einsum(&#8216;pq,qp&#8217;, h1, 1pdm)</dd>
+<dt>Different conventions are used in the high order density matrices:</dt>
+<dd>dm[p,q,r,s,...] = &lt; p^+ r^+ ... s q &gt;</dd>
+</dl>
 <dl class="function">
 <dt id="pyscf.fci.rdm.make_dm123">
 <code class="descclassname">pyscf.fci.rdm.</code><code class="descname">make_dm123</code><span class="sig-paren">(</span><em>fname</em>, <em>cibra</em>, <em>ciket</em>, <em>norb</em>, <em>nelec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/rdm.html#make_dm123"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.rdm.make_dm123" title="Permalink to this definition">¶</a></dt>
 <dd><p>Spin traced 1, 2 and 3-particle density matrices.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">In this function, 2pdm is <span class="math">\(\langle p^\dagger q r^\dagger s\rangle\)</span>;
-3pdm is <span class="math">\(\langle p^\dagger q r^\dagger s t^\dagger u\rangle\)</span>.
-After calling reorder_dm123, the 2pdm and 3pdm are transformed to
-standard definition:
-2pdm = <span class="math">\(\langle p^\dagger q^\dagger r s\rangle\)</span> but is
-stored as [p,s,q,r];
-3pdm = <span class="math">\(\langle p^\dagger q^\dagger r^\dagger s t u\rangle\)</span>,
-stored as [p,u,q,t,r,s].</p>
+<p>In this function, 2pdm[p,q,r,s] is <span class="math">\(\langle p^\dagger q r^\dagger s\rangle\)</span>;
+3pdm[p,q,r,s,t,u] is <span class="math">\(\langle p^\dagger q r^\dagger s t^\dagger u\rangle\)</span>.</p>
+<p class="last">After calling reorder_dm123, the 2pdm and 3pdm are transformed to
+the normal density matrices:
+2pdm[p,r,q,s] = <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span>
+3pdm[p,s,q,t,r,u] = <span class="math">\(\langle p^\dagger q^\dagger r^\dagger u t s\rangle\)</span>.</p>
 </div>
 </dd></dl>
 
@@ -855,17 +985,14 @@ stored as [p,u,q,t,r,s].</p>
 <dd><p>Spin traced 1, 2, 3 and 4-particle density matrices.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">In this function, 2pdm is <span class="math">\(\langle p^\dagger q r^\dagger s\rangle\)</span>;
-3pdm is <span class="math">\(\langle p^\dagger q r^\dagger s t^\dagger u\rangle\)</span>;
-4pdm is <span class="math">\(\langle p^\dagger q r^\dagger s t^\dagger u v^\dagger w\rangle\)</span>.
-After calling reorder_dm1234, the 2pdm and 3pdm and 4pdm are transformed to
-standard definition:
-2pdm = <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span> but is
-stored as [p,r,q,s];
-3pdm = <span class="math">\(\langle p^\dagger q^\dagger r^\dagger u t s\rangle\)</span>,
-stored as [p,s,q,t,r,u];
-4pdm = <span class="math">\(\langle p^\dagger q^\dagger r^\dagger s^dagger w v u t\rangle\)</span>,
-stored as [p,t,q,u,r,v,s,w].</p>
+<p>In this function, 2pdm[p,q,r,s] is <span class="math">\(\langle p^\dagger q r^\dagger s\rangle\)</span>;
+3pdm[p,q,r,s,t,u] is <span class="math">\(\langle p^\dagger q r^\dagger s t^\dagger u\rangle\)</span>;
+4pdm[p,q,r,s,t,u,v,w] is <span class="math">\(\langle p^\dagger q r^\dagger s t^\dagger u v^\dagger w\rangle\)</span>.</p>
+<p class="last">After calling reorder_dm123, the 2pdm and 3pdm are transformed to
+the normal density matrices:
+2pdm[p,r,q,s] = <span class="math">\(\langle p^\dagger q^\dagger s r\rangle\)</span>
+3pdm[p,s,q,t,r,u] = <span class="math">\(\langle p^\dagger q^\dagger r^\dagger u t s\rangle\)</span>.
+4pdm[p,t,q,u,r,v,s,w] = <span class="math">\(\langle p^\dagger q^\dagger r^\dagger s^dagger w v u t\rangle\)</span>.</p>
 </div>
 </dd></dl>
 
@@ -922,6 +1049,22 @@ the N-electron wavefunction.</p>
 <dd>2D array, row for alpha strings and column for beta strings. Note it
 has different number of columns to the input CI coefficients.</dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.fci.addons.cylindrical_init_guess">
+<code class="descclassname">pyscf.fci.addons.</code><code class="descname">cylindrical_init_guess</code><span class="sig-paren">(</span><em>mol</em>, <em>norb</em>, <em>nelec</em>, <em>orbsym</em>, <em>wfnsym=0</em>, <em>singlet=True</em>, <em>nroots=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/fci/addons.html#cylindrical_init_guess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.fci.addons.cylindrical_init_guess" title="Permalink to this definition">¶</a></dt>
+<dd><p>FCI initial guess for system of cylindrical symmetry.
+(In testing)</p>
+<p>Examples:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;O; O 1 1.2&#39;</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">orbsym</span> <span class="o">=</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ci0</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">cylindrical_init_guess</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">orbsym</span><span class="p">,</span> <span class="n">wfnsym</span><span class="o">=</span><span class="mi">10</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ci0</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ci0</span> <span class="o">=</span> <span class="n">fci</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">cylindrical_init_guess</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">orbsym</span><span class="p">,</span> <span class="n">wfnsym</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">singlet</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ci0</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">

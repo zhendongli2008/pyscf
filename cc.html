@@ -449,7 +449,7 @@ field method to CC module to have the gamma point CCSD correlation.</p>
 <span class="p">)</span>
 
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">density_fit</span><span class="p">()</span>
-<span class="n">mf</span><span class="o">.</span><span class="n">with_df</span><span class="o">.</span><span class="n">gs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">with_df</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 
 <span class="c1">#</span>
@@ -513,7 +513,8 @@ population analysis.</p>
 <span class="sd">CCSD density matrix</span>
 <span class="sd">&#39;&#39;&#39;</span>
 
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">cc</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">cc</span><span class="p">,</span> <span class="n">ao2mo</span>
 
 <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
     <span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;H 0 0 0; F 0 0 1.1&#39;</span><span class="p">,</span>
@@ -528,10 +529,16 @@ population analysis.</p>
 <span class="n">dm2</span> <span class="o">=</span> <span class="n">mycc</span><span class="o">.</span><span class="n">make_rdm2</span><span class="p">()</span>
 
 <span class="c1">#</span>
-<span class="c1"># Relaxed CCSD density matrix in MO basis</span>
+<span class="c1"># CCSD energy based on density matrices</span>
 <span class="c1">#</span>
-<span class="kn">from</span> <span class="nn">pyscf.cc</span> <span class="k">import</span> <span class="n">ccsd_grad</span>
-<span class="n">dm1</span> <span class="o">+=</span> <span class="n">ccsd_grad</span><span class="o">.</span><span class="n">response_dm1</span><span class="p">(</span><span class="n">mycc</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">t1</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">t2</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">l1</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">l2</span><span class="p">)</span>
+<span class="n">h1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;pi,pq,qj-&gt;ij&#39;</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">mf</span><span class="o">.</span><span class="n">get_hcore</span><span class="p">(),</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">)</span>
+<span class="n">nmo</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">eri</span> <span class="o">=</span> <span class="n">ao2mo</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">compact</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="n">nmo</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">E</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;pq,qp&#39;</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">dm1</span><span class="p">)</span>
+<span class="c1"># Note dm2 is transposed to simplify its contraction to integrals</span>
+<span class="n">E</span><span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;pqrs,pqrs&#39;</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">dm2</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+<span class="n">E</span><span class="o">+=</span> <span class="n">mol</span><span class="o">.</span><span class="n">energy_nuc</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E(CCSD) = </span><span class="si">%s</span><span class="s1">, reference </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">e_tot</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -626,6 +633,8 @@ This class supports the calculation of CCSD 1- and 2-particle density matrices.<
  <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>DIIS space size.  Default is 6.</dd>
 <dt>diis_start_cycle</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>The step to start DIIS.  Default is 0.</dd>
+<dt>iterative_damping</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>The self consistent damping parameter.</dd>
 <dt>direct</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>AO-direct CCSD. Default is False.</dd>
 <dt>frozen</dt>
@@ -653,15 +662,18 @@ occupied and virtual orbitals can be frozen in CC calculation.</p>
  <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>CCSD correlation correction</dd>
 <dt>e_tot</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>Total CCSD energy (HF + correlation)</dd>
-<dt>t1, t2</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier"></span><dd>T amplitudes t1[i,a], t2[i,j,a,b]  (i,j in occ, a,b in virt)</dd>
-<dt>l1, l2</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier"></span><dd>Lambda amplitudes l1[i,a], l2[i,j,a,b]  (i,j in occ, a,b in virt)</dd>
+<dt>t1, t2 :</dt>
+<dd>T amplitudes t1[i,a], t2[i,j,a,b]  (i,j in occ, a,b in virt)</dd>
+<dt>l1, l2 :</dt>
+<dd>Lambda amplitudes l1[i,a], l2[i,j,a,b]  (i,j in occ, a,b in virt)</dd>
 </dl>
 </div></blockquote>
 </dd></dl>
 
-<span class="target" id="module-pyscf.cc.ccsd"></span><dl class="attribute">
+<span class="target" id="module-pyscf.cc.ccsd"></span><p>RCCSD for real integrals
+8-fold permutation symmetry has been used
+(ij|kl) = (ji|kl) = (kl|ij) = ...</p>
+<dl class="attribute">
 <dt id="pyscf.cc.ccsd.CC">
 <code class="descclassname">pyscf.cc.ccsd.</code><code class="descname">CC</code><a class="headerlink" href="#pyscf.cc.ccsd.CC" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="#pyscf.cc.ccsd.CCSD" title="pyscf.cc.ccsd.CCSD"><code class="xref py py-class docutils literal"><span class="pre">CCSD</span></code></a></p>
@@ -688,6 +700,8 @@ occupied and virtual orbitals can be frozen in CC calculation.</p>
  <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>DIIS space size.  Default is 6.</dd>
 <dt>diis_start_cycle</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>The step to start DIIS.  Default is 0.</dd>
+<dt>iterative_damping</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>The self consistent damping parameter.</dd>
 <dt>direct</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>AO-direct CCSD. Default is False.</dd>
 <dt>frozen</dt>
@@ -715,10 +729,10 @@ occupied and virtual orbitals can be frozen in CC calculation.</p>
  <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>CCSD correlation correction</dd>
 <dt>e_tot</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>Total CCSD energy (HF + correlation)</dd>
-<dt>t1, t2</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier"></span><dd>T amplitudes t1[i,a], t2[i,j,a,b]  (i,j in occ, a,b in virt)</dd>
-<dt>l1, l2</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier"></span><dd>Lambda amplitudes l1[i,a], l2[i,j,a,b]  (i,j in occ, a,b in virt)</dd>
+<dt>t1, t2 :</dt>
+<dd>T amplitudes t1[i,a], t2[i,j,a,b]  (i,j in occ, a,b in virt)</dd>
+<dt>l1, l2 :</dt>
+<dd>Lambda amplitudes l1[i,a], l2[i,j,a,b]  (i,j in occ, a,b in virt)</dd>
 </dl>
 </div></blockquote>
 <dl class="method">
@@ -737,8 +751,8 @@ automatically applied in the solver.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">cc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cc_scanner</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">CCSD</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span><span class="o">.</span><span class="n">as_scanner</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e_tot</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">cc_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1.1&#39;</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e_tot</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">cc_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1.5&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e_tot</span> <span class="o">=</span> <span class="n">cc_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1.1&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e_tot</span> <span class="o">=</span> <span class="n">cc_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1.5&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -747,6 +761,14 @@ automatically applied in the solver.</p>
 <dt id="pyscf.cc.ccsd.CCSD.energy">
 <code class="descname">energy</code><span class="sig-paren">(</span><em>mycc</em>, <em>t1</em>, <em>t2</em>, <em>eris</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.cc.ccsd.CCSD.energy" title="Permalink to this definition">¶</a></dt>
 <dd><p>CCSD correlation energy</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.cc.ccsd.CCSD.get_frozen_mask">
+<code class="descname">get_frozen_mask</code><span class="sig-paren">(</span><em>mp</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.cc.ccsd.CCSD.get_frozen_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get boolean mask for the restricted reference orbitals.</p>
+<p>In the returned boolean (mask) array of frozen orbital indices, the
+element is False if it corresonds to the frozen orbital.</p>
 </dd></dl>
 
 <dl class="method">
@@ -781,8 +803,8 @@ automatically applied in the solver.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">cc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cc_scanner</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">CCSD</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span><span class="o">.</span><span class="n">as_scanner</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e_tot</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">cc_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1.1&#39;</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e_tot</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">cc_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1.5&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e_tot</span> <span class="o">=</span> <span class="n">cc_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1.1&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e_tot</span> <span class="o">=</span> <span class="n">cc_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1.5&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -809,7 +831,12 @@ methods, including EOM-IP-CCSD, EOM-EA-CCSD, EOM-EE-CCSD, EOM-SF-CCSD.</p>
 <p>Ground-state CCSD is performed in optimized ccsd.CCSD and EOM is performed here.</p>
 </dd></dl>
 
-<span class="target" id="module-pyscf.cc.rccsd"></span><dl class="class">
+<span class="target" id="module-pyscf.cc.rccsd"></span><p>Restricted CCSD implementation which supports both real and complex integrals.
+The 4-index integrals are saved on disk entirely (without using any symmetry).
+This code is slower than the pyscf.cc.ccsd implementation.</p>
+<p>Note MO integrals are treated in chemist&#8217;s notation</p>
+<p>Ref: Hirata et al., J. Chem. Phys. 120, 2581 (2004)</p>
+<dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">pyscf.cc.rccsd.</code><code class="descname">RCCSD</code><span class="sig-paren">(</span><em>mf</em>, <em>frozen=0</em>, <em>mo_coeff=None</em>, <em>mo_occ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/rccsd.html#RCCSD"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>restricted CCSD with IP-EOM, EA-EOM, EE-EOM, and SF-EOM capabilities</p>
@@ -828,71 +855,6 @@ methods, including EOM-IP-CCSD, EOM-EA-CCSD, EOM-EE-CCSD, EOM-SF-CCSD.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="pyscf.cc.rccsd.RCCSD.eaccsd">
-<code class="descname">eaccsd</code><span class="sig-paren">(</span><em>nroots=1</em>, <em>left=False</em>, <em>koopmans=False</em>, <em>guess=None</em>, <em>partition=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/rccsd.html#RCCSD.eaccsd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.rccsd.RCCSD.eaccsd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate (N+1)-electron charged excitations via EA-EOM-CCSD.</p>
-<dl class="docutils">
-<dt>Kwargs:</dt>
-<dd>See ipccd()</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyscf.cc.rccsd.RCCSD.eeccsd">
-<code class="descname">eeccsd</code><span class="sig-paren">(</span><em>nroots=1</em>, <em>koopmans=False</em>, <em>guess=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/rccsd.html#RCCSD.eeccsd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.rccsd.RCCSD.eeccsd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate N-electron neutral excitations via EE-EOM-CCSD.</p>
-<dl class="docutils">
-<dt>Kwargs:</dt>
-<dd><dl class="first last docutils">
-<dt>nroots</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>Number of roots (eigenvalues) requested</dd>
-<dt>koopmans</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>Calculate Koopmans&#8217;-like (1p1h) excitations only, targeting via
-overlap.</dd>
-<dt>guess</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">list of ndarray</span><dd>List of guess vectors to use for targeting via overlap.</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyscf.cc.rccsd.RCCSD.eomsf_ccsd_matvec">
-<code class="descname">eomsf_ccsd_matvec</code><span class="sig-paren">(</span><em>vector</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/rccsd.html#RCCSD.eomsf_ccsd_matvec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.rccsd.RCCSD.eomsf_ccsd_matvec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Spin flip EOM-CCSD</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyscf.cc.rccsd.RCCSD.ipccsd">
-<code class="descname">ipccsd</code><span class="sig-paren">(</span><em>nroots=1</em>, <em>left=False</em>, <em>koopmans=False</em>, <em>guess=None</em>, <em>partition=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/rccsd.html#RCCSD.ipccsd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.rccsd.RCCSD.ipccsd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate (N-1)-electron charged excitations via IP-EOM-CCSD.</p>
-<dl class="docutils">
-<dt>Kwargs:</dt>
-<dd><dl class="first last docutils">
-<dt>nroots</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>Number of roots (eigenvalues) requested</dd>
-<dt>partition</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">bool or str</span><dd>Use a matrix-partitioning for the doubles-doubles block.
-Can be None, &#8216;mp&#8217; (Moller-Plesset, i.e. orbital energies on the diagonal),
-or &#8216;full&#8217; (full diagonal elements).</dd>
-<dt>koopmans</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>Calculate Koopmans&#8217;-like (quasiparticle) excitations only, targeting via
-overlap.</dd>
-<dt>guess</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">list of ndarray</span><dd>List of guess vectors to use for targeting via overlap.</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="pyscf.cc.rccsd.kernel">
-<code class="descclassname">pyscf.cc.rccsd.</code><code class="descname">kernel</code><span class="sig-paren">(</span><em>cc</em>, <em>eris</em>, <em>t1=None</em>, <em>t2=None</em>, <em>max_cycle=50</em>, <em>tol=1e-08</em>, <em>tolnormt=1e-06</em>, <em>verbose=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/rccsd.html#kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.rccsd.kernel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exactly the same as pyscf.cc.ccsd.kernel, which calls a
-<em>local</em> energy() function.</p>
 </dd></dl>
 
 </div>
@@ -909,38 +871,6 @@ not support complex integrals.</p>
 <dd></dd></dl>
 
 <span class="target" id="module-pyscf.cc.uccsd"></span><p>UCCSD with spatial integrals</p>
-<dl class="function">
-<dt id="pyscf.cc.uccsd.get_umoidx">
-<code class="descclassname">pyscf.cc.uccsd.</code><code class="descname">get_umoidx</code><span class="sig-paren">(</span><em>cc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/uccsd.html#get_umoidx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.uccsd.get_umoidx" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get MO boolean indices for unrestricted reference, accounting for frozen orbs.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyscf.cc.uccsd.kernel">
-<code class="descclassname">pyscf.cc.uccsd.</code><code class="descname">kernel</code><span class="sig-paren">(</span><em>cc</em>, <em>eris</em>, <em>t1=None</em>, <em>t2=None</em>, <em>max_cycle=50</em>, <em>tol=1e-08</em>, <em>tolnormt=1e-06</em>, <em>verbose=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/uccsd.html#kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.uccsd.kernel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exactly the same as pyscf.cc.ccsd.kernel, which calls a
-<em>local</em> energy() function.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyscf.cc.uccsd.uspatial2spin">
-<code class="descclassname">pyscf.cc.uccsd.</code><code class="descname">uspatial2spin</code><span class="sig-paren">(</span><em>cc</em>, <em>moidx</em>, <em>mo_coeff</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/uccsd.html#uspatial2spin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.uccsd.uspatial2spin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert the results of an unrestricted mean-field calculation to spin-orbital form.</p>
-<p>Spin-orbital ordering is determined by orbital energy without regard for spin.</p>
-<dl class="docutils">
-<dt>Returns:</dt>
-<dd><dl class="first last docutils">
-<dt>fock</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">(nso,nso) ndarray</span><dd>The Fock matrix in the basis of spin-orbitals</dd>
-<dt>so_coeff</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">(nao, nso) ndarray</span><dd>The matrix of spin-orbital coefficients in the AO basis</dd>
-<dt>spin</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">(nso,) ndarary</span><dd>The spin (0 or 1) of each spin-orbital</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 <div class="section" id="cc-addons">
 <h3>cc.addons<a class="headerlink" href="#cc-addons" title="Permalink to this headline">¶</a></h3>
@@ -971,13 +901,15 @@ spin-orbital representation</p>
 </div>
 <div class="section" id="ccsd-t">
 <h3>CCSD(T)<a class="headerlink" href="#ccsd-t" title="Permalink to this headline">¶</a></h3>
-<span class="target" id="module-pyscf.cc.ccsd_t"></span></div>
+<span class="target" id="module-pyscf.cc.ccsd_t"></span><p>RHF-CCSD(T) for real integrals</p>
+</div>
 <div class="section" id="module-pyscf.cc.ccsd_grad">
 <span id="ccsd-gradients"></span><h3>CCSD gradients<a class="headerlink" href="#module-pyscf.cc.ccsd_grad" title="Permalink to this headline">¶</a></h3>
+<p>CCSD analytical nuclear gradients</p>
 <dl class="function">
 <dt id="pyscf.cc.ccsd_grad.as_scanner">
-<code class="descclassname">pyscf.cc.ccsd_grad.</code><code class="descname">as_scanner</code><span class="sig-paren">(</span><em>cc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/ccsd_grad.html#as_scanner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.ccsd_grad.as_scanner" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generating a scanner/solver for CCSD PES.</p>
+<code class="descclassname">pyscf.cc.ccsd_grad.</code><code class="descname">as_scanner</code><span class="sig-paren">(</span><em>grad_cc</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.cc.ccsd_grad.as_scanner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generating a nuclear gradients scanner/solver (for geometry optimizer).</p>
 <p>The returned solver is a function. This function requires one argument
 &#8220;mol&#8221; as input and returns total CCSD energy.</p>
 <p>The solver will automatically use the results of last calculation as the
@@ -989,7 +921,7 @@ automatically applied in the solver.</p>
 <p>Examples:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">cc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cc_scanner</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">CCSD</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span><span class="o">.</span><span class="n">as_scanner</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cc_scanner</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">CCSD</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span><span class="o">.</span><span class="n">nuc_grad_method</span><span class="p">()</span><span class="o">.</span><span class="n">as_scanner</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">e_tot</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">cc_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1.1&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">e_tot</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">cc_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1.5&#39;</span><span class="p">))</span>
 </pre></div>

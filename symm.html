@@ -907,6 +907,30 @@ right symmetry.</p>
 <span class="n">cas_space_symmetry</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;E1gx&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;E1gy&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;E1ux&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;E1uy&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">}</span>
 <span class="n">mo</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">sort_mo_by_irrep</span><span class="p">(</span><span class="n">mymc</span><span class="p">,</span> <span class="n">myhf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">cas_space_symmetry</span><span class="p">)</span>
 <span class="n">mymc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
+
+
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+    <span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;Ti&#39;</span><span class="p">,</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;ccpvdz&#39;</span><span class="p">,</span>
+    <span class="n">symmetry</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">spin</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">myhf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">myhf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">myhf</span><span class="o">.</span><span class="n">analyze</span><span class="p">()</span>
+
+<span class="n">mymc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">myhf</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="c1"># Put 3d, 4d, 4s, 4p orbtials in active space</span>
+<span class="n">cas_space_symmetry</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;A1g&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>  <span class="c1"># 4s, 3d(z^2), 4d(z^2)</span>
+                      <span class="s1">&#39;E2gx&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;E2gy&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;E1gx&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;E1gy&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># 3d and 4d</span>
+                      <span class="s1">&#39;A1u&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;E1ux&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;E1uy&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># 4p</span>
+                     <span class="p">}</span>
+<span class="n">mo</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">sort_mo_by_irrep</span><span class="p">(</span><span class="n">mymc</span><span class="p">,</span> <span class="n">myhf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">cas_space_symmetry</span><span class="p">)</span>
+<span class="n">mymc</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">mymc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">wfnsym</span> <span class="o">=</span> <span class="s1">&#39;E3gx&#39;</span>
+<span class="n">mymc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
+<span class="n">mymc</span><span class="o">.</span><span class="n">analyze</span><span class="p">()</span>
 </pre></div>
 </div>
 <ul>
@@ -1147,6 +1171,12 @@ projects out non-symmetric components for each orbital.</p>
 </div>
 <div class="section" id="module-pyscf.symm.cg">
 <span id="clebsch-gordon-coefficients"></span><h2>Clebsch Gordon coefficients<a class="headerlink" href="#module-pyscf.symm.cg" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyscf.symm.cg.cg_spin">
+<code class="descclassname">pyscf.symm.cg.</code><code class="descname">cg_spin</code><span class="sig-paren">(</span><em>l</em>, <em>jdouble</em>, <em>mjdouble</em>, <em>spin</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/symm/cg.html#cg_spin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.symm.cg.cg_spin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clebsch Gordon coefficient of &lt;l,m,1/2,spin|j,mj&gt;</p>
+</dd></dl>
+
 </div>
 </div>
 

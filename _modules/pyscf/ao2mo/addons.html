@@ -180,6 +180,19 @@
             
   <h1>Source code for pyscf.ao2mo.addons</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># Copyright 2014-2018 The PySCF Developers. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 <span class="c1"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
 <span class="c1">#</span>
@@ -223,8 +236,8 @@
 
 
 <div class="viewcode-block" id="restore"><a class="viewcode-back" href="../../../ao2mo.html#pyscf.ao2mo.addons.restore">[docs]</a><span class="k">def</span> <span class="nf">restore</span><span class="p">(</span><span class="n">symmetry</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">tao</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">r&#39;&#39;&#39;Convert the 2e integrals between different level of permutation symmetry</span>
-<span class="sd">    (8-fold, 4-fold, or no symmetry)</span>
+    <span class="sd">r&#39;&#39;&#39;Convert the 2e integrals (in Chemist&#39;s notation) between different</span>
+<span class="sd">    level of permutation symmetry (8-fold, 4-fold, or no symmetry)</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        symmetry : int or str</span>
@@ -235,6 +248,9 @@
 <span class="sd">            | &#39;s1&#39; or &#39;1&#39; or 1 : no symmetry</span>
 <span class="sd">            | &#39;s2ij&#39; or &#39;2ij&#39; : symmetric ij pair for (ij|kl) (TODO)</span>
 <span class="sd">            | &#39;s2ij&#39; or &#39;2kl&#39; : symmetric kl pair for (ij|kl) (TODO)</span>
+
+<span class="sd">            Note the 4-fold symmetry requires (ij|kl) == (ij|lk) == (ij|lk)</span>
+<span class="sd">            while (ij|kl) != (kl|ij) is not required.</span>
 
 <span class="sd">        eri : ndarray</span>
 <span class="sd">            The symmetry of eri is determined by the size of eri and norb</span>
@@ -307,6 +323,12 @@
     <span class="k">if</span> <span class="n">origsym</span> <span class="o">==</span> <span class="n">targetsym</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">eri</span>
 
+    <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">eri</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;4-fold symmetry and 8-fold symmetry are not &#39;</span>
+                           <span class="s1">&#39;available for complex integrals&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">libao2mo</span><span class="p">,</span> <span class="s1">&#39;AO2MOrestore_nr</span><span class="si">%s</span><span class="s1">to</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">origsym</span><span class="p">,</span><span class="n">targetsym</span><span class="p">))</span>
+
     <span class="k">if</span> <span class="n">targetsym</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
         <span class="n">eri1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">norb</span><span class="p">,</span><span class="n">norb</span><span class="p">,</span><span class="n">norb</span><span class="p">,</span><span class="n">norb</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">eri</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">targetsym</span> <span class="o">==</span> <span class="s1">&#39;4&#39;</span><span class="p">:</span>
@@ -314,20 +336,11 @@
     <span class="k">elif</span> <span class="n">targetsym</span> <span class="o">==</span> <span class="s1">&#39;8&#39;</span><span class="p">:</span>
         <span class="n">eri1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">npair</span><span class="o">*</span><span class="p">(</span><span class="n">npair</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">eri</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">_call_restore</span><span class="p">(</span><span class="n">origsym</span><span class="p">,</span> <span class="n">targetsym</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">eri1</span><span class="p">,</span> <span class="n">norb</span><span class="p">)</span></div>
-
-<span class="k">def</span> <span class="nf">_call_restore</span><span class="p">(</span><span class="n">origsym</span><span class="p">,</span> <span class="n">targetsym</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">eri1</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">tao</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">eri</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;TODO&#39;</span><span class="p">)</span>
-        <span class="c1">#if tao is None:</span>
-        <span class="c1">#    raise RuntimeError(&#39;need time-reversal mapping&#39;)</span>
-        <span class="c1">#fn = getattr(libao2mo, &#39;AO2MOrestore_r&#39;+fname)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">fn</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">libao2mo</span><span class="p">,</span> <span class="s1">&#39;AO2MOrestore_nr</span><span class="si">%s</span><span class="s1">to</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">origsym</span><span class="p">,</span><span class="n">targetsym</span><span class="p">))</span>
     <span class="n">fn</span><span class="p">(</span><span class="n">eri</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
        <span class="n">eri1</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">norb</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">eri1</span>
+
+    <span class="k">return</span> <span class="n">eri1</span></div>
 
 <span class="k">def</span> <span class="nf">_stand_sym_code</span><span class="p">(</span><span class="n">sym</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>

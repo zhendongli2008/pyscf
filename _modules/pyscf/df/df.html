@@ -180,6 +180,19 @@
             
   <h1>Source code for pyscf.df.df</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># Copyright 2014-2018 The PySCF Developers. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 <span class="c1"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
 <span class="c1">#</span>
@@ -202,6 +215,7 @@
 <span class="kn">from</span> <span class="nn">pyscf.df</span> <span class="k">import</span> <span class="n">df_jk</span>
 <span class="kn">from</span> <span class="nn">pyscf.ao2mo</span> <span class="k">import</span> <span class="n">_ao2mo</span>
 <span class="kn">from</span> <span class="nn">pyscf.ao2mo.incore</span> <span class="k">import</span> <span class="n">_conc_mos</span><span class="p">,</span> <span class="n">iden_coeffs</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">__config__</span>
 
 <div class="viewcode-block" id="DF"><a class="viewcode-back" href="../../../df.html#pyscf.df.df.DF">[docs]</a><span class="k">class</span> <span class="nc">DF</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">StreamObject</span><span class="p">):</span>
     <span class="sd">r&#39;&#39;&#39;</span>
@@ -242,7 +256,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">stdout</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">verbose</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_memory</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">max_memory</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">auxbasis</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_auxbasis</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="c1">##################################################</span>
 <span class="c1"># Following are not input options</span>
@@ -251,8 +265,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_cderi_to_save</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">lib</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">)</span>
 <span class="c1"># If _cderi is specified, the 3C-integral tensor will be read from this file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cderi</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_call_count</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">blockdim</span> <span class="o">=</span> <span class="mi">240</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_call_count</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;df_df_DF_call_count&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blockdim</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;df_df_DF_blockdim&#39;</span><span class="p">,</span> <span class="mi">240</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
     <span class="nd">@property</span>
@@ -260,9 +274,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auxbasis</span>
     <span class="nd">@auxbasis</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">auxbasis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_auxbasis</span> <span class="o">=</span> <span class="n">x</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">auxmol</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cderi</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auxbasis</span> <span class="o">!=</span> <span class="n">x</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_auxbasis</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">auxmol</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cderi</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
@@ -322,20 +337,27 @@
     <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blksize</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cderi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">blksize</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">blksize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockdim</span>
         <span class="k">with</span> <span class="n">addons</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cderi</span><span class="p">,</span> <span class="s1">&#39;j3c&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">feri</span><span class="p">:</span>
             <span class="n">naoaux</span> <span class="o">=</span> <span class="n">feri</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">b0</span><span class="p">,</span> <span class="n">b1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">naoaux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockdim</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">b0</span><span class="p">,</span> <span class="n">b1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">naoaux</span><span class="p">,</span> <span class="n">blksize</span><span class="p">):</span>
                 <span class="n">eri1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">feri</span><span class="p">[</span><span class="n">b0</span><span class="p">:</span><span class="n">b1</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
                 <span class="k">yield</span> <span class="n">eri1</span>
 
     <span class="k">def</span> <span class="nf">prange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_call_count</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_count</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">step</span><span class="p">)):</span>
-                <span class="k">yield</span> <span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">step</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_call_count</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_call_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_count</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">step</span><span class="p">)):</span>
+                    <span class="k">yield</span> <span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">step</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+                    <span class="k">yield</span> <span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">step</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
                 <span class="k">yield</span> <span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">step</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
@@ -360,7 +382,8 @@
         <span class="k">return</span> <span class="n">ao2mo</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">ao_eri</span><span class="p">,</span> <span class="n">nao</span><span class="p">)</span>
     <span class="n">get_ao_eri</span> <span class="o">=</span> <span class="n">get_eri</span>
 
-    <span class="k">def</span> <span class="nf">ao2mo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeffs</span><span class="p">,</span> <span class="n">compact</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">ao2mo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeffs</span><span class="p">,</span>
+              <span class="n">compact</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;df_df_DF_ao2mo_compact&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mo_coeffs</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">mo_coeffs</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">mo_coeffs</span> <span class="o">=</span> <span class="p">(</span><span class="n">mo_coeffs</span><span class="p">,)</span> <span class="o">*</span> <span class="mi">4</span>
         <span class="n">ijmosym</span><span class="p">,</span> <span class="n">nij_pair</span><span class="p">,</span> <span class="n">moij</span><span class="p">,</span> <span class="n">ijslice</span> <span class="o">=</span> <span class="n">_conc_mos</span><span class="p">(</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">compact</span><span class="p">)</span>

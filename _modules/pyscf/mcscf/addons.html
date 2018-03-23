@@ -180,22 +180,40 @@
             
   <h1>Source code for pyscf.mcscf.addons</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># Copyright 2014-2018 The PySCF Developers. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 <span class="c1"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="k">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">fci</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">scf</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">symm</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">__config__</span>
+
+<span class="n">BASE</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;mcscf_addons_sort_mo_base&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">MAP2HF_TOL</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;mcscf_addons_map2hf_tol&#39;</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="sort_mo"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.sort_mo">[docs]</a><span class="k">def</span> <span class="nf">sort_mo</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">caslst</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="sort_mo"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.sort_mo">[docs]</a><span class="k">def</span> <span class="nf">sort_mo</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">caslst</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">BASE</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Pick orbitals for CAS space</span>
 
 <span class="sd">    Args:</span>
@@ -260,11 +278,11 @@
                              <span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span><span class="n">idx</span><span class="p">[</span><span class="n">ncore</span><span class="p">[</span><span class="mi">1</span><span class="p">]:]]))</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">mo_a</span><span class="p">,</span> <span class="n">mo_b</span><span class="p">)</span></div>
 
-<span class="k">def</span> <span class="nf">select_mo_by_irrep</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span>  <span class="n">cas_occ_num</span><span class="p">,</span> <span class="n">mo</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">select_mo_by_irrep</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span>  <span class="n">cas_occ_num</span><span class="p">,</span> <span class="n">mo</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">BASE</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;This function has been replaced by function caslst_by_irrep&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="caslst_by_irrep"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.caslst_by_irrep">[docs]</a><span class="k">def</span> <span class="nf">caslst_by_irrep</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">cas_irrep_nocc</span><span class="p">,</span>
-                    <span class="n">cas_irrep_ncore</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">cas_irrep_ncore</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">BASE</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Given number of active orbitals for each irrep, return the orbital</span>
 <span class="sd">    indices of active space</span>
 
@@ -440,9 +458,9 @@
 <span class="sd">    -108.162863845084</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">caslst</span> <span class="o">=</span> <span class="n">caslst_by_irrep</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">cas_irrep_nocc</span><span class="p">,</span>
-                             <span class="n">cas_irrep_ncore</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                             <span class="n">cas_irrep_ncore</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="c1">#FIXME: update mo_coeff.orbsym?</span>
-    <span class="k">return</span> <span class="n">sort_mo</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">caslst</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">sort_mo</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">caslst</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="project_init_guess"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.project_init_guess">[docs]</a><span class="k">def</span> <span class="nf">project_init_guess</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">init_mo</span><span class="p">,</span> <span class="n">prev_mol</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -497,6 +515,17 @@
     <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">lo</span>
 
     <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="n">mfmo</span><span class="p">,</span> <span class="n">init_mo</span><span class="p">,</span> <span class="n">ncore</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">s_init_mo</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;pi,pi-&gt;i&#39;</span><span class="p">,</span> <span class="n">init_mo</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">s</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">init_mo</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">s_init_mo</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">7</span><span class="p">:</span>
+            <span class="c1"># Initial guess orbitals are orthonormal</span>
+            <span class="k">return</span> <span class="n">init_mo</span>
+<span class="c1"># TODO: test whether the canonicalized orbitals are better than the projected orbitals</span>
+<span class="c1"># Be careful that the ordering of the canonicalized orbitals may be very different</span>
+<span class="c1"># to the CASSCF orbitals.</span>
+<span class="c1">#        else:</span>
+<span class="c1">#            fock = casscf.get_fock(mc, init_mo, casscf.ci)</span>
+<span class="c1">#            return casscf._scf.eig(fock, s)[1]</span>
+
         <span class="n">nocc</span> <span class="o">=</span> <span class="n">ncore</span> <span class="o">+</span> <span class="n">casscf</span><span class="o">.</span><span class="n">ncas</span>
         <span class="k">if</span> <span class="n">ncore</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">mo0core</span> <span class="o">=</span> <span class="n">init_mo</span><span class="p">[:,:</span><span class="n">ncore</span><span class="p">]</span>
@@ -514,18 +543,23 @@
                   <span class="o">-</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mocore</span><span class="p">,</span> <span class="n">mocore</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">init_mo</span><span class="p">[:,</span><span class="n">ncore</span><span class="p">:</span><span class="n">nocc</span><span class="p">]))</span>
             <span class="n">mocc</span> <span class="o">=</span> <span class="n">lo</span><span class="o">.</span><span class="n">orth</span><span class="o">.</span><span class="n">vec_lowdin</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">mocore</span><span class="p">,</span> <span class="n">mocas</span><span class="p">)),</span> <span class="n">s</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">mocc</span> <span class="o">=</span> <span class="n">init_mo</span><span class="p">[:,:</span><span class="n">nocc</span><span class="p">]</span>
+            <span class="n">mocc</span> <span class="o">=</span> <span class="n">lo</span><span class="o">.</span><span class="n">orth</span><span class="o">.</span><span class="n">vec_lowdin</span><span class="p">(</span><span class="n">init_mo</span><span class="p">[:,:</span><span class="n">nocc</span><span class="p">],</span> <span class="n">s</span><span class="p">)</span>
 
         <span class="c1"># remove core and active space from rest</span>
         <span class="k">if</span> <span class="n">mocc</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">mfmo</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="n">rest</span> <span class="o">=</span> <span class="n">mfmo</span> <span class="o">-</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mocc</span><span class="p">,</span> <span class="n">mocc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">mfmo</span><span class="p">))</span>
-            <span class="n">e</span><span class="p">,</span> <span class="n">u</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">rest</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">rest</span><span class="p">)))</span>
-            <span class="n">restorb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rest</span><span class="p">,</span> <span class="n">u</span><span class="p">[:,</span><span class="n">e</span><span class="o">&gt;</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">7</span><span class="p">])</span>
             <span class="k">if</span> <span class="n">casscf</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">symmetry</span><span class="p">:</span>
-                <span class="n">t</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s1">&#39;int1e_kin&#39;</span><span class="p">)</span>
-                <span class="n">t</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">restorb</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">restorb</span><span class="p">))</span>
-                <span class="n">e</span><span class="p">,</span> <span class="n">u</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-                <span class="n">restorb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">restorb</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+                <span class="n">restorb</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">orbsym</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf_symm</span><span class="o">.</span><span class="n">get_orbsym</span><span class="p">(</span><span class="n">casscf</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">mfmo</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">ir</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">orbsym</span><span class="p">):</span>
+                    <span class="n">mo_ir</span> <span class="o">=</span> <span class="n">mfmo</span><span class="p">[:,</span><span class="n">orbsym</span><span class="o">==</span><span class="n">ir</span><span class="p">]</span>
+                    <span class="n">rest</span> <span class="o">=</span> <span class="n">mo_ir</span> <span class="o">-</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mocc</span><span class="p">,</span> <span class="n">mocc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">mo_ir</span><span class="p">))</span>
+                    <span class="n">e</span><span class="p">,</span> <span class="n">u</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">rest</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">rest</span><span class="p">)))</span>
+                    <span class="n">restorb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rest</span><span class="p">,</span> <span class="n">u</span><span class="p">[:,</span><span class="n">e</span><span class="o">&gt;</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">7</span><span class="p">]))</span>
+                <span class="n">restorb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">restorb</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rest</span> <span class="o">=</span> <span class="n">mfmo</span> <span class="o">-</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">mocc</span><span class="p">,</span> <span class="n">mocc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">mfmo</span><span class="p">))</span>
+                <span class="n">e</span><span class="p">,</span> <span class="n">u</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">rest</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">rest</span><span class="p">)))</span>
+                <span class="n">restorb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rest</span><span class="p">,</span> <span class="n">u</span><span class="p">[:,</span><span class="n">e</span><span class="o">&gt;</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">7</span><span class="p">])</span>
             <span class="n">mo</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">mocc</span><span class="p">,</span> <span class="n">restorb</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">mo</span> <span class="o">=</span> <span class="n">mocc</span>
@@ -541,18 +575,29 @@
     <span class="n">ncore</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">ncore</span>
     <span class="n">mfmo</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">mo_coeff</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">get_ovlp</span><span class="p">()</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ncore</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
-        <span class="k">if</span> <span class="n">prev_mol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">prev_mol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">init_mo</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">mfmo</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Initial guess orbitals has wrong dimension&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">gto</span><span class="o">.</span><span class="n">same_mol</span><span class="p">(</span><span class="n">prev_mol</span><span class="p">,</span> <span class="n">casscf</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">cmp_basis</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ncore</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>  <span class="c1"># RHF</span>
             <span class="n">init_mo</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">project_mo_nr2nr</span><span class="p">(</span><span class="n">prev_mol</span><span class="p">,</span> <span class="n">init_mo</span><span class="p">,</span> <span class="n">casscf</span><span class="o">.</span><span class="n">mol</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">assert</span><span class="p">(</span><span class="n">mfmo</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">init_mo</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="n">mo</span> <span class="o">=</span> <span class="n">project</span><span class="p">(</span><span class="n">mfmo</span><span class="p">,</span> <span class="n">init_mo</span><span class="p">,</span> <span class="n">ncore</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> <span class="c1"># UHF-based CASSCF</span>
-        <span class="k">if</span> <span class="n">prev_mol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">init_mo</span> <span class="o">=</span> <span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">project_mo_nr2nr</span><span class="p">(</span><span class="n">prev_mol</span><span class="p">,</span> <span class="n">init_mo</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">casscf</span><span class="o">.</span><span class="n">mol</span><span class="p">),</span>
                        <span class="n">scf</span><span class="o">.</span><span class="n">addons</span><span class="o">.</span><span class="n">project_mo_nr2nr</span><span class="p">(</span><span class="n">prev_mol</span><span class="p">,</span> <span class="n">init_mo</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">casscf</span><span class="o">.</span><span class="n">mol</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">gto</span><span class="o">.</span><span class="n">same_basis_set</span><span class="p">(</span><span class="n">prev_mol</span><span class="p">,</span> <span class="n">casscf</span><span class="o">.</span><span class="n">mol</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ncore</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>  <span class="c1"># RHF</span>
+            <span class="n">fock</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">get_fock</span><span class="p">(</span><span class="n">init_mo</span><span class="p">,</span> <span class="n">casscf</span><span class="o">.</span><span class="n">ci</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">casscf</span><span class="o">.</span><span class="n">_scf</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">fock</span><span class="p">,</span> <span class="n">s</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">assert</span><span class="p">(</span><span class="n">mfmo</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">init_mo</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Project initial for UHF orbitals.&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Project initial guess from different system.&#39;</span><span class="p">)</span>
+
+<span class="c1"># Be careful with the orbital projection. The projection may lead to bad</span>
+<span class="c1"># initial guess orbitals if the geometry is dramatically changed.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ncore</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+        <span class="n">mo</span> <span class="o">=</span> <span class="n">project</span><span class="p">(</span><span class="n">mfmo</span><span class="p">,</span> <span class="n">init_mo</span><span class="p">,</span> <span class="n">ncore</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># UHF-based CASSCF</span>
         <span class="n">mo</span> <span class="o">=</span> <span class="p">(</span><span class="n">project</span><span class="p">(</span><span class="n">mfmo</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">init_mo</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ncore</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="p">),</span>
               <span class="n">project</span><span class="p">(</span><span class="n">mfmo</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">init_mo</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ncore</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">mo</span></div>
@@ -649,7 +694,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">casscf</span><span class="o">.</span><span class="n">cas_natorb</span><span class="p">(</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="n">sort</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="map2hf"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.map2hf">[docs]</a><span class="k">def</span> <span class="nf">map2hf</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">mf_mo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=.</span><span class="mi">5</span><span class="p">):</span>
+<div class="viewcode-block" id="map2hf"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.map2hf">[docs]</a><span class="k">def</span> <span class="nf">map2hf</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">mf_mo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">BASE</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">MAP2HF_TOL</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;The overlap between the CASSCF optimized orbitals and the canonical HF orbitals.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">if</span> <span class="n">mf_mo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -750,8 +795,15 @@
         <span class="k">def</span> <span class="nf">make_rdm1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
             <span class="n">dm1</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">wi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">weights</span><span class="p">):</span>
-                <span class="n">dm1</span> <span class="o">+=</span> <span class="n">wi</span><span class="o">*</span><span class="n">fcibase_class</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
+                <span class="n">dm1</span> <span class="o">+=</span> <span class="n">wi</span> <span class="o">*</span> <span class="n">fcibase_class</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">dm1</span>
+        <span class="k">def</span> <span class="nf">make_rdm1s</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
+            <span class="n">dm1a</span><span class="p">,</span> <span class="n">dm1b</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">wi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">weights</span><span class="p">):</span>
+                <span class="n">dm1s</span> <span class="o">=</span> <span class="n">fcibase_class</span><span class="o">.</span><span class="n">make_rdm1s</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
+                <span class="n">dm1a</span> <span class="o">+=</span> <span class="n">wi</span> <span class="o">*</span> <span class="n">dm1s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">dm1b</span> <span class="o">+=</span> <span class="n">wi</span> <span class="o">*</span> <span class="n">dm1s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">dm1a</span><span class="p">,</span> <span class="n">dm1b</span>
         <span class="k">def</span> <span class="nf">make_rdm12</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">):</span>
             <span class="n">rdm1</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">rdm2</span> <span class="o">=</span> <span class="mi">0</span>
@@ -921,6 +973,13 @@
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loop_civecs</span><span class="p">(</span><span class="n">fcisolvers</span><span class="p">,</span> <span class="n">ci0</span><span class="p">)):</span>
                 <span class="n">dm1</span> <span class="o">+=</span> <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">solver</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">get_nelec</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">nelec</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">dm1</span>
+        <span class="k">def</span> <span class="nf">make_rdm1s</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">dm1a</span><span class="p">,</span> <span class="n">dm1b</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loop_civecs</span><span class="p">(</span><span class="n">fcisolvers</span><span class="p">,</span> <span class="n">ci0</span><span class="p">)):</span>
+                <span class="n">dm1s</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">make_rdm1s</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">get_nelec</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">nelec</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">dm1a</span> <span class="o">+=</span> <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">dm1s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">dm1b</span> <span class="o">+=</span> <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">dm1s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">dm1a</span><span class="p">,</span> <span class="n">dm1b</span>
         <span class="k">def</span> <span class="nf">make_rdm12</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ci0</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="n">rdm1</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">rdm2</span> <span class="o">=</span> <span class="mi">0</span>
@@ -947,100 +1006,7 @@
     <span class="k">return</span> <span class="n">casscf</span></div>
 <span class="n">state_average_mix</span> <span class="o">=</span> <span class="n">state_average_mix_</span>
 
-<div class="viewcode-block" id="hot_tuning_"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.addons.hot_tuning_">[docs]</a><span class="k">def</span> <span class="nf">hot_tuning_</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="n">configfile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Allow you to tune CASSCF parameters at the runtime</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="kn">import</span> <span class="nn">traceback</span>
-    <span class="kn">import</span> <span class="nn">tempfile</span>
-    <span class="kn">import</span> <span class="nn">json</span>
-    <span class="c1">#from numpy import array</span>
-
-    <span class="k">if</span> <span class="n">configfile</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">fconfig</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.json&#39;</span><span class="p">)</span>
-        <span class="n">configfile</span> <span class="o">=</span> <span class="n">fconfig</span><span class="o">.</span><span class="n">name</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="s1">&#39;Function hot_tuning_ dumps CASSCF parameters in config file</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                <span class="n">configfile</span><span class="p">)</span>
-
-    <span class="n">exclude_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="s1">&#39;stdout&#39;</span><span class="p">,</span> <span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="s1">&#39;ci&#39;</span><span class="p">,</span> <span class="s1">&#39;mo_coeff&#39;</span><span class="p">,</span> <span class="s1">&#39;mo_energy&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;e_cas&#39;</span><span class="p">,</span> <span class="s1">&#39;e_tot&#39;</span><span class="p">,</span> <span class="s1">&#39;ncore&#39;</span><span class="p">,</span> <span class="s1">&#39;ncas&#39;</span><span class="p">,</span> <span class="s1">&#39;nelecas&#39;</span><span class="p">,</span> <span class="s1">&#39;mol&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;callback&#39;</span><span class="p">,</span> <span class="s1">&#39;fcisolver&#39;</span><span class="p">))</span>
-
-    <span class="n">casscf_settings</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">casscf</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">exclude_keys</span><span class="p">):</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">dict</span><span class="p">))):</span>
-                <span class="n">casscf_settings</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
-                <span class="n">casscf_settings</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-
-    <span class="n">doc</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;# JSON format</span>
-<span class="s1"># Note the double quote &quot;&quot; around keyword</span>
-<span class="s1">&#39;&#39;&#39;</span>
-    <span class="n">conf</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;casscf&#39;</span><span class="p">:</span> <span class="n">casscf_settings</span><span class="p">}</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">configfile</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;# Starting from this line, code are parsed as Python script.  The Python code</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;# will be injected to casscf.kernel through callback hook.  The casscf.kernel</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;# function local variables can be directly accessed.  Note, these variables</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;# cannot be directly modified because the environment is generated using</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;# locals() function (see</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;# https://docs.python.org/2/library/functions.html#locals).</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;# You can modify some variables with inplace updating, eg</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;# from pyscf import fci</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;# if imacro &gt; 6:</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;#     casscf.fcislover = fci.fix_spin_(fci.direct_spin1, ss=2)</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;#     mo[:,:3] *= -1</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;# Warning: this runtime modification is unsafe and highly unrecommended.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-
-    <span class="n">old_cb</span> <span class="o">=</span> <span class="n">casscf</span><span class="o">.</span><span class="n">callback</span>
-    <span class="k">def</span> <span class="nf">hot_load</span><span class="p">(</span><span class="n">envs</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">configfile</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-<span class="c1"># filter out comments</span>
-                <span class="n">raw_js</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="n">balance</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()]</span>
-                <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
-                        <span class="n">raw_js</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-                        <span class="n">balance</span> <span class="o">+=</span> <span class="n">line</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;{&#39;</span><span class="p">)</span> <span class="o">-</span> <span class="n">line</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;}&#39;</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="n">balance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                            <span class="k">break</span>
-            <span class="n">raw_py</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">:])</span>
-            <span class="n">raw_js</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">raw_js</span><span class="p">)</span>
-
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="s1">&#39;Reading CASSCF parameters from config file  </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                         <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">configfile</span><span class="p">))</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="s1">&#39;    Inject casscf settings </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">raw_js</span><span class="p">)</span>
-            <span class="n">conf</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">raw_js</span><span class="p">)</span>
-            <span class="n">casscf</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;casscf&#39;</span><span class="p">))</span>
-
-            <span class="c1"># Not yet found a way to update locals() on the runtime</span>
-            <span class="c1"># https://docs.python.org/2/library/functions.html#locals</span>
-            <span class="c1">#for k in conf:</span>
-            <span class="c1">#    if k in envs:</span>
-            <span class="c1">#        logger.info(casscf, &#39;Update envs[%s] = %s&#39;, k, conf[k])</span>
-            <span class="c1">#        envs[k] = conf[k]</span>
-
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="s1">&#39;    Inject python script</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">raw_py</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_py</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,):</span>
-<span class="c1"># A hacky call using eval because exec are so different in python2 and python3</span>
-                    <span class="nb">eval</span><span class="p">(</span><span class="nb">compile</span><span class="p">(</span><span class="s1">&#39;exec(raw_py, envs, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;str&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="nb">eval</span><span class="p">(</span><span class="nb">compile</span><span class="p">(</span><span class="s1">&#39;exec raw_py in envs, </span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;str&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">))</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="s1">&#39;CASSCF hot_load error </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">casscf</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()))</span>
-
-        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">old_cb</span><span class="p">):</span>
-            <span class="n">old_cb</span><span class="p">(</span><span class="n">envs</span><span class="p">)</span>
-
-    <span class="n">casscf</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="n">hot_load</span>
-    <span class="k">return</span> <span class="n">casscf</span></div>
+<span class="k">del</span><span class="p">(</span><span class="n">BASE</span><span class="p">,</span> <span class="n">MAP2HF_TOL</span><span class="p">)</span>
 
 
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

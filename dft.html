@@ -287,7 +287,7 @@ SCF base class.   non-relativistic RHF.</p>
 <dt>max_cycle</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>max number of iterations.  Default is 50</dd>
 <dt>init_guess</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd>initial guess method.  It can be one of &#8216;minao&#8217;, &#8216;atom&#8217;, &#8216;1e&#8217;, &#8216;chkfile&#8217;.
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd>initial guess method.  It can be one of &#8216;minao&#8217;, &#8216;atom&#8217;, &#8216;hcore&#8217;, &#8216;1e&#8217;, &#8216;chkfile&#8217;.
 Default is &#8216;minao&#8217;</dd>
 <dt>diis</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">boolean or object of DIIS class listed in <code class="xref py py-mod docutils literal"><span class="pre">scf.diis</span></code></span><dd>Default is <code class="xref py py-class docutils literal"><span class="pre">diis.SCF_DIIS</span></code>. Set it to None to turn off DIIS.</dd>
@@ -313,7 +313,7 @@ envrionment.</dd>
 </dl>
 </dd>
 </dl>
-<p>Saved results</p>
+<p>Saved results:</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>converged</dt>
@@ -342,6 +342,8 @@ envrionment.</dd>
 <dd><dl class="first last docutils">
 <dt>xc</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd>&#8216;X_name,C_name&#8217; for the XC functional.  Default is &#8216;lda,vwn&#8217;</dd>
+<dt>nlc</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd>&#8216;NLC_name&#8217; for the NLC functional.  Default is &#8216;&#8217; (i.e., None)</dd>
 <dt>grids</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">Grids object</span><dd><p class="first">grids.level (0 - 9)  big number for large mesh grids. Default is 3</p>
 <dl class="docutils">
@@ -613,7 +615,7 @@ level 3 corresponds to
 </dl>
 <dl class="method">
 <dt id="pyscf.dft.gen_grid.Grids.gen_atomic_grids">
-<code class="descname">gen_atomic_grids</code><span class="sig-paren">(</span><em>mol</em>, <em>atom_grid=None</em>, <em>radi_method=None</em>, <em>level=None</em>, <em>prune=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#Grids.gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.Grids.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
+<code class="descname">gen_atomic_grids</code><span class="sig-paren">(</span><em>mol</em>, <em>atom_grid=None</em>, <em>radi_method=None</em>, <em>level=None</em>, <em>prune=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#Grids.gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.Grids.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate number of radial grids and angular grids for the given molecule.</p>
 <dl class="docutils">
 <dt>Returns:</dt>
@@ -669,7 +671,7 @@ is the number of shells.</dd>
 
 <dl class="function">
 <dt id="pyscf.dft.gen_grid.gen_atomic_grids">
-<code class="descclassname">pyscf.dft.gen_grid.</code><code class="descname">gen_atomic_grids</code><span class="sig-paren">(</span><em>mol</em>, <em>atom_grid={}</em>, <em>radi_method=&lt;function gauss_chebyshev&gt;</em>, <em>level=3</em>, <em>prune=&lt;function nwchem_prune&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyscf.dft.gen_grid.</code><code class="descname">gen_atomic_grids</code><span class="sig-paren">(</span><em>mol</em>, <em>atom_grid={}</em>, <em>radi_method=&lt;function gauss_chebyshev&gt;</em>, <em>level=3</em>, <em>prune=&lt;function nwchem_prune&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/gen_grid.html#gen_atomic_grids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.gen_grid.gen_atomic_grids" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate number of radial grids and angular grids for the given molecule.</p>
 <dl class="docutils">
 <dt>Returns:</dt>
@@ -907,7 +909,7 @@ rho is ((den_u,grad_xu,grad_yu,grad_zu,laplacian_u,tau_u)</p>
 <dt>vxc</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">([4,] ngrids) ndarray</span><dd>XC potential value on each grid = (vrho, vsigma, vlapl, vtau)
 vsigma is GGA potential value on each grid.
-If the kwarg spin is not 0, a list [vsigma_uu,vsigma_ud] is required.</dd>
+If the kwarg spin != 0, a list [vsigma_uu,vsigma_ud] is required.</dd>
 </dl>
 </dd>
 <dt>Kwargs:</dt>
@@ -918,8 +920,8 @@ If the kwarg spin is not 0, a list [vsigma_uu,vsigma_ud] is required.</dd>
  <span class="classifier-delimiter">:</span> <span class="classifier">2D bool array</span><dd>mask array to indicate whether the AO values are zero.  The mask
 array can be obtained by calling <code class="xref py py-func docutils literal"><span class="pre">make_mask()</span></code></dd>
 <dt>spin</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>If not 0, the matrix is contracted with the spin non-degenerated
-UKS formula</dd>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>If not 0, the returned matrix is the Vxc matrix of alpha-spin.  It
+is computed with the spin non-degenerated UKS formula.</dd>
 </dl>
 </dd>
 <dt>Returns:</dt>
@@ -1017,9 +1019,9 @@ nabla^2 rho and tau = 1/2(nabla f)^2</dd>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyscf.dft.numint.large_rho_indices">
-<code class="descclassname">pyscf.dft.numint.</code><code class="descname">large_rho_indices</code><span class="sig-paren">(</span><em>ni</em>, <em>mol</em>, <em>dm</em>, <em>grids</em>, <em>cutoff=1e-10</em>, <em>max_memory=2000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/numint.html#large_rho_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.large_rho_indices" title="Permalink to this definition">¶</a></dt>
-<dd><p>Indices of density which are larger than given cutoff</p>
+<dt id="pyscf.dft.numint.get_rho">
+<code class="descclassname">pyscf.dft.numint.</code><code class="descname">get_rho</code><span class="sig-paren">(</span><em>ni</em>, <em>mol</em>, <em>dm</em>, <em>grids</em>, <em>max_memory=2000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/numint.html#get_rho"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.get_rho" title="Permalink to this definition">¶</a></dt>
+<dd><p>Density in real space</p>
 </dd></dl>
 
 <dl class="function">
@@ -1071,8 +1073,10 @@ excsum is the XC functional value.  vmat is the XC potential matrix in
 <span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">gen_grid</span><span class="o">.</span><span class="n">Grids</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>  <span class="c1"># 100 random points</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">(),</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nelec</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">numint</span><span class="o">.</span><span class="n">nr_vxc</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="s1">&#39;lda,vwn&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ni</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">numint</span><span class="o">.</span><span class="n">_NumInt</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nelec</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">nr_rks</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="s1">&#39;lda,vwn&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1168,8 +1172,10 @@ excsum is the XC functional value.  vmat is the XC potential matrix in
 <span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">gen_grid</span><span class="o">.</span><span class="n">Grids</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>  <span class="c1"># 100 random points</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">(),</span><span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nelec</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">numint</span><span class="o">.</span><span class="n">nr_vxc</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="s1">&#39;lda,vwn&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ni</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">numint</span><span class="o">.</span><span class="n">_NumInt</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nelec</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">nr_rks</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="s1">&#39;lda,vwn&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1206,6 +1212,18 @@ nelec is the number of (alpha,beta) electrons generated by numerical integration
 excsum is the XC functional value.
 vmat is the XC potential matrix for (alpha,beta) spin.</dd>
 </dl>
+<p>Examples:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">dft</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">gen_grid</span><span class="o">.</span><span class="n">Grids</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>  <span class="c1"># 100 random points</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ni</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">numint</span><span class="o">.</span><span class="n">_NumInt</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nelec</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">nr_uks</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="s1">&#39;lda,vwn&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -1282,13 +1300,71 @@ nelec is the number of (alpha,beta) electrons generated by numerical integration
 excsum is the XC functional value.
 vmat is the XC potential matrix for (alpha,beta) spin.</dd>
 </dl>
+<p>Examples:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">dft</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">gen_grid</span><span class="o">.</span><span class="n">Grids</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>  <span class="c1"># 100 random points</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ni</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">numint</span><span class="o">.</span><span class="n">_NumInt</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nelec</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">nr_uks</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="s1">&#39;lda,vwn&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.numint.nr_vxc">
+<code class="descclassname">pyscf.dft.numint.</code><code class="descname">nr_vxc</code><span class="sig-paren">(</span><em>mol</em>, <em>grids</em>, <em>xc_code</em>, <em>dms</em>, <em>spin=0</em>, <em>relativity=0</em>, <em>hermi=0</em>, <em>max_memory=2000</em>, <em>verbose=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/numint.html#nr_vxc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.numint.nr_vxc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate RKS/UKS XC functional and potential matrix on given meshgrids
+for a set of density matrices.  See <a class="reference internal" href="#pyscf.dft.numint.nr_rks" title="pyscf.dft.numint.nr_rks"><code class="xref py py-func docutils literal"><span class="pre">nr_rks()</span></code></a> and <a class="reference internal" href="#pyscf.dft.numint.nr_uks" title="pyscf.dft.numint.nr_uks"><code class="xref py py-func docutils literal"><span class="pre">nr_uks()</span></code></a>
+for more details.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">mol : an instance of <code class="xref py py-class docutils literal"><span class="pre">Mole</span></code></p>
+<dl class="last docutils">
+<dt>grids</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">an instance of <code class="xref py py-class docutils literal"><span class="pre">Grids</span></code></span><dd>grids.coords and grids.weights are needed for coordinates and weights of meshgrids.</dd>
+<dt>xc_code</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd>XC functional description.
+See <code class="xref py py-func docutils literal"><span class="pre">parse_xc()</span></code> of pyscf/dft/libxc.py for more details.</dd>
+<dt>dms</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">2D array or a list of 2D arrays</span><dd>Density matrix or multiple density matrices</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>hermi</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>Input density matrices symmetric or not</dd>
+<dt>max_memory</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int or float</span><dd>The maximum size of cache to use (in MB).</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>nelec, excsum, vmat.
+nelec is the number of electrons generated by numerical integration.
+excsum is the XC functional value.  vmat is the XC potential matrix in
+2D array of shape (nao,nao) where nao is the number of AO functions.</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">dft</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; H 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">gen_grid</span><span class="o">.</span><span class="n">Grids</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>  <span class="c1"># 100 random points</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nao</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nelec</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">numint</span><span class="o">.</span><span class="n">nr_vxc</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="s1">&#39;lda,vwn&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <span class="target" id="module-pyscf.dft.libxc"></span><p>XC functional, the interface to libxc
 (<a class="reference external" href="http://www.tddft.org/programs/octopus/wiki/index.php/Libxc">http://www.tddft.org/programs/octopus/wiki/index.php/Libxc</a>)</p>
 <dl class="function">
 <dt id="pyscf.dft.libxc.define_xc">
-<code class="descclassname">pyscf.dft.libxc.</code><code class="descname">define_xc</code><span class="sig-paren">(</span><em>ni</em>, <em>description</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/libxc.html#define_xc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.define_xc" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyscf.dft.libxc.</code><code class="descname">define_xc</code><span class="sig-paren">(</span><em>ni</em>, <em>description</em>, <em>xctype='LDA'</em>, <em>hyb=0</em>, <em>rsh=(0</em>, <em>0</em>, <em>0)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/libxc.html#define_xc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.define_xc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define XC functional.  See also <a class="reference internal" href="#pyscf.dft.libxc.eval_xc" title="pyscf.dft.libxc.eval_xc"><code class="xref py py-func docutils literal"><span class="pre">eval_xc()</span></code></a> for the rules of input description.</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -1298,6 +1374,16 @@ vmat is the XC potential matrix for (alpha,beta) spin.</dd>
  <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd>A string to describe the linear combination of different XC functionals.
 The X and C functional are separated by comma like &#8216;.8*LDA+.2*B86,VWN&#8217;.
 If &#8220;HF&#8221; was appeared in the string, it stands for the exact exchange.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>xctype</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd>&#8216;LDA&#8217; or &#8216;GGA&#8217; or &#8216;MGGA&#8217;</dd>
+<dt>hyb</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>hybrid functional coefficient</dd>
+<dt>rsh</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>coefficients for range-separated hybrid functional</dd>
 </dl>
 </dd>
 </dl>
@@ -1326,7 +1412,7 @@ If &#8220;HF&#8221; was appeared in the string, it stands for the exact exchange
 
 <dl class="function">
 <dt id="pyscf.dft.libxc.define_xc_">
-<code class="descclassname">pyscf.dft.libxc.</code><code class="descname">define_xc_</code><span class="sig-paren">(</span><em>ni</em>, <em>description</em>, <em>xctype='LDA'</em>, <em>hyb=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/libxc.html#define_xc_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.define_xc_" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyscf.dft.libxc.</code><code class="descname">define_xc_</code><span class="sig-paren">(</span><em>ni</em>, <em>description</em>, <em>xctype='LDA'</em>, <em>hyb=0</em>, <em>rsh=(0</em>, <em>0</em>, <em>0)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/libxc.html#define_xc_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.define_xc_" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define XC functional.  See also <a class="reference internal" href="#pyscf.dft.libxc.eval_xc" title="pyscf.dft.libxc.eval_xc"><code class="xref py py-func docutils literal"><span class="pre">eval_xc()</span></code></a> for the rules of input description.</p>
 <dl class="docutils">
 <dt>Args:</dt>
@@ -1336,6 +1422,16 @@ If &#8220;HF&#8221; was appeared in the string, it stands for the exact exchange
  <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd>A string to describe the linear combination of different XC functionals.
 The X and C functional are separated by comma like &#8216;.8*LDA+.2*B86,VWN&#8217;.
 If &#8220;HF&#8221; was appeared in the string, it stands for the exact exchange.</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>xctype</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd>&#8216;LDA&#8217; or &#8216;GGA&#8217; or &#8216;MGGA&#8217;</dd>
+<dt>hyb</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>hybrid functional coefficient</dd>
+<dt>rsh</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>coefficients for range-separated hybrid functional</dd>
 </dl>
 </dd>
 </dl>
@@ -1461,6 +1557,12 @@ rho is ((den_u,grad_xu,grad_yu,grad_zu,laplacian_u,tau_u)</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pyscf.dft.libxc.nlc_coeff">
+<code class="descclassname">pyscf.dft.libxc.</code><code class="descname">nlc_coeff</code><span class="sig-paren">(</span><em>xc_code</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/libxc.html#nlc_coeff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.nlc_coeff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get NLC coefficients</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyscf.dft.libxc.parse_xc">
 <code class="descclassname">pyscf.dft.libxc.</code><code class="descname">parse_xc</code><span class="sig-paren">(</span><em>description</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/libxc.html#parse_xc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.parse_xc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rules to input functional description:</p>
@@ -1578,6 +1680,12 @@ v3rho2tau, v3rhosigmatau, v3rhotau2, v3sigma2tau, v3sigmatau2, v3tau3</li>
 <dt id="pyscf.dft.libxc.parse_xc_name">
 <code class="descclassname">pyscf.dft.libxc.</code><code class="descname">parse_xc_name</code><span class="sig-paren">(</span><em>xc_name='LDA</em>, <em>VWN'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/libxc.html#parse_xc_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.parse_xc_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the XC functional name to libxc library internal ID.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.dft.libxc.rsh_coeff">
+<code class="descclassname">pyscf.dft.libxc.</code><code class="descname">rsh_coeff</code><span class="sig-paren">(</span><em>xc_code</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/dft/libxc.html#rsh_coeff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.dft.libxc.rsh_coeff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get RSH coefficients</p>
 </dd></dl>
 
 </div>

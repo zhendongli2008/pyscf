@@ -180,13 +180,25 @@
             
   <h1>Source code for pyscf.lib.chkfile</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># Copyright 2014-2018 The PySCF Developers. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 <span class="c1"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
 <span class="c1">#</span>
 
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">h5py</span>
-<span class="kn">import</span> <span class="nn">pyscf.gto</span>
 
 <span class="k">def</span> <span class="nf">load_chkfile_key</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">load</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
@@ -324,15 +336,16 @@
 <span class="sd">    &gt;&gt;&gt; lib.chkfile.load_mol(&#39;He.chk&#39;)</span>
 <span class="sd">    &lt;pyscf.gto.mole.Mole object at 0x7fdcd94d7f50&gt;</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">array</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
-            <span class="n">mol</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="s1">&#39;mol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="s1">&#39;mol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
     <span class="k">except</span><span class="p">:</span>
 <span class="c1"># Compatibility to the old serialization format</span>
 <span class="c1"># TODO: remove it in future release</span>
-        <span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">array</span>
         <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">chkfile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh5</span><span class="p">:</span>
-            <span class="n">mol</span> <span class="o">=</span> <span class="n">pyscf</span><span class="o">.</span><span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+            <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
             <span class="n">mol</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;/dev/null&#39;</span>
             <span class="n">moldic</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">fh5</span><span class="p">[</span><span class="s1">&#39;mol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;mass&#39;</span><span class="p">,</span> <span class="s1">&#39;grids&#39;</span><span class="p">,</span> <span class="s1">&#39;light_speed&#39;</span><span class="p">):</span>

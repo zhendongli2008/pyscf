@@ -217,8 +217,8 @@ effects.  For example</p>
 
 <span class="sd">NOTE the second order SCF (New in version 1.1) decorating operation are not</span>
 <span class="sd">commutable with scf.density_fit operation</span>
-<span class="sd">        [scf.density_fit, scf.sfx2c      ] == 0</span>
-<span class="sd">        [scf.newton     , scf.sfx2c      ] == 0</span>
+<span class="sd">        [scf.density_fit, scf.sfx2c1e    ] == 0</span>
+<span class="sd">        [scf.newton     , scf.sfx2c1e    ] != 0</span>
 <span class="sd">        [scf.newton     , scf.density_fit] != 0</span>
 <span class="sd">* scf.density_fit(scf.newton(scf.RHF(mol))) is the SOSCF for regular 2e</span>
 <span class="sd">  integrals, but with density fitting integrals for the Hessian.  It&#39;s an</span>
@@ -244,7 +244,7 @@ effects.  For example</p>
 <span class="c1">#</span>
 <span class="c1"># 1. spin-free X2C-HF with density fitting approximation on 2E integrals</span>
 <span class="c1">#</span>
-<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">sfx2c</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)))</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">sfx2c1e</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)))</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">x2c</span><span class="p">()</span><span class="o">.</span><span class="n">density_fit</span><span class="p">()</span>  <span class="c1"># Stream style</span>
 <span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E = </span><span class="si">%.12f</span><span class="s1">, ref = -76.075408156180&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
@@ -253,13 +253,25 @@ effects.  For example</p>
 <span class="c1"># 2. spin-free X2C correction for density-fitting HF.  Since X2C correction is</span>
 <span class="c1"># commutable with density fitting operation, it is fully equivalent to case 1.</span>
 <span class="c1">#</span>
-<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">sfx2c</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)))</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">sfx2c1e</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)))</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">density_fit</span><span class="p">()</span><span class="o">.</span><span class="n">x2c</span><span class="p">()</span>  <span class="c1"># Stream style</span>
 <span class="n">energy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E = </span><span class="si">%.12f</span><span class="s1">, ref = -76.075408156180&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
 
 <span class="c1">#</span>
-<span class="c1"># 3. Newton method for non-relativistic HF</span>
+<span class="c1"># 3. The order to apply X2C or newton method matters.  If relativistic effects</span>
+<span class="c1"># need to be included in the calculation, you should first call x2c then</span>
+<span class="c1"># newton method.</span>
+<span class="c1">#</span>
+<span class="n">e1</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">e2</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">x2c</span><span class="p">()</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E(NR)         = </span><span class="si">%.12f</span><span class="s1">  E(X2C)        = </span><span class="si">%.12f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">))</span>
+<span class="n">e1</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">newton</span><span class="p">()</span><span class="o">.</span><span class="n">x2c</span><span class="p">()</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">e2</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">x2c</span><span class="p">()</span><span class="o">.</span><span class="n">newton</span><span class="p">()</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E(Newton,X2C) = </span><span class="si">%.12f</span><span class="s1">  E(X2C,Newton) = </span><span class="si">%.12f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">))</span>
+
+<span class="c1">#</span>
+<span class="c1"># 4. Newton method for non-relativistic HF</span>
 <span class="c1">#</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">newton</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">newton</span><span class="p">()</span>  <span class="c1"># Stream style</span>
@@ -267,7 +279,7 @@ effects.  For example</p>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E = </span><span class="si">%.12f</span><span class="s1">, ref = -76.026765673120&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
 
 <span class="c1">#</span>
-<span class="c1"># 4. Newton method for non-relativistic HF with density fitting for orbital</span>
+<span class="c1"># 5. Newton method for non-relativistic HF with density fitting for orbital</span>
 <span class="c1"># hessian of newton solver.  Note the answer is equal to case 3, but the</span>
 <span class="c1"># solver &quot;mf&quot; is different.</span>
 <span class="c1">#</span>
@@ -277,7 +289,7 @@ effects.  For example</p>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E = </span><span class="si">%.12f</span><span class="s1">, ref = -76.026765673120&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
 
 <span class="c1">#</span>
-<span class="c1"># 5. Newton method to solve the density-fitting approximated HF object.  There</span>
+<span class="c1"># 6. Newton method to solve the density-fitting approximated HF object.  There</span>
 <span class="c1"># is no approximation for newton method (orbital hessian).  Note the density</span>
 <span class="c1"># fitting is applied on HF object only.  It does not affect the Newton solver.</span>
 <span class="c1">#</span>
@@ -287,9 +299,9 @@ effects.  For example</p>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E = </span><span class="si">%.12f</span><span class="s1">, ref = -76.026744737357&#39;</span> <span class="o">%</span> <span class="n">energy</span><span class="p">)</span>
 
 <span class="c1">#</span>
-<span class="c1"># 6. Newton method for density-fitting HF, and the hessian of Newton solver is</span>
+<span class="c1"># 7. Newton method for density-fitting HF, and the hessian of Newton solver is</span>
 <span class="c1"># also approximated with density fitting.  Note the anwser is equivalent to</span>
-<span class="c1"># case 5, but the solver &quot;mf&quot; is different.  Here the fitting basis for HF and</span>
+<span class="c1"># case 6, but the solver &quot;mf&quot; is different.  Here the fitting basis for HF and</span>
 <span class="c1"># Newton solver are different.  HF is approximated with the default density</span>
 <span class="c1"># fitting basis (Weigend cfit basis).  Newton solver is approximated with</span>
 <span class="c1"># Ahlrichs cfit basis.</span>

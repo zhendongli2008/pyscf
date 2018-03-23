@@ -180,6 +180,19 @@
             
   <h1>Source code for pyscf.dft.rks</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># Copyright 2014-2018 The PySCF Developers. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 <span class="c1"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
 <span class="c1">#</span>
@@ -191,10 +204,13 @@
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="k">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="k">import</span> <span class="n">hf</span>
+<span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="k">import</span> <span class="n">jk</span>
 <span class="kn">from</span> <span class="nn">pyscf.dft</span> <span class="k">import</span> <span class="n">gen_grid</span>
 <span class="kn">from</span> <span class="nn">pyscf.dft</span> <span class="k">import</span> <span class="n">numint</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">__config__</span>
 
 
 <div class="viewcode-block" id="get_veff"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.rks.get_veff">[docs]</a><span class="k">def</span> <span class="nf">get_veff</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">mol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dm_last</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vhf_last</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
@@ -239,16 +255,31 @@
             <span class="c1"># Filter grids the first time setup grids</span>
             <span class="n">ks</span><span class="o">.</span><span class="n">grids</span> <span class="o">=</span> <span class="n">prune_small_rho_grids_</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="p">)</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="s1">&#39;setting up grids&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ks</span><span class="o">.</span><span class="n">nlc</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ks</span><span class="o">.</span><span class="n">nlcgrids</span><span class="o">.</span><span class="n">coords</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ks</span><span class="o">.</span><span class="n">nlcgrids</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">with_non0tab</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ks</span><span class="o">.</span><span class="n">small_rho_cutoff</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">20</span> <span class="ow">and</span> <span class="n">ground_state</span><span class="p">:</span>
+                <span class="c1"># Filter grids the first time setup grids</span>
+                <span class="n">ks</span><span class="o">.</span><span class="n">nlcgrids</span> <span class="o">=</span> <span class="n">prune_small_rho_grids_</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">nlcgrids</span><span class="p">)</span>
+            <span class="n">t0</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="s1">&#39;setting up nlc grids&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
 
+    <span class="n">ni</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span>
     <span class="k">if</span> <span class="n">hermi</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># because rho = 0</span>
         <span class="n">n</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">n</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">nr_rks</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">xc</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">vxc</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">nr_rks</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">grids</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">xc</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ks</span><span class="o">.</span><span class="n">nlc</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">assert</span><span class="p">(</span><span class="s1">&#39;VV10&#39;</span> <span class="ow">in</span> <span class="n">ks</span><span class="o">.</span><span class="n">nlc</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">enlc</span><span class="p">,</span> <span class="n">vnlc</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">nr_rks</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">nlcgrids</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">xc</span><span class="o">+</span><span class="s1">&#39;__&#39;</span><span class="o">+</span><span class="n">ks</span><span class="o">.</span><span class="n">nlc</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
+            <span class="n">exc</span> <span class="o">+=</span> <span class="n">enlc</span>
+            <span class="n">vxc</span> <span class="o">+=</span> <span class="n">vnlc</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="s1">&#39;nelec by numeric integration = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="s1">&#39;vxc&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
 
-    <span class="n">hyb</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">hybrid_coeff</span><span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">xc</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="n">mol</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">hyb</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">10</span><span class="p">:</span>
+    <span class="c1">#enabling range-separated hybrids</span>
+    <span class="n">omega</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">hyb</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">rsh_and_hybrid_coeff</span><span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">xc</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="n">mol</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">hyb</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">10</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">10</span><span class="p">:</span>
         <span class="n">vk</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">_eri</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ks</span><span class="o">.</span><span class="n">direct_scf</span> <span class="ow">and</span>
             <span class="nb">getattr</span><span class="p">(</span><span class="n">vhf_last</span><span class="p">,</span> <span class="s1">&#39;vj&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
@@ -263,14 +294,24 @@
             <span class="nb">getattr</span><span class="p">(</span><span class="n">vhf_last</span><span class="p">,</span> <span class="s1">&#39;vk&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
             <span class="n">ddm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dm_last</span><span class="p">)</span>
             <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">get_jk</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ddm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)</span>
+            <span class="n">vk</span> <span class="o">*=</span> <span class="n">hyb</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">10</span><span class="p">:</span>  <span class="c1"># For range separated Coulomb operator</span>
+                <span class="n">vklr</span> <span class="o">=</span> <span class="n">_get_k_lr</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">ddm</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span>
+                <span class="n">vklr</span> <span class="o">*=</span> <span class="p">(</span><span class="n">alpha</span> <span class="o">-</span> <span class="n">hyb</span><span class="p">)</span>
+                <span class="n">vk</span> <span class="o">+=</span> <span class="n">vklr</span>
             <span class="n">vj</span> <span class="o">+=</span> <span class="n">vhf_last</span><span class="o">.</span><span class="n">vj</span>
             <span class="n">vk</span> <span class="o">+=</span> <span class="n">vhf_last</span><span class="o">.</span><span class="n">vk</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">vj</span><span class="p">,</span> <span class="n">vk</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">get_jk</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">hermi</span><span class="p">)</span>
-        <span class="n">vxc</span> <span class="o">+=</span> <span class="n">vj</span> <span class="o">-</span> <span class="n">vk</span> <span class="o">*</span> <span class="p">(</span><span class="n">hyb</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span>
+            <span class="n">vk</span> <span class="o">*=</span> <span class="n">hyb</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">10</span><span class="p">:</span>
+                <span class="n">vklr</span> <span class="o">=</span> <span class="n">_get_k_lr</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span>
+                <span class="n">vklr</span> <span class="o">*=</span> <span class="p">(</span><span class="n">alpha</span> <span class="o">-</span> <span class="n">hyb</span><span class="p">)</span>
+                <span class="n">vk</span> <span class="o">+=</span> <span class="n">vklr</span>
+        <span class="n">vxc</span> <span class="o">+=</span> <span class="n">vj</span> <span class="o">-</span> <span class="n">vk</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
 
         <span class="k">if</span> <span class="n">ground_state</span><span class="p">:</span>
-            <span class="n">exc</span> <span class="o">-=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">vk</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">hyb</span><span class="o">*.</span><span class="mi">5</span>
+            <span class="n">exc</span> <span class="o">-=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">vk</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
 
     <span class="k">if</span> <span class="n">ground_state</span><span class="p">:</span>
         <span class="n">ecoul</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">vj</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
@@ -279,6 +320,22 @@
 
     <span class="n">vxc</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">tag_array</span><span class="p">(</span><span class="n">vxc</span><span class="p">,</span> <span class="n">ecoul</span><span class="o">=</span><span class="n">ecoul</span><span class="p">,</span> <span class="n">exc</span><span class="o">=</span><span class="n">exc</span><span class="p">,</span> <span class="n">vj</span><span class="o">=</span><span class="n">vj</span><span class="p">,</span> <span class="n">vk</span><span class="o">=</span><span class="n">vk</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">vxc</span></div>
+
+<span class="k">def</span> <span class="nf">_get_k_lr</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="n">omega_bak</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">_env</span><span class="p">[</span><span class="n">gto</span><span class="o">.</span><span class="n">PTR_RANGE_OMEGA</span><span class="p">]</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">set_range_coulomb</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
+
+    <span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span>
+<span class="c1"># Note, ks object caches the ERIs for small systems. The cached eris are</span>
+<span class="c1"># computed with regular Coulomb operator. ks.get_jk or ks.get_k do not evalute</span>
+<span class="c1"># the K matrix with the range separated Coulomb operator.  Here jk.get_jk</span>
+<span class="c1"># function computes the K matrix with the modified Coulomb operator.</span>
+    <span class="n">nao</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">dms</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">nao</span><span class="p">,</span><span class="n">nao</span><span class="p">)</span>
+    <span class="n">vklr</span> <span class="o">=</span> <span class="n">jk</span><span class="o">.</span><span class="n">get_jk</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dms</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;ijkl,jk-&gt;il&#39;</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">dms</span><span class="p">))</span>
+
+    <span class="n">mol</span><span class="o">.</span><span class="n">set_range_coulomb</span><span class="p">(</span><span class="n">omega_bak</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vklr</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dm</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="energy_elec"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.rks.energy_elec">[docs]</a><span class="k">def</span> <span class="nf">energy_elec</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">h1e</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vhf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -305,10 +362,13 @@
     <span class="k">return</span> <span class="n">tot_e</span><span class="p">,</span> <span class="n">vhf</span><span class="o">.</span><span class="n">ecoul</span><span class="o">+</span><span class="n">vhf</span><span class="o">.</span><span class="n">exc</span></div>
 
 
-<span class="n">NELEC_ERROR_TOL</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">NELEC_ERROR_TOL</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;dft_rks_prune_error_tol&#39;</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">prune_small_rho_grids_</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">grids</span><span class="p">):</span>
-    <span class="n">n</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">large_rho_indices</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">small_rho_cutoff</span><span class="p">)</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">get_rho</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">ks</span><span class="o">.</span><span class="n">max_memory</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">NELEC_ERROR_TOL</span><span class="o">*</span><span class="n">n</span><span class="p">:</span>
+        <span class="n">rho</span> <span class="o">*=</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">ks</span><span class="o">.</span><span class="n">small_rho_cutoff</span> <span class="o">/</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">size</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="s1">&#39;Drop grids </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span>
                      <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
         <span class="n">grids</span><span class="o">.</span><span class="n">coords</span>  <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span> <span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
@@ -316,9 +376,9 @@
         <span class="n">grids</span><span class="o">.</span><span class="n">non0tab</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">make_mask</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">grids</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">grids</span>
 
-<span class="k">def</span> <span class="nf">define_xc_</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">xctype</span><span class="o">=</span><span class="s1">&#39;LDA&#39;</span><span class="p">,</span> <span class="n">hyb</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">define_xc_</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">xctype</span><span class="o">=</span><span class="s1">&#39;LDA&#39;</span><span class="p">,</span> <span class="n">hyb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rsh</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)):</span>
     <span class="n">libxc</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">libxc</span>
-    <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span> <span class="o">=</span> <span class="n">libxc</span><span class="o">.</span><span class="n">define_xc_</span><span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">xctype</span><span class="p">,</span> <span class="n">hyb</span><span class="p">)</span>
+    <span class="n">ks</span><span class="o">.</span><span class="n">_numint</span> <span class="o">=</span> <span class="n">libxc</span><span class="o">.</span><span class="n">define_xc_</span><span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">_numint</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">xctype</span><span class="p">,</span> <span class="n">hyb</span><span class="p">,</span> <span class="n">rsh</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ks</span>
 
 
@@ -327,6 +387,8 @@
 <span class="s1">    Attributes for RKS:</span>
 <span class="s1">        xc : str</span>
 <span class="s1">            &#39;X_name,C_name&#39; for the XC functional.  Default is &#39;lda,vwn&#39;</span>
+<span class="s1">        nlc : str</span>
+<span class="s1">            &#39;NLC_name&#39; for the NLC functional.  Default is &#39;&#39; (i.e., None)</span>
 <span class="s1">        grids : Grids object</span>
 <span class="s1">            grids.level (0 - 9)  big number for large mesh grids. Default is 3</span>
 
@@ -381,25 +443,38 @@
     <span class="k">def</span> <span class="nf">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">hf</span><span class="o">.</span><span class="n">RHF</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;XC functionals = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nlc</span><span class="o">!=</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;NLC functional = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nlc</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;small_rho_cutoff = </span><span class="si">%g</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">small_rho_cutoff</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nlc</span><span class="o">!=</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;** Following is NLC Grids **&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nlcgrids</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">()</span>
 
     <span class="n">get_veff</span> <span class="o">=</span> <span class="n">get_veff</span>
     <span class="n">energy_elec</span> <span class="o">=</span> <span class="n">energy_elec</span>
     <span class="n">define_xc_</span> <span class="o">=</span> <span class="n">define_xc_</span>
 
     <span class="k">def</span> <span class="nf">nuc_grad_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">pyscf.grad</span> <span class="k">import</span> <span class="n">rks</span>
-        <span class="k">return</span> <span class="n">rks</span><span class="o">.</span><span class="n">Gradients</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+        <span class="kn">from</span> <span class="nn">pyscf.dft</span> <span class="k">import</span> <span class="n">rks_grad</span>
+        <span class="k">return</span> <span class="n">rks_grad</span><span class="o">.</span><span class="n">Gradients</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 <span class="k">def</span> <span class="nf">_dft_common_init_</span><span class="p">(</span><span class="n">mf</span><span class="p">):</span>
     <span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s1">&#39;LDA,VWN&#39;</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">nlc</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
     <span class="n">mf</span><span class="o">.</span><span class="n">grids</span> <span class="o">=</span> <span class="n">gen_grid</span><span class="o">.</span><span class="n">Grids</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="p">)</span>
-    <span class="n">mf</span><span class="o">.</span><span class="n">small_rho_cutoff</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">7</span>  <span class="c1"># Use rho to filter grids</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;dft_rks_RKS_grids_level&#39;</span><span class="p">,</span>
+                             <span class="n">mf</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">nlcgrids</span> <span class="o">=</span> <span class="n">gen_grid</span><span class="o">.</span><span class="n">Grids</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">nlcgrids</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;dft_rks_RKS_nlcgrids_level&#39;</span><span class="p">,</span>
+                                <span class="n">mf</span><span class="o">.</span><span class="n">nlcgrids</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+    <span class="c1"># Use rho to filter grids</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">small_rho_cutoff</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;dft_rks_RKS_small_rho_cutoff&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">7</span><span class="p">)</span>
 <span class="c1">##################################################</span>
 <span class="c1"># don&#39;t modify the following attributes, they are not input options</span>
     <span class="n">mf</span><span class="o">.</span><span class="n">_numint</span> <span class="o">=</span> <span class="n">numint</span><span class="o">.</span><span class="n">_NumInt</span><span class="p">()</span>
-    <span class="n">mf</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">_keys</span><span class="o">.</span><span class="n">union</span><span class="p">([</span><span class="s1">&#39;xc&#39;</span><span class="p">,</span> <span class="s1">&#39;grids&#39;</span><span class="p">,</span> <span class="s1">&#39;small_rho_cutoff&#39;</span><span class="p">])</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">_keys</span><span class="o">.</span><span class="n">union</span><span class="p">([</span><span class="s1">&#39;xc&#39;</span><span class="p">,</span> <span class="s1">&#39;nlc&#39;</span><span class="p">,</span> <span class="s1">&#39;grids&#39;</span><span class="p">,</span> <span class="s1">&#39;nlcgrids&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;small_rho_cutoff&#39;</span><span class="p">])</span>
 
 
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

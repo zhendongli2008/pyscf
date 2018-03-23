@@ -180,6 +180,19 @@
             
   <h1>Source code for pyscf.df.addons</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># Copyright 2014-2018 The PySCF Developers. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 <span class="c1"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
 <span class="c1">#</span>
@@ -191,6 +204,12 @@
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="k">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">ao2mo</span>
+<span class="kn">from</span> <span class="nn">pyscf.data</span> <span class="k">import</span> <span class="n">elements</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">__config__</span>
+
+<span class="n">DFBASIS</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;df_addons_aug_etb_beta&#39;</span><span class="p">,</span> <span class="s1">&#39;weigend&#39;</span><span class="p">)</span>
+<span class="n">ETB_BETA</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;df_addons_aug_dfbasis&#39;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+<span class="n">FIRST_ETB_ELEMENT</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;df_addons_aug_start_at&#39;</span><span class="p">,</span> <span class="mi">36</span><span class="p">)</span>  <span class="c1"># &#39;Rb&#39;</span>
 
 <span class="c1"># For code compatiblity in python-2 and python-3</span>
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,):</span>
@@ -240,21 +259,22 @@
         <span class="n">ao2mo</span><span class="o">.</span><span class="n">load</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">dataname</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="aug_etb_for_dfbasis"><a class="viewcode-back" href="../../../df.html#pyscf.df.addons.aug_etb_for_dfbasis">[docs]</a><span class="k">def</span> <span class="nf">aug_etb_for_dfbasis</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dfbasis</span><span class="o">=</span><span class="s1">&#39;weigend&#39;</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">2.3</span><span class="p">,</span> <span class="n">start_at</span><span class="o">=</span><span class="s1">&#39;Rb&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="aug_etb_for_dfbasis"><a class="viewcode-back" href="../../../df.html#pyscf.df.addons.aug_etb_for_dfbasis">[docs]</a><span class="k">def</span> <span class="nf">aug_etb_for_dfbasis</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dfbasis</span><span class="o">=</span><span class="n">DFBASIS</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">ETB_BETA</span><span class="p">,</span>
+                        <span class="n">start_at</span><span class="o">=</span><span class="n">FIRST_ETB_ELEMENT</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;augment weigend basis with even-tempered gaussian basis</span>
 <span class="sd">    exps = alpha*beta^i for i = 1..N</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">nuc_start</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">mole</span><span class="o">.</span><span class="n">_charge</span><span class="p">(</span><span class="n">start_at</span><span class="p">)</span>
+    <span class="n">nuc_start</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="n">start_at</span><span class="p">)</span>
     <span class="n">uniq_atoms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">mol</span><span class="o">.</span><span class="n">_atom</span><span class="p">])</span>
 
     <span class="n">newbasis</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">symb</span> <span class="ow">in</span> <span class="n">uniq_atoms</span><span class="p">:</span>
-        <span class="n">nuc_charge</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">mole</span><span class="o">.</span><span class="n">_charge</span><span class="p">(</span><span class="n">symb</span><span class="p">)</span>
+        <span class="n">nuc_charge</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="n">symb</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">nuc_charge</span> <span class="o">&lt;</span> <span class="n">nuc_start</span><span class="p">:</span>
             <span class="n">newbasis</span><span class="p">[</span><span class="n">symb</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfbasis</span>
         <span class="c1">#?elif symb in mol._ecp:</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">conf</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">ELEMENTS</span><span class="p">[</span><span class="n">nuc_charge</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">conf</span> <span class="o">=</span> <span class="n">elements</span><span class="o">.</span><span class="n">CONFIGURATION</span><span class="p">[</span><span class="n">nuc_charge</span><span class="p">]</span>
             <span class="n">max_shells</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">-</span> <span class="n">conf</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">emin_by_l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="n">e99</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span>
             <span class="n">emax_by_l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span>
@@ -293,7 +313,7 @@
 
     <span class="k">return</span> <span class="n">newbasis</span></div>
 
-<div class="viewcode-block" id="aug_etb"><a class="viewcode-back" href="../../../df.html#pyscf.df.addons.aug_etb">[docs]</a><span class="k">def</span> <span class="nf">aug_etb</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">2.3</span><span class="p">):</span>
+<div class="viewcode-block" id="aug_etb"><a class="viewcode-back" href="../../../df.html#pyscf.df.addons.aug_etb">[docs]</a><span class="k">def</span> <span class="nf">aug_etb</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">ETB_BETA</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;To generate the even-tempered auxiliary Gaussian basis&#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="n">aug_etb_for_dfbasis</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">start_at</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
 
@@ -378,6 +398,8 @@
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;num shells = </span><span class="si">%d</span><span class="s1">, num cGTOs = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span>
                  <span class="n">pmol</span><span class="o">.</span><span class="n">nbas</span><span class="p">,</span> <span class="n">pmol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">())</span>
     <span class="k">return</span> <span class="n">pmol</span></div>
+
+<span class="k">del</span><span class="p">(</span><span class="n">DFBASIS</span><span class="p">,</span> <span class="n">ETB_BETA</span><span class="p">,</span> <span class="n">FIRST_ETB_ELEMENT</span><span class="p">)</span>
 </pre></div>
 
            </div>

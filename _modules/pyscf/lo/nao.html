@@ -180,6 +180,19 @@
             
   <h1>Source code for pyscf.lo.nao</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># Copyright 2014-2018 The PySCF Developers. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 <span class="c1"># Author: Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
 <span class="c1">#</span>
@@ -195,146 +208,47 @@
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">scipy.linalg</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">scf</span>
 <span class="kn">from</span> <span class="nn">pyscf.gto</span> <span class="k">import</span> <span class="n">mole</span>
 <span class="kn">from</span> <span class="nn">pyscf.lo</span> <span class="k">import</span> <span class="n">orth</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">pyscf.data</span> <span class="k">import</span> <span class="n">elements</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">__config__</span>
 
 <span class="c1"># Note the valence space for Li, Be may need include 2p, Al..Cl may need 3d ...</span>
-<span class="n">AOSHELL</span> <span class="o">=</span> <span class="p">[</span>
 <span class="c1"># This is No. of shells, not the atomic configuations</span>
 <span class="c1">#     core       core+valence</span>
 <span class="c1"># core+valence = lambda nuc, l: \</span>
-<span class="c1">#            int(numpy.ceil(pyscf.lib.parameters.ELEMENTS[nuc][2][l]/(4*l+2.)))</span>
-    <span class="p">[</span><span class="s1">&#39;0s0p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;0s0p0d0f&#39;</span><span class="p">],</span>     <span class="c1">#  0  GHOST</span>
-    <span class="p">[</span><span class="s1">&#39;0s0p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;1s0p0d0f&#39;</span><span class="p">],</span>     <span class="c1">#  1  H</span>
-    <span class="p">[</span><span class="s1">&#39;0s0p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;1s0p0d0f&#39;</span><span class="p">],</span>     <span class="c1">#  2  He</span>
-    <span class="p">[</span><span class="s1">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;2s0p0d0f&#39;</span><span class="p">],</span>     <span class="c1">#  3  Li</span>
-    <span class="p">[</span><span class="s1">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;2s0p0d0f&#39;</span><span class="p">],</span>     <span class="c1">#  4  Be</span>
-    <span class="p">[</span><span class="s1">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c1">#  5  B</span>
-    <span class="p">[</span><span class="s1">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c1">#  6  C</span>
-    <span class="p">[</span><span class="s1">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c1">#  7  N</span>
-    <span class="p">[</span><span class="s1">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c1">#  8  O</span>
-    <span class="p">[</span><span class="s1">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c1">#  9  F</span>
-    <span class="p">[</span><span class="s1">&#39;1s0p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">],</span>     <span class="c1"># 10  Ne</span>
-    <span class="p">[</span><span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;3s1p0d0f&#39;</span><span class="p">],</span>     <span class="c1"># 11  Na</span>
-    <span class="p">[</span><span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;3s1p0d0f&#39;</span><span class="p">],</span>     <span class="c1"># 12  Mg</span>
-    <span class="p">[</span><span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c1"># 13  Al</span>
-    <span class="p">[</span><span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c1"># 14  Si</span>
-    <span class="p">[</span><span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c1"># 15  P</span>
-    <span class="p">[</span><span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c1"># 16  S</span>
-    <span class="p">[</span><span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c1"># 17  Cl</span>
-    <span class="p">[</span><span class="s1">&#39;2s1p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">],</span>     <span class="c1"># 18  Ar</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p0d0f&#39;</span><span class="p">],</span>     <span class="c1"># 19  K</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p0d0f&#39;</span><span class="p">],</span>     <span class="c1"># 20  Ca</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 21  Sc</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 22  Ti</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 23  V</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 24  Cr</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 25  Mn</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 26  Fe</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 27  Co</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 28  Ni</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 29  Cu</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p0d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s2p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 30  Zn</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 31  Ga</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 32  Ge</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 33  As</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 34  Se</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 35  Br</span>
-    <span class="p">[</span><span class="s1">&#39;3s2p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 36  Kr</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s3p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 37  Rb</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s3p1d0f&#39;</span><span class="p">],</span>     <span class="c1"># 38  Sr</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 39  Y</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 40  Zr</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 41  Nb</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 42  Mo</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 43  Tc</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 44  Ru</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 45  Rh</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;4s3p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 46  Pd</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 47  Ag</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p1d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s3p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 48  Cd</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 49  In</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 50  Sn</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 51  Sb</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 52  Te</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 53  I</span>
-    <span class="p">[</span><span class="s1">&#39;4s3p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 54  Xe</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 55  Cs</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d0f&#39;</span><span class="p">],</span>     <span class="c1"># 56  Ba</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d0f&#39;</span><span class="p">],</span>     <span class="c1"># 57  La</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 58  Ce</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c1"># 59  Pr</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c1"># 60  Nd</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c1"># 61  Pm</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c1"># 62  Sm</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c1"># 63  Eu</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 64  Gd</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 65  Tb</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c1"># 66  Dy</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c1"># 67  Ho</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c1"># 68  Er</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c1"># 69  Tm</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d0f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p2d1f&#39;</span><span class="p">],</span>     <span class="c1"># 70  Yb</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 71  Lu</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 72  Hf</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 73  Ta</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 74  W</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 75  Re</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 76  Os</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 77  Ir</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 78  Pt</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 79  Au</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p2d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s4p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 80  Hg</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 81  Tl</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 82  Pb</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 83  Bi</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 84  Po</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 85  At</span>
-    <span class="p">[</span><span class="s1">&#39;5s4p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 86  Rn</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 87  Fr</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p3d1f&#39;</span><span class="p">],</span>     <span class="c1"># 88  Ra</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d1f&#39;</span><span class="p">],</span>     <span class="c1"># 89  Ac</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d1f&#39;</span><span class="p">],</span>     <span class="c1"># 90  Th</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1"># 91  Pa</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1"># 92  U</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1"># 93  Np</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c1"># 94  Pu</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c1"># 95  Am</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1"># 96  Cm</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1"># 97  Bk</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c1"># 98  Cf</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c1"># 99  Es</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c1">#100  Fm</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c1">#101  Md</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d1f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p3d2f&#39;</span><span class="p">],</span>     <span class="c1">#102  No</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#103  Lr</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#104  Rf</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#105  Db</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#106  Sg</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#107  Bh</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#108  Hs</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#109  Mt</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#110  E110</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#111  E111</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p3d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s5p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#112  E112</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p4d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s6p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#113  E113</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p4d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s6p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#114  E114</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p4d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s6p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#115  E115</span>
-    <span class="p">[</span><span class="s1">&#39;6s5p4d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s6p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#116  E116</span>
-    <span class="p">[</span><span class="s1">&#39;6s3p4d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s6p4d2f&#39;</span><span class="p">],</span>     <span class="c1">#117  E117</span>
-    <span class="p">[</span><span class="s1">&#39;6s3p4d2f&#39;</span><span class="p">,</span> <span class="s1">&#39;7s6p4d2f&#39;</span><span class="p">]</span>      <span class="c1">#118  E118</span>
-<span class="p">]</span>
+<span class="c1">#            int(numpy.ceil(elements.CONFIGURATION[nuc][l]/(4*l+2.)))</span>
+<span class="n">AOSHELL</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;lo_nao_AOSHELL&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">AOSHELL</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">AOSHELL</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">elements</span><span class="o">.</span><span class="n">N_CORE_SHELLS</span><span class="p">,</span>
+                       <span class="n">elements</span><span class="o">.</span><span class="n">N_CORE_VALENCE_SHELLS</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">prenao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">):</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dm</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="c1"># UHF or ROHF</span>
+        <span class="n">dm</span> <span class="o">=</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;pbc_intor&#39;</span><span class="p">):</span>  <span class="c1"># whether mol object is a cell</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">pbc_intor</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">)</span>
+
     <span class="n">p</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">_prenao_sub</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">s</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
 
 <span class="k">def</span> <span class="nf">nao</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">restore</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;pbc_intor&#39;</span><span class="p">):</span>  <span class="c1"># whether mol object is a cell</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">pbc_intor</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">)</span>
+
     <span class="n">dm</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">uhf</span><span class="o">.</span><span class="n">UHF</span><span class="p">,</span> <span class="n">scf</span><span class="o">.</span><span class="n">rohf</span><span class="o">.</span><span class="n">ROHF</span><span class="p">)):</span>
+        <span class="n">dm</span> <span class="o">=</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
     <span class="n">p</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
     <span class="n">pre_occ</span><span class="p">,</span> <span class="n">pre_nao</span> <span class="o">=</span> <span class="n">_prenao_sub</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
     <span class="n">cnao</span> <span class="o">=</span> <span class="n">_nao_sub</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">pre_occ</span><span class="p">,</span> <span class="n">pre_nao</span><span class="p">)</span>
@@ -383,7 +297,11 @@
 
 <span class="k">def</span> <span class="nf">_nao_sub</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">pre_occ</span><span class="p">,</span> <span class="n">pre_nao</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;pbc_intor&#39;</span><span class="p">):</span>  <span class="c1"># whether mol object is a cell</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">pbc_intor</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">)</span>
+
     <span class="n">core_lst</span><span class="p">,</span> <span class="n">val_lst</span><span class="p">,</span> <span class="n">rydbg_lst</span> <span class="o">=</span> <span class="n">_core_val_ryd_list</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
     <span class="n">nbf</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nao_nr</span><span class="p">()</span>
     <span class="n">pre_nao</span> <span class="o">=</span> <span class="n">pre_nao</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -425,7 +343,7 @@
     <span class="k">for</span> <span class="n">ib</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">):</span>
         <span class="n">ia</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_atom</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
 <span class="c1"># Avoid calling mol.atom_charge because we should include ECP core electrons here</span>
-        <span class="n">nuc</span> <span class="o">=</span> <span class="n">mole</span><span class="o">.</span><span class="n">_charge</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="n">ia</span><span class="p">))</span>
+        <span class="n">nuc</span> <span class="o">=</span> <span class="n">mole</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="n">ia</span><span class="p">))</span>
         <span class="n">l</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_angular</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
         <span class="n">nc</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">bas_nctr</span><span class="p">(</span><span class="n">ib</span><span class="p">)</span>
         <span class="n">symb</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="n">ia</span><span class="p">)</span>
@@ -460,7 +378,7 @@
 <div class="viewcode-block" id="set_atom_conf"><a class="viewcode-back" href="../../../lo.html#pyscf.lo.nao.set_atom_conf">[docs]</a><span class="k">def</span> <span class="nf">set_atom_conf</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Change the default atomic core and valence configuration to the one</span>
 <span class="sd">    given by &quot;description&quot;.</span>
-<span class="sd">    See lo.nao.AOSHELL for the default configuration.</span>
+<span class="sd">    See data/elements.py for the default configuration.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        element : str or int</span>
@@ -473,7 +391,7 @@
 <span class="sd">            | &quot;1s1d&quot;     : keep core unchanged and set 1 s 1 d shells for valence</span>
 <span class="sd">            | (&quot;3s2p&quot;,&quot;1d&quot;) : 3 s, 2 p shells for core and 1 d shells for valence</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">charge</span> <span class="o">=</span> <span class="n">mole</span><span class="o">.</span><span class="n">_charge</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+    <span class="n">charge</span> <span class="o">=</span> <span class="n">mole</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">to_conf</span><span class="p">(</span><span class="n">desc</span><span class="p">):</span>
         <span class="n">desc</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="k">if</span> <span class="s2">&quot;doublep&quot;</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">:</span>
