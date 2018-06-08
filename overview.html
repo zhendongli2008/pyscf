@@ -232,9 +232,9 @@ based quantum chemistry programs.</p>
 <li>4-component relativistic Dirac-Hartree-Fock</li>
 <li>Density fitting HF</li>
 <li>Second order SCF</li>
-<li>General JK contraction function</li>
+<li>General J/K build function</li>
 <li>DIIS, EDIIS, ADIIS and second order solver</li>
-<li>SCF wavefunction stability analysis</li>
+<li>SCF wavefunction (RHF, UHF, GHF) stability analysis</li>
 <li>Generalized Hartree-Fock (GHF)</li>
 </ul>
 </li>
@@ -361,12 +361,13 @@ based quantum chemistry programs.</p>
 </ul>
 </li>
 <li>Extended systems with periodic boundary condition<ul>
-<li>gamma point RHF, UHF, RKS, UKS</li>
+<li>gamma point RHF, ROHF, UHF, RKS, ROKS, UKS</li>
 <li>gamma point TDDFT, MP2, CCSD</li>
-<li>RHF, UHF, GHF, RKS, UKS with k-point sampling</li>
+<li>RHF, ROHF, UHF, GHF, RKS, ROKS, UKS with k-point sampling</li>
 <li>Restricted MP2 with k-point sampling</li>
-<li>RCCSD with k-point sampling (KRCCSD)</li>
-<li>Generalized CCSD with k-point sampling (KGCCSD)</li>
+<li>KRCCSD (RCCSD with k-point sampling)</li>
+<li>KUCCSD</li>
+<li>KGCCSD (Generalized CCSD with k-point sampling)</li>
 <li>k-point GCCSD(T) and RCCSD(T)</li>
 <li>k-point EOM-IP/EA-CCSD</li>
 <li>PBC AO integrals</li>
@@ -375,10 +376,18 @@ based quantum chemistry programs.</p>
 <li>Smearing for mean-field methods</li>
 <li>Low-dimensional (0D, 1D, 2D) PBC systems</li>
 <li>(restricted and unrestricted) TDA, TDHF and TDDFT with k-point sampling</li>
+<li>Multigrid DFT</li>
+</ul>
+</li>
+<li>Relativistic effects<ul>
+<li>4-component HF with Dirac-Coulomb Hamiltonian (DHF)</li>
+<li>4-component DHF with Gaunt and Breit corrections</li>
+<li>2-component X2C HF</li>
+<li>4-component and 2-component Kohn-Sham DFT (LDA only)</li>
 </ul>
 </li>
 <li>AO integrals<ul>
-<li>Interface to call Libcint library</li>
+<li>Interface to access all AO integrals of Libcint library</li>
 <li>1-electron real-GTO and spinor-GTO integrals</li>
 <li>2-electron real-GTO and spinor-GTO integrals</li>
 <li>3-center 1-electron real-GTO and spinor-GTO integrals</li>
@@ -394,6 +403,8 @@ based quantum chemistry programs.</p>
 Libcint library</li>
 <li>Support for 4-index integral transformation with 4 different orbitals</li>
 <li>PBC 2-electron MO integrals</li>
+<li>Integral transformation for (4-component and 2-compoent relativistic) spinor
+integrals</li>
 </ul>
 </li>
 <li>Localizer<ul>
@@ -605,9 +616,12 @@ addition.</p>
 <p>Scanner is a special derived object of the caller.  Most methods which are
 defined in the caller class can be used with the scanner object. For example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mf_scanner</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">)</span><span class="o">.</span><span class="n">as_scanner</span><span class="p">()</span>
-<span class="n">mf_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; H 0 0 </span><span class="si">%g</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">r</span><span class="p">))</span>
+<span class="n">mf_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; H 0 0 1.2&#39;</span><span class="p">))</span>
 <span class="n">mf_scanner</span><span class="o">.</span><span class="n">analyze</span><span class="p">()</span>
 <span class="n">dm1</span> <span class="o">=</span> <span class="n">mf_scanner</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
+
+<span class="n">mf_grad_scanner</span> <span class="o">=</span> <span class="n">mf_scanner</span><span class="o">.</span><span class="n">nuc_grad_method</span><span class="p">()</span><span class="o">.</span><span class="n">as_scanner</span><span class="p">()</span>
+<span class="n">mf_grad_scanner</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; H 0 0 1.2&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>As shown in the example above, the scanner works pretty close to the relevant

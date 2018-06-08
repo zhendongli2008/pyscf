@@ -301,10 +301,7 @@
 <span class="sd">    (80, 80)</span>
 
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">verbose</span><span class="p">,</span> <span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">):</span>
-        <span class="n">log</span> <span class="o">=</span> <span class="n">verbose</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">Logger</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">new_logger</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
 
     <span class="n">nao</span> <span class="o">=</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">nao_pair</span> <span class="o">=</span> <span class="n">nao</span><span class="o">*</span><span class="p">(</span><span class="n">nao</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
@@ -314,15 +311,13 @@
                           <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                           <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
 
-    <span class="k">assert</span><span class="p">(</span><span class="n">eri_ao</span><span class="o">.</span><span class="n">size</span> <span class="ow">in</span> <span class="p">(</span><span class="n">nao_pair</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">nao_pair</span><span class="o">*</span><span class="p">(</span><span class="n">nao_pair</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">))</span>
-
 <span class="c1"># transform e1</span>
     <span class="n">eri1</span> <span class="o">=</span> <span class="n">half_e1</span><span class="p">(</span><span class="n">eri_ao</span><span class="p">,</span> <span class="n">mo_coeffs</span><span class="p">,</span> <span class="n">compact</span><span class="p">)</span>
     <span class="n">klmosym</span><span class="p">,</span> <span class="n">nkl_pair</span><span class="p">,</span> <span class="n">mokl</span><span class="p">,</span> <span class="n">klshape</span> <span class="o">=</span> <span class="n">_conc_mos</span><span class="p">(</span><span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">mo_coeffs</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">compact</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">eri1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">nkl_pair</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="c1"># 0 dimension sometimes causes blas problem</span>
-        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nij_pair</span><span class="p">,</span><span class="n">nkl_pair</span><span class="p">))</span>
+        <span class="c1"># 0 dimension causes error in certain BLAS implementations</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">eri1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">nkl_pair</span><span class="p">))</span>
 
 <span class="c1">#    if nij_pair &gt; nkl_pair:</span>
 <span class="c1">#        log.warn(&#39;low efficiency for AO to MO trans!&#39;)</span>

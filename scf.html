@@ -99,7 +99,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#caching-two-electron-integrals">6.3. Caching two-electron integrals</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#customizing-hamiltonian">6.4. Customizing Hamiltonian</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyscf.scf">6.5. Program reference</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#non-relativistic-and-relativistic-hartree-fock">6.5.1. Non-relativistic and relativistic Hartree-Fock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hartree-fock">6.5.1. Hartree-Fock</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#non-relativistic-hartree-fock">6.5.2. Non-relativistic Hartree-Fock</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-pyscf.scf.dhf">6.5.3. Relativistic Hartree-Fock</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id1">6.5.4. addons</a></li>
@@ -377,8 +377,8 @@ use the density fitting/Cholesky decomposed integrals.  See also
 </div>
 <div class="section" id="module-pyscf.scf">
 <span id="program-reference"></span><h2>6.5. Program reference<a class="headerlink" href="#module-pyscf.scf" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="non-relativistic-and-relativistic-hartree-fock">
-<h3>6.5.1. Non-relativistic and relativistic Hartree-Fock<a class="headerlink" href="#non-relativistic-and-relativistic-hartree-fock" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="hartree-fock">
+<h3>6.5.1. Hartree-Fock<a class="headerlink" href="#hartree-fock" title="Permalink to this headline">¶</a></h3>
 <p>Simple usage:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; H 0 0 1&#39;</span><span class="p">)</span>
@@ -515,6 +515,8 @@ callback function can access all local variables in the current
 envrionment.</dd>
 <dt>conv_check</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>An extra cycle to check convergence after SCF iterations.</dd>
+<dt>check_convergence</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">function(envs) =&gt; bool</span><dd>A hook for overloading convergence criteria in SCF iterations.</dd>
 </dl>
 </dd>
 </dl>
@@ -672,7 +674,7 @@ basis defined by <code class="docutils literal"><span class="pre">mol</span></co
 Fock matrix if diis and cycle is specified (The two parameters are passed
 to get_fock function during the SCF iteration)</p>
 <dl class="docutils">
-<dt>Args:</dt>
+<dt>Kwargs:</dt>
 <dd><dl class="first last docutils">
 <dt>h1e</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span><dd>Core hamiltonian</dd>
@@ -682,10 +684,6 @@ to get_fock function during the SCF iteration)</p>
  <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span><dd>HF potential matrix</dd>
 <dt>dm</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span><dd>Density matrix, for DIIS</dd>
-</dl>
-</dd>
-<dt>Kwargs:</dt>
-<dd><dl class="first last docutils">
 <dt>cycle</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>Then present SCF iteration step, for DIIS</dd>
 <dt>diis</dt>
@@ -988,6 +986,44 @@ three methods</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyscf.scf.hf.SCF.mulliken_pop_meta_lowdin_ao">
+<code class="descname">mulliken_pop_meta_lowdin_ao</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.scf.hf.SCF.mulliken_pop_meta_lowdin_ao" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mulliken population analysis, based on meta-Lowdin AOs.
+In the meta-lowdin, the AOs are grouped in three sets: core, valence and
+Rydberg, the orthogonalization are carreid out within each subsets.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">mol : an instance of <code class="xref py py-class docutils literal"><span class="pre">Mole</span></code></p>
+<dl class="last docutils">
+<dt>dm</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">ndarray or 2-item list of ndarray</span><dd>Density matrix.  ROHF dm is a 2-item list of 2D array</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><p class="first">verbose : int or instance of <a class="reference internal" href="lib.html#lib.logger.Logger" title="lib.logger.Logger"><code class="xref py py-class docutils literal"><span class="pre">lib.logger.Logger</span></code></a></p>
+<dl class="last docutils">
+<dt>pre_orth_method</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd><p class="first">Pre-orthogonalization, which localized GTOs for each atom.
+To obtain the occupied and unoccupied atomic shells, there are
+three methods</p>
+<div class="last line-block">
+<div class="line">&#8216;ano&#8217;   : Project GTOs to ANO basis</div>
+<div class="line">&#8216;minao&#8217; : Project GTOs to MINAO basis</div>
+<div class="line">&#8216;scf&#8217;   : Fraction-averaged RHF</div>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.scf.hf.SCF.nuc_grad_method">
+<code class="descname">nuc_grad_method</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/hf.html#SCF.nuc_grad_method"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.hf.SCF.nuc_grad_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook to create object for analytical nuclear gradients.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyscf.scf.hf.SCF.pop">
 <code class="descname">pop</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/hf.html#SCF.pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.hf.SCF.pop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mulliken population analysis, based on meta-Lowdin AOs.
@@ -1046,9 +1082,30 @@ three methods</p>
 
 <dl class="method">
 <dt id="pyscf.scf.hf.SCF.update">
-<code class="descname">update</code><span class="sig-paren">(</span><em>chkfile=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/hf.html#SCF.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.hf.SCF.update" title="Permalink to this definition">¶</a></dt>
+<code class="descname">update</code><span class="sig-paren">(</span><em>chkfile=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.scf.hf.SCF.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read attributes from the chkfile then replace the attributes of
-current object.  See also mf.update_from_chk</p>
+current object.  It&#8217;s an alias of function <a href="#id2"><span class="problematic" id="id3">update_from_chk_</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.scf.hf.SCF.update_">
+<code class="descname">update_</code><span class="sig-paren">(</span><em>chkfile=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/hf.html#SCF.update_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.hf.SCF.update_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read attributes from the chkfile then replace the attributes of
+current object.  It&#8217;s an alias of function <a href="#id4"><span class="problematic" id="id5">update_from_chk_</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.scf.hf.SCF.update_from_chk">
+<code class="descname">update_from_chk</code><span class="sig-paren">(</span><em>chkfile=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.scf.hf.SCF.update_from_chk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read attributes from the chkfile then replace the attributes of
+current object.  It&#8217;s an alias of function <a href="#id6"><span class="problematic" id="id7">update_from_chk_</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.scf.hf.SCF.update_from_chk_">
+<code class="descname">update_from_chk_</code><span class="sig-paren">(</span><em>chkfile=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.scf.hf.SCF.update_from_chk_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read attributes from the chkfile then replace the attributes of
+current object.  It&#8217;s an alias of function <a href="#id8"><span class="problematic" id="id9">update_from_chk_</span></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1107,6 +1164,8 @@ callback function can access all local variables in the current
 envrionment.</dd>
 <dt>conv_check</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>An extra cycle to check convergence after SCF iterations.</dd>
+<dt>check_convergence</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">function(envs) =&gt; bool</span><dd>A hook for overloading convergence criteria in SCF iterations.</dd>
 </dl>
 </dd>
 </dl>
@@ -1268,6 +1327,8 @@ callback function can access all local variables in the current
 envrionment.</dd>
 <dt>conv_check</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>An extra cycle to check convergence after SCF iterations.</dd>
+<dt>check_convergence</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">function(envs) =&gt; bool</span><dd>A hook for overloading convergence criteria in SCF iterations.</dd>
 </dl>
 </dd>
 </dl>
@@ -1497,6 +1558,8 @@ callback function can access all local variables in the current
 envrionment.</dd>
 <dt>conv_check</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>An extra cycle to check convergence after SCF iterations.</dd>
+<dt>check_convergence</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">function(envs) =&gt; bool</span><dd>A hook for overloading convergence criteria in SCF iterations.</dd>
 </dl>
 </dd>
 </dl>
@@ -1548,6 +1611,12 @@ envrionment.</dd>
 <code class="descname">canonicalize</code><span class="sig-paren">(</span><em>mf</em>, <em>mo_coeff</em>, <em>mo_occ</em>, <em>fock=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.scf.uhf.UHF.canonicalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Canonicalization diagonalizes the UHF Fock matrix within occupied,
 virtual subspaces separatedly (without change occupancy).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.scf.uhf.UHF.convert_from_">
+<code class="descname">convert_from_</code><span class="sig-paren">(</span><em>mf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/uhf.html#UHF.convert_from_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.uhf.UHF.convert_from_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create UHF object based on the RHF/ROHF object</p>
 </dd></dl>
 
 <dl class="method">
@@ -1900,6 +1969,8 @@ callback function can access all local variables in the current
 envrionment.</dd>
 <dt>conv_check</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>An extra cycle to check convergence after SCF iterations.</dd>
+<dt>check_convergence</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">function(envs) =&gt; bool</span><dd>A hook for overloading convergence criteria in SCF iterations.</dd>
 </dl>
 </dd>
 </dl>
@@ -2060,6 +2131,8 @@ callback function can access all local variables in the current
 envrionment.</dd>
 <dt>conv_check</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>An extra cycle to check convergence after SCF iterations.</dd>
+<dt>check_convergence</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">function(envs) =&gt; bool</span><dd>A hook for overloading convergence criteria in SCF iterations.</dd>
 </dl>
 </dd>
 </dl>
@@ -2217,7 +2290,7 @@ basis defined by <code class="docutils literal"><span class="pre">mol</span></co
 Fock matrix if diis and cycle is specified (The two parameters are passed
 to get_fock function during the SCF iteration)</p>
 <dl class="docutils">
-<dt>Args:</dt>
+<dt>Kwargs:</dt>
 <dd><dl class="first last docutils">
 <dt>h1e</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span><dd>Core hamiltonian</dd>
@@ -2227,10 +2300,6 @@ to get_fock function during the SCF iteration)</p>
  <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span><dd>HF potential matrix</dd>
 <dt>dm</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span><dd>Density matrix, for DIIS</dd>
-</dl>
-</dd>
-<dt>Kwargs:</dt>
-<dd><dl class="first last docutils">
 <dt>cycle</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>Then present SCF iteration step, for DIIS</dd>
 <dt>diis</dt>
@@ -2534,6 +2603,44 @@ three methods</p>
 
 <dl class="method">
 <dt>
+<code class="descname">mulliken_pop_meta_lowdin_ao</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Mulliken population analysis, based on meta-Lowdin AOs.
+In the meta-lowdin, the AOs are grouped in three sets: core, valence and
+Rydberg, the orthogonalization are carreid out within each subsets.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">mol : an instance of <code class="xref py py-class docutils literal"><span class="pre">Mole</span></code></p>
+<dl class="last docutils">
+<dt>dm</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">ndarray or 2-item list of ndarray</span><dd>Density matrix.  ROHF dm is a 2-item list of 2D array</dd>
+</dl>
+</dd>
+<dt>Kwargs:</dt>
+<dd><p class="first">verbose : int or instance of <a class="reference internal" href="lib.html#lib.logger.Logger" title="lib.logger.Logger"><code class="xref py py-class docutils literal"><span class="pre">lib.logger.Logger</span></code></a></p>
+<dl class="last docutils">
+<dt>pre_orth_method</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd><p class="first">Pre-orthogonalization, which localized GTOs for each atom.
+To obtain the occupied and unoccupied atomic shells, there are
+three methods</p>
+<div class="last line-block">
+<div class="line">&#8216;ano&#8217;   : Project GTOs to ANO basis</div>
+<div class="line">&#8216;minao&#8217; : Project GTOs to MINAO basis</div>
+<div class="line">&#8216;scf&#8217;   : Fraction-averaged RHF</div>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">nuc_grad_method</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/hf.html#SCF.nuc_grad_method"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Hook to create object for analytical nuclear gradients.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <code class="descname">pop</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/hf.html#SCF.pop"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Mulliken population analysis, based on meta-Lowdin AOs.
 In the meta-lowdin, the AOs are grouped in three sets: core, valence and
@@ -2591,9 +2698,30 @@ three methods</p>
 
 <dl class="method">
 <dt>
-<code class="descname">update</code><span class="sig-paren">(</span><em>chkfile=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/hf.html#SCF.update"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">update</code><span class="sig-paren">(</span><em>chkfile=None</em><span class="sig-paren">)</span></dt>
 <dd><p>Read attributes from the chkfile then replace the attributes of
-current object.  See also mf.update_from_chk</p>
+current object.  It&#8217;s an alias of function <a href="#id10"><span class="problematic" id="id11">update_from_chk_</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">update_</code><span class="sig-paren">(</span><em>chkfile=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/hf.html#SCF.update_"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Read attributes from the chkfile then replace the attributes of
+current object.  It&#8217;s an alias of function <a href="#id12"><span class="problematic" id="id13">update_from_chk_</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">update_from_chk</code><span class="sig-paren">(</span><em>chkfile=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Read attributes from the chkfile then replace the attributes of
+current object.  It&#8217;s an alias of function <a href="#id14"><span class="problematic" id="id15">update_from_chk_</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">update_from_chk_</code><span class="sig-paren">(</span><em>chkfile=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Read attributes from the chkfile then replace the attributes of
+current object.  It&#8217;s an alias of function <a href="#id16"><span class="problematic" id="id17">update_from_chk_</span></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -2764,7 +2892,7 @@ See <code class="xref py py-func docutils literal"><span class="pre">scf.hf.ener
 Fock matrix if diis and cycle is specified (The two parameters are passed
 to get_fock function during the SCF iteration)</p>
 <dl class="docutils">
-<dt>Args:</dt>
+<dt>Kwargs:</dt>
 <dd><dl class="first last docutils">
 <dt>h1e</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span><dd>Core hamiltonian</dd>
@@ -2774,10 +2902,6 @@ to get_fock function during the SCF iteration)</p>
  <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span><dd>HF potential matrix</dd>
 <dt>dm</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">2D ndarray</span><dd>Density matrix, for DIIS</dd>
-</dl>
-</dd>
-<dt>Kwargs:</dt>
-<dd><dl class="first last docutils">
 <dt>cycle</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>Then present SCF iteration step, for DIIS</dd>
 <dt>diis</dt>
@@ -2828,7 +2952,7 @@ to get_fock function during the SCF iteration)</p>
 <dl class="function">
 <dt id="pyscf.scf.hf.get_init_guess">
 <code class="descclassname">pyscf.scf.hf.</code><code class="descname">get_init_guess</code><span class="sig-paren">(</span><em>mol</em>, <em>key='minao'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/hf.html#get_init_guess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.hf.get_init_guess" title="Permalink to this definition">¶</a></dt>
-<dd><p>Pick a init_guess method</p>
+<dd><p>Generate density matrix for initial guess</p>
 <dl class="docutils">
 <dt>Kwargs:</dt>
 <dd><dl class="first last docutils">
@@ -3275,6 +3399,8 @@ callback function can access all local variables in the current
 envrionment.</dd>
 <dt>conv_check</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>An extra cycle to check convergence after SCF iterations.</dd>
+<dt>check_convergence</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">function(envs) =&gt; bool</span><dd>A hook for overloading convergence criteria in SCF iterations.</dd>
 </dl>
 </dd>
 </dl>
@@ -3326,6 +3452,12 @@ envrionment.</dd>
 <code class="descname">canonicalize</code><span class="sig-paren">(</span><em>mf</em>, <em>mo_coeff</em>, <em>mo_occ</em>, <em>fock=None</em><span class="sig-paren">)</span></dt>
 <dd><p>Canonicalization diagonalizes the UHF Fock matrix within occupied,
 virtual subspaces separatedly (without change occupancy).</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">convert_from_</code><span class="sig-paren">(</span><em>mf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/uhf.html#UHF.convert_from_"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Create UHF object based on the RHF/ROHF object</p>
 </dd></dl>
 
 <dl class="method">
@@ -3841,12 +3973,6 @@ See also <a class="reference internal" href="#pyscf.scf.uhf.det_ovlp" title="pys
 </dd></dl>
 
 <dl class="function">
-<dt id="pyscf.scf.uhf.rhf_to_uhf">
-<code class="descclassname">pyscf.scf.uhf.</code><code class="descname">rhf_to_uhf</code><span class="sig-paren">(</span><em>mf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/uhf.html#rhf_to_uhf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.uhf.rhf_to_uhf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create UHF object based on the RHF object</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="pyscf.scf.uhf.spin_square">
 <code class="descclassname">pyscf.scf.uhf.</code><code class="descname">spin_square</code><span class="sig-paren">(</span><em>mo</em>, <em>s=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/uhf.html#spin_square"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.uhf.spin_square" title="Permalink to this definition">¶</a></dt>
 <dd><p>Spin square and multiplicity of UHF determinant</p>
@@ -4023,6 +4149,8 @@ callback function can access all local variables in the current
 envrionment.</dd>
 <dt>conv_check</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>An extra cycle to check convergence after SCF iterations.</dd>
+<dt>check_convergence</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">function(envs) =&gt; bool</span><dd>A hook for overloading convergence criteria in SCF iterations.</dd>
 </dl>
 </dd>
 </dl>
@@ -4191,6 +4319,8 @@ callback function can access all local variables in the current
 envrionment.</dd>
 <dt>conv_check</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>An extra cycle to check convergence after SCF iterations.</dd>
+<dt>check_convergence</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">function(envs) =&gt; bool</span><dd>A hook for overloading convergence criteria in SCF iterations.</dd>
 </dl>
 </dd>
 </dl>
@@ -4376,6 +4506,8 @@ callback function can access all local variables in the current
 envrionment.</dd>
 <dt>conv_check</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>An extra cycle to check convergence after SCF iterations.</dd>
+<dt>check_convergence</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">function(envs) =&gt; bool</span><dd>A hook for overloading convergence criteria in SCF iterations.</dd>
 </dl>
 </dd>
 </dl>
@@ -4620,6 +4752,8 @@ callback function can access all local variables in the current
 envrionment.</dd>
 <dt>conv_check</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>An extra cycle to check convergence after SCF iterations.</dd>
+<dt>check_convergence</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">function(envs) =&gt; bool</span><dd>A hook for overloading convergence criteria in SCF iterations.</dd>
 </dl>
 </dd>
 </dl>
@@ -4670,6 +4804,25 @@ envrionment.</dd>
 </pre></div>
 </div>
 <dl class="method">
+<dt id="pyscf.scf.dhf.UHF.dip_moment">
+<code class="descname">dip_moment</code><span class="sig-paren">(</span><em>mol=None</em>, <em>dm=None</em>, <em>unit='Debye'</em>, <em>verbose=3</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/dhf.html#UHF.dip_moment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.dhf.UHF.dip_moment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dipole moment calculation</p>
+<div class="math">
+\[\begin{split}\mu_x = -\sum_{\mu}\sum_{\nu} P_{\mu\nu}(\nu|x|\mu) + \sum_A Q_A X_A\\
+\mu_y = -\sum_{\mu}\sum_{\nu} P_{\mu\nu}(\nu|y|\mu) + \sum_A Q_A Y_A\\
+\mu_z = -\sum_{\mu}\sum_{\nu} P_{\mu\nu}(\nu|z|\mu) + \sum_A Q_A Z_A\end{split}\]</div>
+<p>where <span class="math">\(\mu_x, \mu_y, \mu_z\)</span> are the x, y and z components of dipole
+moment</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>mol: an instance of <code class="xref py py-class docutils literal"><span class="pre">Mole</span></code>
+dm : a 2D ndarrays density matrices</dd>
+<dt>Return:</dt>
+<dd>A list: the dipole moment on x, y and z component</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyscf.scf.dhf.UHF.get_veff">
 <code class="descname">get_veff</code><span class="sig-paren">(</span><em>mol=None</em>, <em>dm=None</em>, <em>dm_last=0</em>, <em>vhf_last=0</em>, <em>hermi=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/dhf.html#UHF.get_veff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.dhf.UHF.get_veff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dirac-Coulomb</p>
@@ -4681,12 +4834,56 @@ envrionment.</dd>
 <dd><p>Initial guess in terms of the overlap to minimal basis.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="pyscf.scf.dhf.UHF.mulliken_pop">
+<code class="descname">mulliken_pop</code><span class="sig-paren">(</span><em>mol=None</em>, <em>dm=None</em>, <em>s=None</em>, <em>verbose=5</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/dhf.html#UHF.mulliken_pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.dhf.UHF.mulliken_pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mulliken population analysis</p>
+<div class="math">
+\[M_{ij} = D_{ij} S_{ji}\]</div>
+<p>Mulliken charges</p>
+<div class="math">
+\[\delta_i = \sum_j M_{ij}\]</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.scf.dhf.dip_moment">
+<code class="descclassname">pyscf.scf.dhf.</code><code class="descname">dip_moment</code><span class="sig-paren">(</span><em>mol</em>, <em>dm</em>, <em>unit='Debye'</em>, <em>verbose=3</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/dhf.html#dip_moment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.dhf.dip_moment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dipole moment calculation</p>
+<div class="math">
+\[\begin{split}\mu_x = -\sum_{\mu}\sum_{\nu} P_{\mu\nu}(\nu|x|\mu) + \sum_A Q_A X_A\\
+\mu_y = -\sum_{\mu}\sum_{\nu} P_{\mu\nu}(\nu|y|\mu) + \sum_A Q_A Y_A\\
+\mu_z = -\sum_{\mu}\sum_{\nu} P_{\mu\nu}(\nu|z|\mu) + \sum_A Q_A Z_A\end{split}\]</div>
+<p>where <span class="math">\(\mu_x, \mu_y, \mu_z\)</span> are the x, y and z components of dipole
+moment</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>mol: an instance of <code class="xref py py-class docutils literal"><span class="pre">Mole</span></code>
+dm : a 2D ndarrays density matrices</dd>
+<dt>Return:</dt>
+<dd>A list: the dipole moment on x, y and z component</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.scf.dhf.get_grad">
 <code class="descclassname">pyscf.scf.dhf.</code><code class="descname">get_grad</code><span class="sig-paren">(</span><em>mo_coeff</em>, <em>mo_occ</em>, <em>fock_ao</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/dhf.html#get_grad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.dhf.get_grad" title="Permalink to this definition">¶</a></dt>
 <dd><p>DHF Gradients</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.scf.dhf.get_init_guess">
+<code class="descclassname">pyscf.scf.dhf.</code><code class="descname">get_init_guess</code><span class="sig-paren">(</span><em>mol</em>, <em>key='minao'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/dhf.html#get_init_guess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.dhf.get_init_guess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate density matrix for initial guess</p>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>key</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span><dd>One of &#8216;minao&#8217;, &#8216;atom&#8217;, &#8216;hcore&#8217;, &#8216;1e&#8217;, &#8216;chkfile&#8217;.</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -4739,6 +4936,17 @@ SCF is carried out in three steps.  First the 2-electron part is
 approximated by large component integrals (LL|LL); Next, (SS|LL) the
 interaction between large and small components are added; Finally,
 converge the SCF with the small component contributions (SS|SS)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyscf.scf.dhf.mulliken_pop">
+<code class="descclassname">pyscf.scf.dhf.</code><code class="descname">mulliken_pop</code><span class="sig-paren">(</span><em>mol</em>, <em>dm</em>, <em>s=None</em>, <em>verbose=5</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/dhf.html#mulliken_pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.dhf.mulliken_pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mulliken population analysis</p>
+<div class="math">
+\[M_{ij} = D_{ij} S_{ji}\]</div>
+<p>Mulliken charges</p>
+<div class="math">
+\[\delta_i = \sum_j M_{ij}\]</div>
 </dd></dl>
 
 <dl class="function">
@@ -4882,16 +5090,34 @@ HF/KS.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pyscf.scf.addons.project_dm_nr2nr">
+<code class="descclassname">pyscf.scf.addons.</code><code class="descname">project_dm_nr2nr</code><span class="sig-paren">(</span><em>mol1</em>, <em>dm1</em>, <em>mol2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/addons.html#project_dm_nr2nr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.addons.project_dm_nr2nr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Project density matrix representation from basis set 1 (mol1) to basis
+set 2 (mol2).</p>
+<div class="math">
+\[ \begin{align}\begin{aligned}|AO2\rangle DM_AO2 \langle AO2|\\= |AO2\rangle P DM_AO1 P \langle AO2|\\DM_AO2 = P DM_AO1 P\\P = S_{AO2}^{-1}\langle AO2|AO1\rangle\end{aligned}\end{align} \]</div>
+<p>There are three relevant functions:
+<a class="reference internal" href="#pyscf.scf.addons.project_dm_nr2nr" title="pyscf.scf.addons.project_dm_nr2nr"><code class="xref py py-func docutils literal"><span class="pre">project_dm_nr2nr()</span></code></a> is the projection for non-relativistic (scalar) basis.
+<code class="xref py py-func docutils literal"><span class="pre">project_dm_nr2r()</span></code> projects from non-relativistic to relativistic basis.
+<code class="xref py py-func docutils literal"><span class="pre">project_dm_r2r()</span></code>  is the projection between relativistic (spinor) basis.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyscf.scf.addons.project_mo_nr2nr">
 <code class="descclassname">pyscf.scf.addons.</code><code class="descname">project_mo_nr2nr</code><span class="sig-paren">(</span><em>mol1</em>, <em>mo1</em>, <em>mol2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/addons.html#project_mo_nr2nr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.addons.project_mo_nr2nr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Project orbital coefficients</p>
+<dd><p>Project orbital coefficients from basis set 1 (C1 for mol1) to basis
+set 2 (C2 for mol2).</p>
 <div class="math">
-\[ \begin{align}\begin{aligned}|\psi1&gt; = |AO1&gt; C1\\|\psi2&gt; = P |\psi1&gt; = |AO2&gt;S^{-1}&lt;AO2| AO1&gt; C1 = |AO2&gt; C2\\C2 = S^{-1}&lt;AO2|AO1&gt; C1\end{aligned}\end{align} \]</div>
+\[ \begin{align}\begin{aligned}|\psi1\rangle = |AO1\rangle C1\\|\psi2\rangle = P |\psi1\rangle = |AO2\rangle S^{-1}\langle AO2| AO1\rangle&gt; C1 = |AO2\rangle&gt; C2\\C2 = S^{-1}\langle AO2|AO1\rangle C1\end{aligned}\end{align} \]</div>
+<p>There are three relevant functions:
+<a class="reference internal" href="#pyscf.scf.addons.project_mo_nr2nr" title="pyscf.scf.addons.project_mo_nr2nr"><code class="xref py py-func docutils literal"><span class="pre">project_mo_nr2nr()</span></code></a> is the projection for non-relativistic (scalar) basis.
+<code class="xref py py-func docutils literal"><span class="pre">project_mo_nr2r()</span></code> projects from non-relativistic to relativistic basis.
+<code class="xref py py-func docutils literal"><span class="pre">project_mo_r2r()</span></code>  is the projection between relativistic (spinor) basis.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyscf.scf.addons.remove_linear_dep">
-<code class="descclassname">pyscf.scf.addons.</code><code class="descname">remove_linear_dep</code><span class="sig-paren">(</span><em>mf</em>, <em>threshold=1e-08</em>, <em>lindep=1e-14</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.scf.addons.remove_linear_dep" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyscf.scf.addons.</code><code class="descname">remove_linear_dep</code><span class="sig-paren">(</span><em>mf</em>, <em>threshold=1e-08</em>, <em>lindep=1e-10</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.scf.addons.remove_linear_dep" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Args:</dt>
 <dd><dl class="first last docutils">
@@ -4908,7 +5134,7 @@ dependence issue.</dd>
 
 <dl class="function">
 <dt id="pyscf.scf.addons.remove_linear_dep_">
-<code class="descclassname">pyscf.scf.addons.</code><code class="descname">remove_linear_dep_</code><span class="sig-paren">(</span><em>mf</em>, <em>threshold=1e-08</em>, <em>lindep=1e-14</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/addons.html#remove_linear_dep_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.addons.remove_linear_dep_" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyscf.scf.addons.</code><code class="descname">remove_linear_dep_</code><span class="sig-paren">(</span><em>mf</em>, <em>threshold=1e-08</em>, <em>lindep=1e-10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/scf/addons.html#remove_linear_dep_"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.scf.addons.remove_linear_dep_" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Args:</dt>
 <dd><dl class="first last docutils">

@@ -203,6 +203,7 @@
 <span class="sd">&#39;&#39;&#39;</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">ctypes</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -594,34 +595,66 @@
 <span class="s1">&#39;VWN3&#39;</span>          <span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
 <span class="s1">&#39;VWNRPA&#39;</span>        <span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
 <span class="s1">&#39;VWN5&#39;</span>          <span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+<span class="s1">&#39;B88&#39;</span>           <span class="p">:</span> <span class="mi">106</span><span class="p">,</span>
 <span class="s1">&#39;BLYP&#39;</span>          <span class="p">:</span> <span class="s1">&#39;B88,LYP&#39;</span><span class="p">,</span>
 <span class="s1">&#39;BP86&#39;</span>          <span class="p">:</span> <span class="s1">&#39;B88,P86&#39;</span><span class="p">,</span>
 <span class="s1">&#39;PBE0&#39;</span>          <span class="p">:</span> <span class="mi">406</span><span class="p">,</span>
 <span class="s1">&#39;PBE1PBE&#39;</span>       <span class="p">:</span> <span class="mi">406</span><span class="p">,</span>
+<span class="s1">&#39;OPTXCORR&#39;</span>      <span class="p">:</span> <span class="s1">&#39;0.7344536875999693*SLATER - 0.6984752285760186*OPTX,&#39;</span><span class="p">,</span>
 <span class="s1">&#39;B3LYP&#39;</span>         <span class="p">:</span> <span class="s1">&#39;B3LYP5&#39;</span><span class="p">,</span>  <span class="c1"># VWN5 version</span>
-<span class="s1">&#39;B3LYP5&#39;</span>        <span class="p">:</span> <span class="s1">&#39;.2*HF + .08*LDA + .72*B88, .81*LYP + .19*VWN&#39;</span><span class="p">,</span>
+<span class="s1">&#39;B3LYP5&#39;</span>        <span class="p">:</span> <span class="s1">&#39;.2*HF + .08*SLATER + .72*B88, .81*LYP + .19*VWN&#39;</span><span class="p">,</span>
 <span class="s1">&#39;B3LYPG&#39;</span>        <span class="p">:</span> <span class="mi">402</span><span class="p">,</span>  <span class="c1"># VWN3, used by Gaussian</span>
 <span class="s1">&#39;B3P86&#39;</span>         <span class="p">:</span> <span class="s1">&#39;B3P865&#39;</span><span class="p">,</span>  <span class="c1"># VWN5 version</span>
-<span class="s1">&#39;B3P865&#39;</span>        <span class="p">:</span> <span class="s1">&#39;.2*HF + .08*LDA + .72*B88, .81*P86 + .19*VWN&#39;</span><span class="p">,</span>
-<span class="s1">&#39;B3P86G&#39;</span>        <span class="p">:</span> <span class="mi">403</span><span class="p">,</span>  <span class="c1"># VWN3, used by Gaussian</span>
+<span class="s1">&#39;B3P865&#39;</span>        <span class="p">:</span> <span class="s1">&#39;.2*HF + .08*SLATER + .72*B88, .81*P86 + .19*VWN&#39;</span><span class="p">,</span>
+<span class="c1">#?&#39;B3P86G&#39;        : 403,  # VWN3, used by Gaussian</span>
+<span class="s1">&#39;B3P86G&#39;</span>        <span class="p">:</span> <span class="s1">&#39;.2*HF + .08*SLATER + .72*B88, .81*P86 + .19*VWN3&#39;</span><span class="p">,</span>
+<span class="s1">&#39;B3PW91&#39;</span>        <span class="p">:</span> <span class="s1">&#39;B3PW915&#39;</span><span class="p">,</span>
+<span class="s1">&#39;B3PW915&#39;</span>       <span class="p">:</span> <span class="s1">&#39;.2*HF + .08*SLATER + .72*B88, .81*PW91 + .19*VWN&#39;</span><span class="p">,</span>
+<span class="c1">#&#39;B3PW91G&#39;       : &#39;.2*HF + .08*SLATER + .72*B88, .81*PW91 + .19*VWN3&#39;,</span>
+<span class="s1">&#39;B3PW91G&#39;</span>       <span class="p">:</span> <span class="mi">401</span><span class="p">,</span>
+<span class="c1">#&#39;O3LYP5&#39;        : &#39;.1161*HF + .9262*SLATER + .8133*OPTXCORR, .81*LYP + .19*VWN5&#39;,</span>
+<span class="c1">#&#39;O3LYPG&#39;        : &#39;.1161*HF + .9262*SLATER + .8133*OPTXCORR, .81*LYP + .19*VWN3&#39;,</span>
+<span class="s1">&#39;O3LYP&#39;</span>         <span class="p">:</span> <span class="mi">404</span><span class="p">,</span> <span class="c1"># in libxc == &#39;.1161*HF + 0.071006917*SLATER + .8133*OPTX, .81*LYP + .19*VWN5&#39;, may be erroreous</span>
 <span class="s1">&#39;MPW3PW&#39;</span>        <span class="p">:</span> <span class="s1">&#39;MPW3PW5&#39;</span><span class="p">,</span>  <span class="c1"># VWN5 version</span>
-<span class="s1">&#39;MPW3PW5&#39;</span>       <span class="p">:</span> <span class="s1">&#39;.2*HF + .08*LDA + .72*MPW91, .81*PW91 + .19*VWN&#39;</span><span class="p">,</span>
+<span class="s1">&#39;MPW3PW5&#39;</span>       <span class="p">:</span> <span class="s1">&#39;.2*HF + .08*SLATER + .72*MPW91, .81*PW91 + .19*VWN&#39;</span><span class="p">,</span>
 <span class="s1">&#39;MPW3PWG&#39;</span>       <span class="p">:</span> <span class="mi">415</span><span class="p">,</span>  <span class="c1"># VWN3, used by Gaussian</span>
 <span class="s1">&#39;MPW3LYP&#39;</span>       <span class="p">:</span> <span class="s1">&#39;MPW3LYP5&#39;</span><span class="p">,</span>  <span class="c1"># VWN5 version</span>
-<span class="s1">&#39;MPW3LYP5&#39;</span>      <span class="p">:</span> <span class="s1">&#39;.218*HF + .073*LDA + .709*MPW91, .871*LYP + .129*VWN&#39;</span><span class="p">,</span>
+<span class="s1">&#39;MPW3LYP5&#39;</span>      <span class="p">:</span> <span class="s1">&#39;.218*HF + .073*SLATER + .709*MPW91, .871*LYP + .129*VWN&#39;</span><span class="p">,</span>
 <span class="s1">&#39;MPW3LYPG&#39;</span>      <span class="p">:</span> <span class="mi">419</span><span class="p">,</span>  <span class="c1"># VWN3, used by Gaussian</span>
 <span class="s1">&#39;REVB3LYP&#39;</span>      <span class="p">:</span> <span class="s1">&#39;REVB3LYP5&#39;</span><span class="p">,</span>  <span class="c1"># VWN5 version</span>
-<span class="s1">&#39;REVB3LYP5&#39;</span>     <span class="p">:</span> <span class="s1">&#39;.2*HF + .13*LDA + .67*B88, .84*LYP + .16*VWN&#39;</span><span class="p">,</span>
+<span class="s1">&#39;REVB3LYP5&#39;</span>     <span class="p">:</span> <span class="s1">&#39;.2*HF + .13*SLATER + .67*B88, .84*LYP + .16*VWN&#39;</span><span class="p">,</span>
 <span class="s1">&#39;REVB3LYPG&#39;</span>     <span class="p">:</span> <span class="mi">454</span><span class="p">,</span>  <span class="c1"># VWN3, used by Gaussian</span>
 <span class="s1">&#39;X3LYP&#39;</span>         <span class="p">:</span> <span class="s1">&#39;X3LYP5&#39;</span><span class="p">,</span>  <span class="c1"># VWN5 version</span>
-<span class="s1">&#39;X3LYP5&#39;</span>        <span class="p">:</span> <span class="s1">&#39;.218*HF + .073*LDA + .478575*B88 + .166615*PW91, .871*LYP + .129*VWN&#39;</span><span class="p">,</span>
+<span class="s1">&#39;X3LYP5&#39;</span>        <span class="p">:</span> <span class="s1">&#39;.218*HF + .073*SLATER + .542385*B88 + .166615*PW91, .871*LYP + .129*VWN&#39;</span><span class="p">,</span>
 <span class="s1">&#39;X3LYPG&#39;</span>        <span class="p">:</span> <span class="mi">411</span><span class="p">,</span>  <span class="c1"># VWN3, used by Gaussian</span>
-<span class="s1">&#39;XC_MGGA_X_M06L&#39;</span><span class="p">:</span> <span class="mi">203</span><span class="p">,</span>
-<span class="s1">&#39;XC_MGGA_C_M06L&#39;</span><span class="p">:</span> <span class="mi">233</span><span class="p">,</span>
 <span class="s1">&#39;CAMB3LYP&#39;</span>      <span class="p">:</span> <span class="s1">&#39;XC_HYB_GGA_XC_CAM_B3LYP&#39;</span><span class="p">,</span>
 <span class="s1">&#39;CAMYBLYP&#39;</span>      <span class="p">:</span> <span class="s1">&#39;XC_HYB_GGA_XC_CAMY_BLYP&#39;</span><span class="p">,</span>
 <span class="s1">&#39;CAMYB3LYP&#39;</span>     <span class="p">:</span> <span class="s1">&#39;XC_HYB_GGA_XC_CAMY_B3LYP&#39;</span><span class="p">,</span>
+<span class="s1">&#39;B5050LYP&#39;</span>      <span class="p">:</span> <span class="s1">&#39;.5*HF + .08*SLATER + .42*B88, .81*LYP + .19*VWN&#39;</span><span class="p">,</span>
+<span class="s1">&#39;MPW1LYP&#39;</span>       <span class="p">:</span> <span class="s1">&#39;.25*HF + .75*MPW91, LYP&#39;</span><span class="p">,</span>
+<span class="s1">&#39;MPW1PBE&#39;</span>       <span class="p">:</span> <span class="s1">&#39;.25*HF + .75*MPW91, PBE&#39;</span><span class="p">,</span>
+<span class="s1">&#39;PBE50&#39;</span>         <span class="p">:</span> <span class="s1">&#39;.5*HF + .5*PBE, PBE&#39;</span><span class="p">,</span>
+<span class="s1">&#39;REVPBE0&#39;</span>       <span class="p">:</span> <span class="s1">&#39;.25*HF + .75*PBE_R, PBE&#39;</span><span class="p">,</span>
+<span class="s1">&#39;B1B95&#39;</span>         <span class="p">:</span> <span class="mi">440</span><span class="p">,</span>
+<span class="s1">&#39;TPSS0&#39;</span>         <span class="p">:</span> <span class="s1">&#39;.25*HF + .75*TPSS, TPSS&#39;</span><span class="p">,</span>
 <span class="p">}</span>
+
+<span class="k">def</span> <span class="nf">_xc_key_without_underscore</span><span class="p">(</span><span class="n">xc_keys</span><span class="p">):</span>
+    <span class="n">new_xc</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">xc_keys</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;XC_&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">delimeter</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;_XC_&#39;</span><span class="p">,</span> <span class="s1">&#39;_X_&#39;</span><span class="p">,</span> <span class="s1">&#39;_C_&#39;</span><span class="p">,</span> <span class="s1">&#39;_K_&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">delimeter</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                    <span class="n">key0</span><span class="p">,</span> <span class="n">key1</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimeter</span><span class="p">)</span>
+                    <span class="n">new_key1</span> <span class="o">=</span> <span class="n">key1</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">key1</span> <span class="o">!=</span> <span class="n">new_key1</span><span class="p">:</span>
+                        <span class="n">new_xc</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key0</span><span class="o">+</span><span class="n">delimeter</span><span class="o">+</span><span class="n">new_key1</span><span class="p">,</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+                    <span class="k">break</span>
+    <span class="k">return</span> <span class="n">new_xc</span>
+<span class="n">XC_CODES</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_xc_key_without_underscore</span><span class="p">(</span><span class="n">XC_CODES</span><span class="p">))</span>
+<span class="k">del</span><span class="p">(</span><span class="n">_xc_key_without_underscore</span><span class="p">)</span>
+
+<span class="n">XC_KEYS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">XC_CODES</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
 <span class="c1"># Some XC functionals have conventional name, like M06-L means M06-L for X</span>
 <span class="c1"># functional and M06-L for C functional, PBE mean PBE-X plus PBE-C. If the</span>
@@ -631,13 +664,58 @@
 <span class="c1"># shortcut for XC functional.</span>
 <span class="n">XC_ALIAS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="c1"># Conventional name : name in XC_CODES</span>
+    <span class="s1">&#39;BLYP&#39;</span>              <span class="p">:</span> <span class="s1">&#39;B88,LYP&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;BP86&#39;</span>              <span class="p">:</span> <span class="s1">&#39;B88,P86&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PW91&#39;</span>              <span class="p">:</span> <span class="s1">&#39;PW91,PW91&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PBE&#39;</span>               <span class="p">:</span> <span class="s1">&#39;PBE,PBE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;REVPBE&#39;</span>            <span class="p">:</span> <span class="s1">&#39;PBE_R,PBE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PBESOL&#39;</span>            <span class="p">:</span> <span class="s1">&#39;PBE_SOL,PBE_SOL&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PKZB&#39;</span>              <span class="p">:</span> <span class="s1">&#39;PKZB,PKZB&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;TPSS&#39;</span>              <span class="p">:</span> <span class="s1">&#39;TPSS,TPSS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;REVTPSS&#39;</span>           <span class="p">:</span> <span class="s1">&#39;REVTPSS,REVTPSS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;SCAN&#39;</span>              <span class="p">:</span> <span class="s1">&#39;SCAN,SCAN&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;SOGGA&#39;</span>             <span class="p">:</span> <span class="s1">&#39;SOGGA,PBE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;BLOC&#39;</span>              <span class="p">:</span> <span class="s1">&#39;BLOC,TPSSLOC&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;OLYP&#39;</span>              <span class="p">:</span> <span class="s1">&#39;OPTX,LYP&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RPBE&#39;</span>              <span class="p">:</span> <span class="s1">&#39;RPBE,PBE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;BPBE&#39;</span>              <span class="p">:</span> <span class="s1">&#39;B88,PBE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MPW91&#39;</span>             <span class="p">:</span> <span class="s1">&#39;MPW91,PW91&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;HFLYP&#39;</span>             <span class="p">:</span> <span class="s1">&#39;HF,LYP&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;HFPW92&#39;</span>            <span class="p">:</span> <span class="s1">&#39;HF,PW_MOD&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;SPW92&#39;</span>             <span class="p">:</span> <span class="s1">&#39;SLATER,PW_MOD&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;SVWN&#39;</span>              <span class="p">:</span> <span class="s1">&#39;SLATER,VWN&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MS0&#39;</span>               <span class="p">:</span> <span class="s1">&#39;MS0,REGTPSS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MS1&#39;</span>               <span class="p">:</span> <span class="s1">&#39;MS1,REGTPSS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MS2&#39;</span>               <span class="p">:</span> <span class="s1">&#39;MS2,REGTPSS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MS2H&#39;</span>              <span class="p">:</span> <span class="s1">&#39;MS2H,REGTPSS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MVS&#39;</span>               <span class="p">:</span> <span class="s1">&#39;MVS,REGTPSS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MVSH&#39;</span>              <span class="p">:</span> <span class="s1">&#39;MVSH,REGTPSS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;SOGGA11&#39;</span>           <span class="p">:</span> <span class="s1">&#39;SOGGA11,SOGGA11&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;SOGGA11-X&#39;</span>         <span class="p">:</span> <span class="s1">&#39;SOGGA11_X,SOGGA11_X&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;KT1&#39;</span>               <span class="p">:</span> <span class="s1">&#39;KT1,VWN&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DLDF&#39;</span>              <span class="p">:</span> <span class="s1">&#39;DLDF,DLDF&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GAM&#39;</span>               <span class="p">:</span> <span class="s1">&#39;GAM,GAM&#39;</span><span class="p">,</span>
     <span class="s1">&#39;M06-L&#39;</span>             <span class="p">:</span> <span class="s1">&#39;M06_L,M06_L&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;PBE&#39;</span>               <span class="p">:</span> <span class="s1">&#39;PBE,PBE&#39;</span>
+    <span class="s1">&#39;M11-L&#39;</span>             <span class="p">:</span> <span class="s1">&#39;M11_L,M11_L&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MN12-L&#39;</span>            <span class="p">:</span> <span class="s1">&#39;MN12_L,MN12_L&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MN15-L&#39;</span>            <span class="p">:</span> <span class="s1">&#39;MN15_L,MN15_L&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;N12&#39;</span>               <span class="p">:</span> <span class="s1">&#39;N12,N12&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;N12-SX&#39;</span>            <span class="p">:</span> <span class="s1">&#39;N12_SX,N12_SX&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MN12-SX&#39;</span>           <span class="p">:</span> <span class="s1">&#39;MN12_SX,MN12_SX&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MN15&#39;</span>              <span class="p">:</span> <span class="s1">&#39;MN15,MN15&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MBEEF&#39;</span>             <span class="p">:</span> <span class="s1">&#39;MBEEF,PBE_SOL&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;SCAN0&#39;</span>             <span class="p">:</span> <span class="s1">&#39;SCAN0,SCAN&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PBEOP&#39;</span>             <span class="p">:</span> <span class="s1">&#39;PBE,OP_PBE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;BOP&#39;</span>               <span class="p">:</span> <span class="s1">&#39;B88,OP_B88&#39;</span><span class="p">,</span>
 <span class="p">}</span>
-
-<span class="n">XC_KEYS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">XC_CODES</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="n">XC_ALIAS</span><span class="o">.</span><span class="n">update</span><span class="p">([(</span><span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">),</span> <span class="n">XC_ALIAS</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">XC_ALIAS</span> <span class="k">if</span> <span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">])</span>
 
 <span class="n">VV10_XC</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="s1">&#39;B97M_V&#39;</span><span class="p">,</span> <span class="s1">&#39;WB97M_V&#39;</span><span class="p">,</span> <span class="s1">&#39;WB97X_V&#39;</span><span class="p">,</span> <span class="s1">&#39;VV10&#39;</span><span class="p">,</span> <span class="s1">&#39;LC_VV10&#39;</span><span class="p">))</span>
+
+<span class="n">PROBLEMATIC_XC</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">XC_CODES</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
+                       <span class="p">(</span><span class="s1">&#39;XC_GGA_C_SPBE&#39;</span><span class="p">,</span> <span class="s1">&#39;XC_MGGA_X_TPSS&#39;</span><span class="p">,</span> <span class="s1">&#39;XC_MGGA_X_REVTPSS&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;XC_MGGA_C_TPSSLOC&#39;</span><span class="p">,</span> <span class="s1">&#39;XC_HYB_MGGA_XC_TPSSH&#39;</span><span class="p">)])</span>
 
 <span class="k">def</span> <span class="nf">xc_type</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -663,7 +741,7 @@
 <span class="k">def</span> <span class="nf">is_hybrid_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">xc_code</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
-            <span class="k">return</span> <span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_is_hybrid</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xc_code</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_is_hybrid</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;HF&#39;</span> <span class="ow">in</span> <span class="n">xc_code</span> <span class="ow">or</span> <span class="n">hybrid_coeff</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
@@ -714,7 +792,7 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">hyb</span><span class="p">,</span> <span class="n">fn_facs</span> <span class="o">=</span> <span class="n">parse_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">fac</span> <span class="ow">in</span> <span class="n">fn_facs</span><span class="p">:</span>
-        <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_hybrid_coeff</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xid</span><span class="p">))</span>
+        <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fac</span> <span class="o">*</span> <span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_hybrid_coeff</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">xid</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="nlc_coeff"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.libxc.nlc_coeff">[docs]</a><span class="k">def</span> <span class="nf">nlc_coeff</span><span class="p">(</span><span class="n">xc_code</span><span class="p">):</span>
@@ -739,21 +817,31 @@
 <span class="sd">    SR_HFX = &lt; pi | e^{-omega r_{12}}/r_{12} | iq &gt;</span>
 <span class="sd">    LR_HFX = &lt; pi | (1-e^{-omega r_{12}})/r_{12} | iq &gt;</span>
 <span class="sd">    alpha = c_LR</span>
-<span class="sd">    beta = c_SR - c_LR</span>
+<span class="sd">    beta = c_SR - c_LR = hyb - alpha</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">xc_code</span><span class="p">:</span>
+        <span class="c1"># Parse only X part for the RSH coefficients.  This is to handle</span>
+        <span class="c1"># exceptions for C functionals such as M11.</span>
+        <span class="n">xc_code</span> <span class="o">=</span> <span class="n">xc_code</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span>
     <span class="n">hyb</span><span class="p">,</span> <span class="n">fn_facs</span> <span class="o">=</span> <span class="n">parse_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">)</span>
+
     <span class="n">hyb</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">omega</span> <span class="o">=</span> <span class="n">hyb</span>
     <span class="n">beta</span> <span class="o">=</span> <span class="n">hyb</span> <span class="o">-</span> <span class="n">alpha</span>
     <span class="n">rsh_pars</span> <span class="o">=</span> <span class="p">[</span><span class="n">omega</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">]</span>
     <span class="n">rsh_tmp</span> <span class="o">=</span> <span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="o">*</span><span class="mi">3</span><span class="p">)()</span>
+    <span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_rsh_coeff</span><span class="p">(</span><span class="mi">433</span><span class="p">,</span> <span class="n">rsh_tmp</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">fac</span> <span class="ow">in</span> <span class="n">fn_facs</span><span class="p">:</span>
         <span class="n">_itrf</span><span class="o">.</span><span class="n">LIBXC_rsh_coeff</span><span class="p">(</span><span class="n">xid</span><span class="p">,</span> <span class="n">rsh_tmp</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">rsh_pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">rsh_pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">rsh_tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">elif</span> <span class="n">rsh_pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">rsh_tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">rsh_tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">rsh_pars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">rsh_tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Different values of omega found for RSH functionals&#39;</span><span class="p">)</span>
-        <span class="n">rsh_pars</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">rsh_tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">rsh_pars</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">rsh_tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># libxc-3.0.0 bug https://gitlab.com/libxc/libxc/issues/46</span>
+        <span class="c1">#if _itrf.LIBXC_is_hybrid(ctypes.c_int(xid)):</span>
+        <span class="c1">#    rsh_pars[1] += rsh_tmp[1] * fac</span>
+        <span class="c1">#    rsh_pars[2] += rsh_tmp[2] * fac</span>
+        <span class="n">rsh_pars</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">rsh_tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">fac</span>
+        <span class="n">rsh_pars</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">rsh_tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">fac</span>
     <span class="k">return</span> <span class="n">rsh_pars</span></div>
 
 <div class="viewcode-block" id="parse_xc_name"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.libxc.parse_xc_name">[docs]</a><span class="k">def</span> <span class="nf">parse_xc_name</span><span class="p">(</span><span class="n">xc_name</span><span class="o">=</span><span class="s1">&#39;LDA,VWN&#39;</span><span class="p">):</span>
@@ -771,32 +859,33 @@
 <span class="sd">      first part describes the exchange functional, the second is the correlation</span>
 <span class="sd">      functional.</span>
 
-<span class="sd">      - If &quot;,&quot; was not in string, the entire string is considered as a XC</span>
-<span class="sd">        functional (if applicable).</span>
-<span class="sd">      - To apply only X functional (without C functional), leave blank in the</span>
-<span class="sd">        second part, e.g. description=&#39;lda,&#39; for pure LDA functional</span>
-<span class="sd">      - To neglect X functional (just apply C functional), leave blank in the</span>
-<span class="sd">        first part, e.g. description=&#39;,vwn&#39; for pure VWN functional</span>
-<span class="sd">      - If compound XC functional (including both X and C functionals, such as</span>
-<span class="sd">        b3lyp) is specified, no matter whehter it is in the X part (the string</span>
-<span class="sd">        in front of comma) or the C part (the string behind comma), both X and C</span>
-<span class="sd">        functionals of the compound XC functional will be used.</span>
+<span class="sd">      - If &quot;,&quot; was not in string, the entire string is considered as a</span>
+<span class="sd">        compound XC functional (including both X and C functionals, such as b3lyp).</span>
+<span class="sd">      - To input only X functional (without C functional), leave the second</span>
+<span class="sd">        part blank. E.g. description=&#39;slater,&#39; means pure LDA functional.</span>
+<span class="sd">      - To neglect X functional (just apply C functional), leave the first</span>
+<span class="sd">        part blank. E.g. description=&#39;,vwn&#39; means pure VWN functional.</span>
+<span class="sd">      - If compound XC functional is specified, no matter whehter it is in the</span>
+<span class="sd">        X part (the string in front of comma) or the C part (the string behind</span>
+<span class="sd">        comma), both X and C functionals of the compound XC functional will be</span>
+<span class="sd">        used.</span>
 
 <span class="sd">    * The functional name can be placed in arbitrary order.  Two name needs to</span>
 <span class="sd">      be separated by operators &quot;+&quot; or &quot;-&quot;.  Blank spaces are ignored.</span>
 <span class="sd">      NOTE the parser only reads operators &quot;+&quot; &quot;-&quot; &quot;*&quot;.  / is not in support.</span>
-<span class="sd">    * A functional name is associated with one factor.  If the factor is not</span>
-<span class="sd">      given, it is assumed equaling 1.  Compound functional can be scaled as a</span>
-<span class="sd">      unit. For example &#39;0.5*b3lyp&#39; is equivalent to</span>
+<span class="sd">    * A functional name can have at most one factor.  If the factor is not</span>
+<span class="sd">      given, it is set to 1.  Compound functional can be scaled as a unit. For</span>
+<span class="sd">      example &#39;0.5*b3lyp&#39; is equivalent to</span>
 <span class="sd">      &#39;HF*0.1 + .04*LDA + .36*B88, .405*LYP + .095*VWN&#39;</span>
 <span class="sd">    * String &quot;HF&quot; stands for exact exchange (HF K matrix).  Putting &quot;HF&quot; in</span>
 <span class="sd">      correlation functional part is the same to putting &quot;HF&quot; in exchange</span>
 <span class="sd">      part.</span>
 <span class="sd">    * String &quot;RSH&quot; means range-separated operator. Its format is</span>
-<span class="sd">      RSH(alpha; beta; omega).  Another way to input RSH is &quot;SR-HF(0.1)&quot; and</span>
-<span class="sd">      &quot;LR-HF(0.1)&quot;.  The number in parenthesis is the value of omega.</span>
+<span class="sd">      RSH(alpha; beta; omega).  Another way to input RSH is to use keywords</span>
+<span class="sd">      SR_HF and LR_HF: &quot;SR_HF(0.1) * alpha_plus_beta&quot; and &quot;LR_HF(0.1) *</span>
+<span class="sd">      alpha&quot; where the number in parenthesis is the value of omega.</span>
 <span class="sd">    * Be careful with the libxc convention on GGA functional, in which the LDA</span>
-<span class="sd">      contribution is included.</span>
+<span class="sd">      contribution has been included.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        xc_code : str</span>
@@ -867,45 +956,57 @@
 
 <span class="sd">        see also libxc_itrf.c</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">hyb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># hybrid, alpha, omega</span>
+    <span class="n">hyb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># hybrid, alpha, omega (== SR_HF, LR_HF, omega)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">hyb</span><span class="p">,</span> <span class="p">[(</span><span class="n">description</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)]</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span> <span class="c1">#isinstance(description, (tuple,list)):</span>
         <span class="k">return</span> <span class="n">parse_xc</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">description</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">assign_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">hyb</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">assign_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">hyb_or_sr</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">hyb</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">omega</span> <span class="ow">or</span> <span class="n">omega</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">hyb_or_sr</span>
+            <span class="n">hyb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">lr</span>
+        <span class="k">elif</span> <span class="n">hyb</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">hyb_or_sr</span>
+            <span class="n">hyb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">lr</span>
             <span class="n">hyb</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">omega</span>
-        <span class="k">elif</span> <span class="n">hyb</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">omega</span><span class="p">:</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Different values of omega found for RSH functionals&#39;</span><span class="p">)</span>
     <span class="n">fn_facs</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">def</span> <span class="nf">parse_token</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">possible_xc_for</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">token</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+                <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="n">token</span> <span class="o">=</span> <span class="n">token</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span>
             <span class="k">if</span> <span class="s1">&#39;*&#39;</span> <span class="ow">in</span> <span class="n">token</span><span class="p">:</span>
                 <span class="n">fac</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">fac</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isalpha</span><span class="p">():</span>
                     <span class="n">fac</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="p">,</span> <span class="n">fac</span>
-                <span class="n">fac</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">fac</span><span class="p">)</span>
+                <span class="n">fac</span> <span class="o">=</span> <span class="n">sign</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">fac</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">fac</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">token</span>
+                <span class="n">fac</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">sign</span><span class="p">,</span> <span class="n">token</span>
+
             <span class="k">if</span> <span class="n">key</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;RSH&#39;</span><span class="p">:</span>
 <span class="c1"># RSH(alpha; beta; omega): Range-separated-hybrid functional</span>
                 <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">omega</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">key</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)]</span>
-                <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">alpha</span> <span class="o">+</span> <span class="n">beta</span>
-                <span class="n">hyb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">alpha</span>
-                <span class="n">assign_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
+                <span class="n">assign_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">fac</span><span class="o">*</span><span class="p">(</span><span class="n">alpha</span><span class="o">+</span><span class="n">beta</span><span class="p">),</span> <span class="n">fac</span><span class="o">*</span><span class="n">alpha</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;HF&#39;</span><span class="p">:</span>
                 <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fac</span>
+                <span class="n">hyb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fac</span>  <span class="c1"># also add to LR_HF</span>
             <span class="k">elif</span> <span class="s1">&#39;SR_HF&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
-                <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fac</span>
                 <span class="k">if</span> <span class="s1">&#39;(&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
                     <span class="n">omega</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-                    <span class="n">assign_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
+                    <span class="n">assign_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">fac</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># Assuming this omega the same to the existing omega</span>
+                    <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fac</span>
             <span class="k">elif</span> <span class="s1">&#39;LR_HF&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
-                <span class="n">hyb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fac</span>  <span class="c1"># alpha</span>
                 <span class="k">if</span> <span class="s1">&#39;(&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
                     <span class="n">omega</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-                    <span class="n">assign_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
+                    <span class="n">assign_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">fac</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">hyb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fac</span>  <span class="c1"># == alpha</span>
             <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
                 <span class="n">fn_facs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">fac</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
@@ -917,8 +1018,15 @@
                         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">possible_xc</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                             <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Possible xc_code </span><span class="si">%s</span><span class="s1"> matches </span><span class="si">%s</span><span class="s1">. &#39;</span>
                                              <span class="o">%</span> <span class="p">(</span><span class="n">possible_xc</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
-                            <span class="n">x_id</span> <span class="o">=</span> <span class="n">possible_xc</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-                            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Take </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">x_id</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">x_id</span> <span class="ow">in</span> <span class="n">possible_xc</span><span class="p">:</span>  <span class="c1"># Prefer X functional</span>
+                                <span class="k">if</span> <span class="s1">&#39;_X_&#39;</span> <span class="ow">in</span> <span class="n">x_id</span><span class="p">:</span>
+                                    <span class="k">break</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">x_id</span> <span class="o">=</span> <span class="n">possible_xc</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;XC parser takes </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">x_id</span><span class="p">)</span>
+                            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;You can add prefix to </span><span class="si">%s</span><span class="s1"> for a &#39;</span>
+                                             <span class="s1">&#39;specific functional (e.g. X_</span><span class="si">%s</span><span class="s1">)</span><span class="se">\n</span><span class="s1">&#39;</span>
+                                             <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">x_id</span> <span class="o">=</span> <span class="n">possible_xc</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
                         <span class="n">x_id</span> <span class="o">=</span> <span class="n">XC_CODES</span><span class="p">[</span><span class="n">x_id</span><span class="p">]</span>
@@ -927,15 +1035,15 @@
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                     <span class="n">hyb1</span><span class="p">,</span> <span class="n">fn_facs1</span> <span class="o">=</span> <span class="n">parse_xc</span><span class="p">(</span><span class="n">x_id</span><span class="p">)</span>
 <span class="c1"># Recursively scale the composed functional, to support e.g. &#39;0.5*b3lyp&#39;</span>
-                    <span class="n">hyb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">hyb1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">fac</span>
-                    <span class="n">hyb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">hyb1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">fac</span>
-                    <span class="n">assign_omega</span><span class="p">(</span><span class="n">hyb1</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">hyb1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">hyb1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">assign_omega</span><span class="p">(</span><span class="n">hyb1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">hyb1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">fac</span><span class="p">,</span> <span class="n">hyb1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">fac</span><span class="p">)</span>
                     <span class="n">fn_facs</span><span class="o">.</span><span class="n">extend</span><span class="p">([(</span><span class="n">xid</span><span class="p">,</span> <span class="n">c</span><span class="o">*</span><span class="n">fac</span><span class="p">)</span> <span class="k">for</span> <span class="n">xid</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">fn_facs1</span><span class="p">])</span>
                 <span class="k">elif</span> <span class="n">x_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">fn_facs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x_id</span><span class="p">,</span> <span class="n">fac</span><span class="p">))</span>
     <span class="k">def</span> <span class="nf">possible_x_for</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+        <span class="n">key1</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">set</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39;XC_&#39;</span><span class="o">+</span><span class="n">key</span><span class="p">,</span>
                     <span class="s1">&#39;XC_LDA_X_&#39;</span><span class="o">+</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39;XC_GGA_X_&#39;</span><span class="o">+</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39;XC_MGGA_X_&#39;</span><span class="o">+</span><span class="n">key</span><span class="p">,</span>
                     <span class="s1">&#39;XC_HYB_GGA_X_&#39;</span><span class="o">+</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39;XC_HYB_MGGA_X_&#39;</span><span class="o">+</span><span class="n">key</span><span class="p">))</span>
@@ -964,7 +1072,7 @@
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">fn_ids</span><span class="p">,</span> <span class="n">facs</span><span class="p">))</span>
 
     <span class="n">description</span> <span class="o">=</span> <span class="n">description</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-    <span class="k">if</span> <span class="s1">&#39;,&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">description</span> <span class="ow">and</span> <span class="n">description</span> <span class="ow">in</span> <span class="n">XC_ALIAS</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">description</span> <span class="ow">in</span> <span class="n">XC_ALIAS</span><span class="p">:</span>
         <span class="n">description</span> <span class="o">=</span> <span class="n">XC_ALIAS</span><span class="p">[</span><span class="n">description</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">description</span><span class="p">:</span>  <span class="c1"># To handle e.g. M06-L</span>
@@ -981,22 +1089,41 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">description</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;+-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">):</span>
             <span class="n">parse_token</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">possible_xc_for</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hyb</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># No omega is assigned. LR_HF is 0 for normal Coulomb operator</span>
+        <span class="n">hyb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">return</span> <span class="n">hyb</span><span class="p">,</span> <span class="n">remove_dup</span><span class="p">(</span><span class="n">fn_facs</span><span class="p">)</span></div>
 
-<span class="n">_NAME_WITH_DASH</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;SR-HF&#39;</span>  <span class="p">:</span> <span class="s1">&#39;SR_HF&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;LR-HF&#39;</span>  <span class="p">:</span> <span class="s1">&#39;LR_HF&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;OTPSS-D&#39;</span><span class="p">:</span> <span class="s1">&#39;OTPSS_D&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;M06-L&#39;</span>  <span class="p">:</span> <span class="s1">&#39;M06_L&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;M05-2X&#39;</span> <span class="p">:</span> <span class="s1">&#39;M05_2X&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;M06-HF&#39;</span> <span class="p">:</span> <span class="s1">&#39;M06_HF&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;M06-2X&#39;</span> <span class="p">:</span> <span class="s1">&#39;M06_2X&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;M08-HX&#39;</span> <span class="p">:</span> <span class="s1">&#39;M08_HX&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;M08-SO&#39;</span> <span class="p">:</span> <span class="s1">&#39;M08_SO&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;M11-L&#39;</span>  <span class="p">:</span> <span class="s1">&#39;M11_L&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;MN12-L&#39;</span> <span class="p">:</span> <span class="s1">&#39;MN12_L&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;B97M-V&#39;</span> <span class="p">:</span> <span class="s1">&#39;B97M_V&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;MN15-L&#39;</span> <span class="p">:</span> <span class="s1">&#39;MN15_L&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;MN12-SX&#39;</span><span class="p">:</span> <span class="s1">&#39;MN12_SX&#39;</span><span class="p">}</span>
+<span class="n">_NAME_WITH_DASH</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;SR-HF&#39;</span>    <span class="p">:</span> <span class="s1">&#39;SR_HF&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;LR-HF&#39;</span>    <span class="p">:</span> <span class="s1">&#39;LR_HF&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;OTPSS-D&#39;</span>  <span class="p">:</span> <span class="s1">&#39;OTPSS_D&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;B97-1&#39;</span>    <span class="p">:</span> <span class="s1">&#39;B97_1&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;B97-2&#39;</span>    <span class="p">:</span> <span class="s1">&#39;B97_2&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;B97-3&#39;</span>    <span class="p">:</span> <span class="s1">&#39;B97_3&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;B97-K&#39;</span>    <span class="p">:</span> <span class="s1">&#39;B97_K&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;B97-D&#39;</span>    <span class="p">:</span> <span class="s1">&#39;B97_D&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;HCTH-93&#39;</span>  <span class="p">:</span> <span class="s1">&#39;HCTH_93&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;HCTH-120&#39;</span> <span class="p">:</span> <span class="s1">&#39;HCTH_120&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;HCTH-147&#39;</span> <span class="p">:</span> <span class="s1">&#39;HCTH_147&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;HCTH-407&#39;</span> <span class="p">:</span> <span class="s1">&#39;HCTH_407&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;WB97X-D&#39;</span>  <span class="p">:</span> <span class="s1">&#39;WB97X_D&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;WB97X-V&#39;</span>  <span class="p">:</span> <span class="s1">&#39;WB97X_V&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;WB97M-V&#39;</span>  <span class="p">:</span> <span class="s1">&#39;WB97M_V&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;B97M-V&#39;</span>   <span class="p">:</span> <span class="s1">&#39;B97M_V&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;M05-2X&#39;</span>   <span class="p">:</span> <span class="s1">&#39;M05_2X&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;M06-L&#39;</span>    <span class="p">:</span> <span class="s1">&#39;M06_L&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;M06-HF&#39;</span>   <span class="p">:</span> <span class="s1">&#39;M06_HF&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;M06-2X&#39;</span>   <span class="p">:</span> <span class="s1">&#39;M06_2X&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;M08-HX&#39;</span>   <span class="p">:</span> <span class="s1">&#39;M08_HX&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;M08-SO&#39;</span>   <span class="p">:</span> <span class="s1">&#39;M08_SO&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;M11-L&#39;</span>    <span class="p">:</span> <span class="s1">&#39;M11_L&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;MN12-L&#39;</span>   <span class="p">:</span> <span class="s1">&#39;MN12_L&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;MN15-L&#39;</span>   <span class="p">:</span> <span class="s1">&#39;MN15_L&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;MN12-SX&#39;</span>  <span class="p">:</span> <span class="s1">&#39;MN12_SX&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;N12-SX&#39;</span>   <span class="p">:</span> <span class="s1">&#39;N12_SX&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;LRC-WPBE&#39;</span> <span class="p">:</span> <span class="s1">&#39;LRC_WPBE&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;LRC-WPBEH&#39;</span><span class="p">:</span> <span class="s1">&#39;LRC_WPBEH&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;LC-VV10&#39;</span>  <span class="p">:</span> <span class="s1">&#39;LC_VV10&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;CAM-B3LYP&#39;</span><span class="p">:</span> <span class="s1">&#39;CAM_B3LYP&#39;</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="eval_xc"><a class="viewcode-back" href="../../../dft.html#pyscf.dft.libxc.eval_xc">[docs]</a><span class="k">def</span> <span class="nf">eval_xc</span><span class="p">(</span><span class="n">xc_code</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relativity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1109,6 +1236,13 @@
 
     <span class="n">fn_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">fn_facs</span><span class="p">]</span>
     <span class="n">facs</span>   <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">fn_facs</span><span class="p">]</span>
+    <span class="n">fn_ids_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">fn_ids</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fn_ids_set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">PROBLEMATIC_XC</span><span class="p">):</span>
+        <span class="n">problem_xc</span> <span class="o">=</span> <span class="p">[</span><span class="n">PROBLEMATIC_XC</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                      <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">fn_ids_set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">PROBLEMATIC_XC</span><span class="p">)]</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Libxc functionals </span><span class="si">%s</span><span class="s1"> have large discrepancy to xcfun &#39;</span>
+                      <span class="s1">&#39;library.</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">problem_xc</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="nb">all</span><span class="p">((</span><span class="n">is_lda</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">fn_ids</span><span class="p">)):</span>
         <span class="k">if</span> <span class="n">spin</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">nvar</span> <span class="o">=</span> <span class="mi">1</span>
@@ -1126,7 +1260,7 @@
             <span class="n">nvar</span> <span class="o">=</span> <span class="mi">5</span>
     <span class="n">outlen</span> <span class="o">=</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">nvar</span><span class="o">+</span><span class="n">deriv</span><span class="p">)</span> <span class="o">//</span>
               <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">nvar</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">deriv</span><span class="p">)))</span>
-    <span class="k">if</span> <span class="n">SINGULAR_IDS</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">fn_ids</span><span class="p">)</span> <span class="ow">and</span> <span class="n">deriv</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">SINGULAR_IDS</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">fn_ids_set</span><span class="p">)</span> <span class="ow">and</span> <span class="n">deriv</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">non0idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">rho_u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">rho_d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span>
         <span class="n">rho_u</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rho_u</span><span class="p">[:,</span><span class="n">non0idx</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
         <span class="n">rho_d</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rho_d</span><span class="p">[:,</span><span class="n">non0idx</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
@@ -1183,6 +1317,8 @@
             <span class="n">vxc</span> <span class="o">=</span> <span class="n">outbuf</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">deriv</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">fxc</span> <span class="o">=</span> <span class="n">outbuf</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">15</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">deriv</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">kxc</span> <span class="o">=</span> <span class="n">outbuf</span><span class="p">[</span><span class="mi">15</span><span class="p">:</span><span class="mi">19</span><span class="p">]</span>
     <span class="k">elif</span> <span class="n">nvar</span> <span class="o">==</span> <span class="mi">9</span><span class="p">:</span>  <span class="c1"># MGGA</span>
         <span class="k">if</span> <span class="n">deriv</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">vxc</span> <span class="o">=</span> <span class="p">(</span><span class="n">outbuf</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">outbuf</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">outbuf</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">outbuf</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
@@ -1198,7 +1334,7 @@
     <span class="sd">&#39;&#39;&#39;Define XC functional.  See also :func:`eval_xc` for the rules of input description.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        ni : an instance of :class:`_NumInt`</span>
+<span class="sd">        ni : an instance of :class:`NumInt`</span>
 
 <span class="sd">        description : str</span>
 <span class="sd">            A string to describe the linear combination of different XC functionals.</span>
@@ -1262,8 +1398,12 @@
         <span class="p">[</span><span class="s2">&quot;O&quot;</span> <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span>     <span class="p">,</span> <span class="mf">0.</span><span class="p">)],</span>
         <span class="p">[</span><span class="mi">1</span>   <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="o">-</span><span class="mf">0.757</span> <span class="p">,</span> <span class="mf">0.587</span><span class="p">)],</span>
         <span class="p">[</span><span class="mi">1</span>   <span class="p">,</span> <span class="p">(</span><span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.757</span>  <span class="p">,</span> <span class="mf">0.587</span><span class="p">)]</span> <span class="p">],</span>
-        <span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;6311g**&#39;</span><span class="p">,)</span>
+        <span class="p">)</span><span class="c1">#basis = &#39;6311g**&#39;,)</span>
     <span class="n">mf</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">RKS</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">_numint</span><span class="o">.</span><span class="n">libxc</span> <span class="o">=</span> <span class="n">dft</span><span class="o">.</span><span class="n">xcfun</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s1">&#39;camb3lyp&#39;</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+    <span class="n">exit</span><span class="p">()</span>
     <span class="n">mf</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="s1">&#39;b88,lyp&#39;</span>
     <span class="n">eref</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 

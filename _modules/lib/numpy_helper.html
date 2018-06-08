@@ -554,16 +554,24 @@
 <span class="sd">     [ 6.  7.  8.]]</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">assert</span><span class="p">(</span><span class="n">hermi</span> <span class="o">==</span> <span class="n">HERMITIAN</span> <span class="ow">or</span> <span class="n">hermi</span> <span class="o">==</span> <span class="n">ANTIHERMI</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">mat</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">c_contiguous</span><span class="p">:</span>
-        <span class="k">assert</span><span class="p">(</span><span class="ow">not</span> <span class="n">inplace</span><span class="p">)</span>
-        <span class="n">mat</span> <span class="o">=</span> <span class="n">mat</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inplace</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">mat</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mat</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">c_contiguous</span><span class="p">:</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">mat</span>
+    <span class="k">elif</span> <span class="n">mat</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">f_contiguous</span><span class="p">:</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">mat</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
     <span class="n">nd</span> <span class="o">=</span> <span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">nd</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">mat</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">numpy</span><span class="o">.</span><span class="n">double</span><span class="p">:</span>
         <span class="n">fn</span> <span class="o">=</span> <span class="n">_np_helper</span><span class="o">.</span><span class="n">NPdsymm_triu</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">fn</span> <span class="o">=</span> <span class="n">_np_helper</span><span class="o">.</span><span class="n">NPzhermi_triu</span>
     <span class="n">fn</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span>
-    <span class="n">fn</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nd</span><span class="p">),</span> <span class="n">mat</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
+    <span class="n">fn</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">nd</span><span class="p">),</span> <span class="n">buf</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data_as</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">),</span>
        <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">hermi</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">mat</span></div>
 
@@ -1139,7 +1147,21 @@
 
 
 <span class="k">class</span> <span class="nc">NPArrayWithTag</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-    <span class="k">pass</span>
+    <span class="c1"># Initialize kwargs in function tag_array</span>
+    <span class="c1">#def __new__(cls, a, **kwargs):</span>
+    <span class="c1">#    obj = numpy.asarray(a).view(cls)</span>
+    <span class="c1">#    obj.__dict__.update(kwargs)</span>
+    <span class="c1">#    return obj</span>
+<span class="c1"># Customize __reduce__ and __setstate__ to keep tags after serialization</span>
+<span class="c1"># pickle.loads(pickle.dumps(tagarray)).  This is needed by mpi communication</span>
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pickled</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">pickled</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">,)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">pickled</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pickled</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
 <div class="viewcode-block" id="tag_array"><a class="viewcode-back" href="../../lib.html#lib.numpy_helper.tag_array">[docs]</a><span class="k">def</span> <span class="nf">tag_array</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Attach attributes to numpy ndarray. The attribute name and value are</span>
 <span class="sd">    obtained from the keyword arguments.</span>
@@ -1182,8 +1204,8 @@
         <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
     <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="o">-</span><span class="n">a</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
     <span class="n">b</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">b</span><span class="p">,</span><span class="n">b</span><span class="p">))</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">hermi_triu</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">hermi_triu</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">hermi_triu</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">unpack_tril</span><span class="p">(</span><span class="n">pack_tril</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>

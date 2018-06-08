@@ -210,8 +210,10 @@
 <span class="sd">J. Chem. Phys. 147, 164119 (2017)</span>
 <span class="sd">&#39;&#39;&#39;</span>
 
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">h5py</span>
@@ -490,7 +492,10 @@
                     <span class="n">j3cI</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">))</span>
             <span class="n">v</span> <span class="o">=</span> <span class="kc">None</span>
 
-            <span class="n">shls_slice</span> <span class="o">=</span> <span class="p">(</span><span class="n">bstart</span><span class="p">,</span> <span class="n">bend</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bend</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">aosym</span> <span class="o">==</span> <span class="s1">&#39;s2&#39;</span><span class="p">:</span>
+                <span class="n">shls_slice</span> <span class="o">=</span> <span class="p">(</span><span class="n">bstart</span><span class="p">,</span> <span class="n">bend</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bend</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shls_slice</span> <span class="o">=</span> <span class="p">(</span><span class="n">bstart</span><span class="p">,</span> <span class="n">bend</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">nbas</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">p0</span><span class="p">,</span> <span class="n">p1</span> <span class="ow">in</span> <span class="n">lib</span><span class="o">.</span><span class="n">prange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ngrids</span><span class="p">,</span> <span class="n">Gblksize</span><span class="p">):</span>
                 <span class="n">dat</span> <span class="o">=</span> <span class="n">ft_ao</span><span class="o">.</span><span class="n">_ft_aopair_kpts</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">Gv</span><span class="p">[</span><span class="n">p0</span><span class="p">:</span><span class="n">p1</span><span class="p">],</span> <span class="n">shls_slice</span><span class="p">,</span> <span class="n">aosym</span><span class="p">,</span>
                                             <span class="n">b</span><span class="p">,</span> <span class="n">gxyz</span><span class="p">[</span><span class="n">p0</span><span class="p">:</span><span class="n">p1</span><span class="p">],</span> <span class="n">Gvbase</span><span class="p">,</span> <span class="n">kpt</span><span class="p">,</span>
@@ -600,6 +605,15 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">auxcell</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cderi</span> <span class="o">=</span> <span class="kc">None</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">n</span><span class="o">//</span><span class="mi">2</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">]</span>
+    <span class="nd">@gs</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">gs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Attribute .gs is deprecated. It is replaced by attribute .mesh.</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;mesh = the number of PWs (=2*gs+1) for each direction.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+
     <span class="k">def</span> <span class="nf">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">new_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -662,11 +676,17 @@
         <span class="k">if</span> <span class="n">with_j3c</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cderi_to_save</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="n">cderi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cderi_to_save</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cderi</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Value of _cderi is ignored. DF &#39;</span>
-                                <span class="s1">&#39;integrals will be saved in file </span><span class="si">%s</span><span class="s1"> .&#39;</span><span class="p">,</span> <span class="n">cderi</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">cderi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cderi_to_save</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cderi</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cderi</span> <span class="o">==</span> <span class="n">cderi</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">cderi</span><span class="p">):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;DF integrals in </span><span class="si">%s</span><span class="s1"> (specified by &#39;</span>
+                                <span class="s1">&#39;._cderi) is overwritten by GDF &#39;</span>
+                                <span class="s1">&#39;initialization. &#39;</span><span class="p">,</span> <span class="n">cderi</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Value of ._cderi is ignored. &#39;</span>
+                                <span class="s1">&#39;DF integrals will be saved in file </span><span class="si">%s</span><span class="s1"> .&#39;</span><span class="p">,</span>
+                                <span class="n">cderi</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cderi</span> <span class="o">=</span> <span class="n">cderi</span>
             <span class="n">t1</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">(),</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_make_j3c</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">auxcell</span><span class="p">,</span> <span class="n">kptij_lst</span><span class="p">,</span> <span class="n">cderi</span><span class="p">)</span>

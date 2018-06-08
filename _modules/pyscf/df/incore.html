@@ -204,14 +204,14 @@
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="k">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span>
 <span class="kn">from</span> <span class="nn">pyscf.df</span> <span class="k">import</span> <span class="n">addons</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">__config__</span>
 
 
-<div class="viewcode-block" id="format_aux_basis"><a class="viewcode-back" href="../../../df.html#pyscf.df.incore.format_aux_basis">[docs]</a><span class="k">def</span> <span class="nf">format_aux_basis</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s1">&#39;weigend+etb&#39;</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;See also pyscf.df.addons.make_auxmol.</span>
+<span class="n">LINEAR_DEP_THR</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;df_df_DF_lindep&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">12</span><span class="p">)</span>
 
-<span class="sd">    This funciton is defined for backward compatibility.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">return</span> <span class="n">addons</span><span class="o">.</span><span class="n">make_auxmol</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxbasis</span><span class="p">)</span></div>
+
+<span class="c1"># This funciton is aliased for backward compatibility.</span>
+<span class="n">format_aux_basis</span> <span class="o">=</span> <span class="n">addons</span><span class="o">.</span><span class="n">make_auxmol</span>
 
 
 <span class="c1"># (ij|L)</span>
@@ -259,18 +259,22 @@
     <span class="n">naux</span> <span class="o">=</span> <span class="n">j2c</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;size of aux basis </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">naux</span><span class="p">)</span>
     <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s1">&#39;2c2e&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t0</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">low</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">j2c</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
-        <span class="n">j2c</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">diag_indices</span><span class="p">(</span><span class="n">j2c</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">+=</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">14</span>
-        <span class="n">low</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">j2c</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">j2c</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s1">&#39;Cholesky 2c2e&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t1</span><span class="p">)</span>
 
     <span class="n">j3c</span> <span class="o">=</span> <span class="n">fauxe2</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxmol</span><span class="p">,</span> <span class="n">intor</span><span class="o">=</span><span class="n">int3c</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="n">aosym</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">naux</span><span class="p">)</span>
     <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s1">&#39;3c2e&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t1</span><span class="p">)</span>
-    <span class="n">cderi</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">j3c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                          <span class="n">overwrite_b</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">j2c</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">j2c</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="s1">&#39;Cholesky 2c2e&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">t1</span><span class="p">)</span>
+        <span class="n">cderi</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">j3c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                              <span class="n">overwrite_b</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">j2c</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">w</span> <span class="o">&gt;</span> <span class="n">LINEAR_DEP_THR</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span> <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
+        <span class="n">cderi</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">j3c</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
     <span class="n">j3c</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">cderi</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">f_contiguous</span><span class="p">:</span>
         <span class="n">cderi</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">cderi</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>

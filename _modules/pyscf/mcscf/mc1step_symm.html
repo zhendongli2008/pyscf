@@ -204,6 +204,7 @@
 <span class="kn">from</span> <span class="nn">pyscf.mcscf</span> <span class="k">import</span> <span class="n">mc1step</span>
 <span class="kn">from</span> <span class="nn">pyscf.mcscf</span> <span class="k">import</span> <span class="n">mc2step</span>
 <span class="kn">from</span> <span class="nn">pyscf.mcscf</span> <span class="k">import</span> <span class="n">casci_symm</span>
+<span class="kn">from</span> <span class="nn">pyscf.mcscf</span> <span class="k">import</span> <span class="n">addons</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">fci</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">__config__</span>
 
@@ -276,7 +277,23 @@
         <span class="sd">&#39;&#39;&#39;Rotate orbitals with the given unitary matrix&#39;&#39;&#39;</span>
         <span class="n">mo</span> <span class="o">=</span> <span class="n">mc1step</span><span class="o">.</span><span class="n">CASSCF</span><span class="o">.</span><span class="n">rotate_mo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
         <span class="n">mo</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">tag_array</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">orbsym</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span><span class="o">.</span><span class="n">orbsym</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">mo</span></div></div>
+        <span class="k">return</span> <span class="n">mo</span></div>
+
+<div class="viewcode-block" id="SymAdaptedCASSCF.sort_mo_by_irrep"><a class="viewcode-back" href="../../../mcscf.html#pyscf.mcscf.mc1step_symm.SymAdaptedCASSCF.sort_mo_by_irrep">[docs]</a>    <span class="k">def</span> <span class="nf">sort_mo_by_irrep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cas_irrep_nocc</span><span class="p">,</span>
+                         <span class="n">cas_irrep_ncore</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Select active space based on symmetry information.</span>
+<span class="sd">        See also :func:`pyscf.mcscf.addons.sort_mo_by_irrep`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">mo_coeff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">mo_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mo_coeff</span>
+        <span class="k">return</span> <span class="n">addons</span><span class="o">.</span><span class="n">sort_mo_by_irrep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo_coeff</span><span class="p">,</span> <span class="n">cas_irrep_nocc</span><span class="p">,</span>
+                                       <span class="n">cas_irrep_ncore</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">newton</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">pyscf.mcscf</span> <span class="k">import</span> <span class="n">newton_casscf_symm</span>
+        <span class="n">mc1</span> <span class="o">=</span> <span class="n">newton_casscf_symm</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelecas</span><span class="p">)</span>
+        <span class="n">mc1</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
+        <span class="n">mc1</span><span class="o">.</span><span class="n">max_cycle_micro</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="k">return</span> <span class="n">mc1</span></div>
 
 <span class="n">CASSCF</span> <span class="o">=</span> <span class="n">SymAdaptedCASSCF</span>
 
