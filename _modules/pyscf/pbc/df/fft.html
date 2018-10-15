@@ -108,13 +108,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../grad.html">19. grad &#8212; Analytical nuclear gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../hessian.html">20. hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../pbc.html">21. pbc &#8212; Periodic boundary conditions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../lo.html">22. lo &#8212; Orbital localization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../advanced.html">23. Miscellaneous</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../qmmm.html">24. qmmm &#8212; QM/MM interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../mrpt.html">25. mrpt &#8212; Multi-reference perturbation theory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../benchmark.html">26. Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../code-rule.html">27. Code standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../version.html">28. Version history</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../nao.html">22. nao &#8212; Numerical Atomic Orbitals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../lo.html">23. lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../advanced.html">24. Miscellaneous</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../qmmm.html">25. qmmm &#8212; QM/MM interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../mrpt.html">26. mrpt &#8212; Multi-reference perturbation theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../benchmark.html">27. Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../code-rule.html">28. Code standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../version.html">29. Version history</a></li>
 </ul>
 
             
@@ -202,7 +203,6 @@
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">lib</span>
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="k">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="k">import</span> <span class="n">tools</span>
 <span class="kn">from</span> <span class="nn">pyscf.pbc.gto</span> <span class="k">import</span> <span class="n">pseudo</span><span class="p">,</span> <span class="n">estimate_ke_cutoff</span><span class="p">,</span> <span class="n">error_for_ke_cutoff</span>
@@ -215,22 +215,21 @@
 
 
 <span class="k">def</span> <span class="nf">get_nuc</span><span class="p">(</span><span class="n">mydf</span><span class="p">,</span> <span class="n">kpts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="n">cell</span> <span class="o">=</span> <span class="n">mydf</span><span class="o">.</span><span class="n">cell</span>
     <span class="k">if</span> <span class="n">kpts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">kpts_lst</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">kpts_lst</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">kpts</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
 
-    <span class="n">low_dim_ft_type</span> <span class="o">=</span> <span class="n">mydf</span><span class="o">.</span><span class="n">low_dim_ft_type</span>
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">mydf</span><span class="o">.</span><span class="n">cell</span>
     <span class="n">mesh</span> <span class="o">=</span> <span class="n">mydf</span><span class="o">.</span><span class="n">mesh</span>
     <span class="n">charge</span> <span class="o">=</span> <span class="o">-</span><span class="n">cell</span><span class="o">.</span><span class="n">atom_charges</span><span class="p">()</span>
     <span class="n">Gv</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get_Gv</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
     <span class="n">SI</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get_SI</span><span class="p">(</span><span class="n">Gv</span><span class="p">)</span>
     <span class="n">rhoG</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">charge</span><span class="p">,</span> <span class="n">SI</span><span class="p">)</span>
 
-    <span class="n">coulG</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">get_coulG</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">Gv</span><span class="o">=</span><span class="n">Gv</span><span class="p">,</span> <span class="n">low_dim_ft_type</span><span class="o">=</span><span class="n">low_dim_ft_type</span><span class="p">)</span>
+    <span class="n">coulG</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">get_coulG</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">Gv</span><span class="o">=</span><span class="n">Gv</span><span class="p">)</span>
     <span class="n">vneG</span> <span class="o">=</span> <span class="n">rhoG</span> <span class="o">*</span> <span class="n">coulG</span>
-    <span class="n">vneR</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">vneG</span><span class="p">,</span> <span class="n">mydf</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+    <span class="n">vneR</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">vneG</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
 
     <span class="n">vne</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">kpts_lst</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">ao_ks_etc</span><span class="p">,</span> <span class="n">p0</span><span class="p">,</span> <span class="n">p1</span> <span class="ow">in</span> <span class="n">mydf</span><span class="o">.</span><span class="n">aoR_loop</span><span class="p">(</span><span class="n">mydf</span><span class="o">.</span><span class="n">grids</span><span class="p">,</span> <span class="n">kpts_lst</span><span class="p">):</span>
@@ -246,20 +245,18 @@
 <span class="k">def</span> <span class="nf">get_pp</span><span class="p">(</span><span class="n">mydf</span><span class="p">,</span> <span class="n">kpts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Get the periodic pseudotential nuc-el AO matrix, with G=0 removed.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span>
     <span class="n">cell</span> <span class="o">=</span> <span class="n">mydf</span><span class="o">.</span><span class="n">cell</span>
     <span class="k">if</span> <span class="n">kpts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">kpts_lst</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">kpts_lst</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">kpts</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
 
-    <span class="n">low_dim_ft_type</span> <span class="o">=</span> <span class="n">mydf</span><span class="o">.</span><span class="n">low_dim_ft_type</span>
     <span class="n">mesh</span> <span class="o">=</span> <span class="n">mydf</span><span class="o">.</span><span class="n">mesh</span>
     <span class="n">SI</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get_SI</span><span class="p">()</span>
     <span class="n">Gv</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get_Gv</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
-    <span class="n">vpplocG</span> <span class="o">=</span> <span class="n">pseudo</span><span class="o">.</span><span class="n">get_vlocG</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">Gv</span><span class="p">,</span> <span class="n">low_dim_ft_type</span><span class="p">)</span>
+    <span class="n">vpplocG</span> <span class="o">=</span> <span class="n">pseudo</span><span class="o">.</span><span class="n">get_vlocG</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">Gv</span><span class="p">)</span>
     <span class="n">vpplocG</span> <span class="o">=</span> <span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ij-&gt;j&#39;</span><span class="p">,</span> <span class="n">SI</span><span class="p">,</span> <span class="n">vpplocG</span><span class="p">)</span>
-    <span class="c1"># from get_jvloc_G0 function</span>
-    <span class="n">vpplocG</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pseudo</span><span class="o">.</span><span class="n">get_alphas</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">low_dim_ft_type</span><span class="p">))</span>
     <span class="n">ngrids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vpplocG</span><span class="p">)</span>
 
     <span class="c1"># vpploc evaluated in real-space</span>
@@ -287,7 +284,7 @@
     <span class="k">def</span> <span class="nf">vppnl_by_k</span><span class="p">(</span><span class="n">kpt</span><span class="p">):</span>
         <span class="n">Gk</span> <span class="o">=</span> <span class="n">Gv</span> <span class="o">+</span> <span class="n">kpt</span>
         <span class="n">G_rad</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">Gk</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">aokG</span> <span class="o">=</span> <span class="n">ft_ao</span><span class="o">.</span><span class="n">ft_ao</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">Gv</span><span class="p">,</span> <span class="n">kpt</span><span class="o">=</span><span class="n">kpt</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">ngrids</span><span class="o">/</span><span class="n">cell</span><span class="o">.</span><span class="n">vol</span><span class="p">)</span>
+        <span class="n">aokG</span> <span class="o">=</span> <span class="n">ft_ao</span><span class="o">.</span><span class="n">ft_ao</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">Gv</span><span class="p">,</span> <span class="n">kpt</span><span class="o">=</span><span class="n">kpt</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">cell</span><span class="o">.</span><span class="n">vol</span><span class="p">)</span><span class="o">**.</span><span class="mi">5</span>
         <span class="n">vppnl</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">ia</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">natm</span><span class="p">):</span>
             <span class="n">symb</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">atom_symbol</span><span class="p">(</span><span class="n">ia</span><span class="p">)</span>
@@ -326,7 +323,7 @@
                         <span class="n">SPG_lm_aoG</span> <span class="o">=</span> <span class="n">SPG_lm_aoGs</span><span class="p">[</span><span class="n">p0</span><span class="p">:</span><span class="n">p1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nl</span><span class="p">,</span><span class="n">l</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
                         <span class="n">tmp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,jmp-&gt;imp&#39;</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">SPG_lm_aoG</span><span class="p">)</span>
                         <span class="n">vppnl</span> <span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;imp,imq-&gt;pq&#39;</span><span class="p">,</span> <span class="n">SPG_lm_aoG</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">tmp</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">vppnl</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">ngrids</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vppnl</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">cell</span><span class="o">.</span><span class="n">vol</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">kpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">kpts_lst</span><span class="p">):</span>
         <span class="n">vppnl</span> <span class="o">=</span> <span class="n">vppnl_by_k</span><span class="p">(</span><span class="n">kpt</span><span class="p">)</span>
@@ -350,7 +347,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">stdout</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">verbose</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_memory</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">max_memory</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">low_dim_ft_type</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">low_dim_ft_type</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">kpts</span> <span class="o">=</span> <span class="n">kpts</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">grids</span> <span class="o">=</span> <span class="n">gen_grid</span><span class="o">.</span><span class="n">UniformGrids</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
@@ -358,8 +354,10 @@
         <span class="c1"># to mimic molecular DF object</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">blockdim</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">__config__</span><span class="p">,</span> <span class="s1">&#39;pbc_df_df_DF_blockdim&#39;</span><span class="p">,</span> <span class="mi">240</span><span class="p">)</span>
 
-<span class="c1"># Not input options</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">exxdiv</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># to mimic KRHF/KUHF object in function get_coulG</span>
+        <span class="c1"># The following attributes are not input options.</span>
+        <span class="c1"># self.exxdiv has no effects. It was set in the get_k_kpts function to</span>
+        <span class="c1"># mimic the KRHF/KUHF object in the call to tools.get_coulG.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exxdiv</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_numint</span> <span class="o">=</span> <span class="n">numint</span><span class="o">.</span><span class="n">KNumInt</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
@@ -372,7 +370,7 @@
 
     <span class="k">def</span> <span class="nf">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;******** </span><span class="si">%s</span><span class="s1"> flags ********&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;******** </span><span class="si">%s</span><span class="s1"> ********&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;mesh = </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%d</span><span class="s1"> PWs)&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">))</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;len(kpts) = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kpts</span><span class="p">))</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;    kpts = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kpts</span><span class="p">)</span>
@@ -381,15 +379,11 @@
     <span class="k">def</span> <span class="nf">check_sanity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">lib</span><span class="o">.</span><span class="n">StreamObject</span><span class="o">.</span><span class="n">check_sanity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span>
-        <span class="k">if</span> <span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span>
+            <span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">cell</span><span class="o">.</span><span class="n">low_dim_ft_type</span> <span class="o">==</span> <span class="s1">&#39;inf_vacuum&#39;</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;FFTDF method does not support 0D/1D low-dimension &#39;</span>
                                <span class="s1">&#39;PBC system.  DF, MDF or AFTDF methods should &#39;</span>
                                <span class="s1">&#39;be used.</span><span class="se">\n</span><span class="s1">See also examples/pbc/31-low_dimensional_pbc.py&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">low_dim_ft_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;FFTDF method does not support low_dim_ft_type of None &#39;</span>
-                               <span class="s1">&#39;for 2D systems.  Supported types include </span><span class="se">\&#39;</span><span class="s1">analytic_2d_1</span><span class="se">\&#39;</span><span class="s1">. &#39;</span>
-                               <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">See also examples/pbc/32-graphene.py&#39;</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="n">cell</span><span class="o">.</span><span class="n">has_ecp</span><span class="p">():</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;FFTDF integrals are found in all-electron &#39;</span>
                         <span class="s1">&#39;calculation.  It often causes huge error.</span><span class="se">\n</span><span class="s1">&#39;</span>
@@ -424,14 +418,11 @@
         <span class="k">if</span> <span class="n">kpts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">kpts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kpts</span>
         <span class="n">kpts</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kpts</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span>
+            <span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">cell</span><span class="o">.</span><span class="n">low_dim_ft_type</span> <span class="o">==</span> <span class="s1">&#39;inf_vacuum&#39;</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;FFTDF method does not support low-dimension &#39;</span>
                                <span class="s1">&#39;PBC system.  DF, MDF or AFTDF methods should &#39;</span>
                                <span class="s1">&#39;be used.</span><span class="se">\n</span><span class="s1">See also examples/pbc/31-low_dimensional_pbc.py&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">low_dim_ft_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;FFTDF method only supports low_dim_ft_type of None &#39;</span>
-                               <span class="s1">&#39;for 2D systems.  Supported types include </span><span class="se">\&#39;</span><span class="s1">analytic_2d_1</span><span class="se">\&#39;</span><span class="s1">. &#39;</span>
-                               <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">See also examples/pbc/32-graphene.py&#39;</span><span class="p">)</span>
 
         <span class="n">max_memory</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_memory</span><span class="o">-</span><span class="n">lib</span><span class="o">.</span><span class="n">current_memory</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">ni</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numint</span>
@@ -450,8 +441,7 @@
                <span class="n">with_j</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_k</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exxdiv</span><span class="o">=</span><span class="s1">&#39;ewald&#39;</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">pyscf.pbc.df</span> <span class="k">import</span> <span class="n">fft_jk</span>
         <span class="k">if</span> <span class="n">kpts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kpts</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
-                <span class="c1"># Gamma-point calculation by default</span>
+            <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kpts</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span> <span class="c1"># Gamma-point J/K by default</span>
                 <span class="n">kpts</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">kpts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kpts</span>
@@ -471,6 +461,7 @@
 
     <span class="n">get_eri</span> <span class="o">=</span> <span class="n">get_ao_eri</span> <span class="o">=</span> <span class="n">fft_ao2mo</span><span class="o">.</span><span class="n">get_eri</span>
     <span class="n">ao2mo</span> <span class="o">=</span> <span class="n">get_mo_eri</span> <span class="o">=</span> <span class="n">fft_ao2mo</span><span class="o">.</span><span class="n">general</span>
+    <span class="n">ao2mo_7d</span> <span class="o">=</span> <span class="n">fft_ao2mo</span><span class="o">.</span><span class="n">ao2mo_7d</span>
     <span class="n">get_ao_pairs_G</span> <span class="o">=</span> <span class="n">get_ao_pairs</span> <span class="o">=</span> <span class="n">fft_ao2mo</span><span class="o">.</span><span class="n">get_ao_pairs_G</span>
     <span class="n">get_mo_pairs_G</span> <span class="o">=</span> <span class="n">get_mo_pairs</span> <span class="o">=</span> <span class="n">fft_ao2mo</span><span class="o">.</span><span class="n">get_mo_pairs_G</span>
 
@@ -483,11 +474,15 @@
 <span class="c1"># With this function to mimic the molecular DF.loop function, the pbc gamma</span>
 <span class="c1"># point DF object can be used in the molecular code</span>
     <span class="k">def</span> <span class="nf">loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blksize</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;ERIs of 1D and 2D systems are not positive &#39;</span>
+                               <span class="s1">&#39;definite. Current API only supports postive &#39;</span>
+                               <span class="s1">&#39;definite ERIs.&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">blksize</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">blksize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockdim</span>
         <span class="n">kpts0</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
-        <span class="n">coulG</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">get_coulG</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
-                                <span class="n">low_dim_ft_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">low_dim_ft_type</span><span class="p">)</span>
+        <span class="n">coulG</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">get_coulG</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
         <span class="n">ngrids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coulG</span><span class="p">)</span>
         <span class="n">ao_pairs_G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ao_pairs_G</span><span class="p">(</span><span class="n">kpts0</span><span class="p">,</span> <span class="n">compact</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">ao_pairs_G</span> <span class="o">*=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">coulG</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">vol</span><span class="o">/</span><span class="n">ngrids</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>

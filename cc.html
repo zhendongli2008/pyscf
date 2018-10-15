@@ -131,13 +131,14 @@
 <li class="toctree-l1"><a class="reference internal" href="grad.html">19. grad &#8212; Analytical nuclear gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hessian.html">20. hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pbc.html">21. pbc &#8212; Periodic boundary conditions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="lo.html">22. lo &#8212; Orbital localization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="advanced.html">23. Miscellaneous</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qmmm.html">24. qmmm &#8212; QM/MM interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mrpt.html">25. mrpt &#8212; Multi-reference perturbation theory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="benchmark.html">26. Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="code-rule.html">27. Code standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="version.html">28. Version history</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nao.html">22. nao &#8212; Numerical Atomic Orbitals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lo.html">23. lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">24. Miscellaneous</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qmmm.html">25. qmmm &#8212; QM/MM interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrpt.html">26. mrpt &#8212; Multi-reference perturbation theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">27. Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code-rule.html">28. Code standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="version.html">29. Version history</a></li>
 </ul>
 
             
@@ -539,6 +540,15 @@ population analysis.</p>
 <span class="n">E</span><span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;pqrs,pqrs&#39;</span><span class="p">,</span> <span class="n">eri</span><span class="p">,</span> <span class="n">dm2</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
 <span class="n">E</span><span class="o">+=</span> <span class="n">mol</span><span class="o">.</span><span class="n">energy_nuc</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;E(CCSD) = </span><span class="si">%s</span><span class="s1">, reference </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">mycc</span><span class="o">.</span><span class="n">e_tot</span><span class="p">))</span>
+
+
+<span class="c1"># When plotting CCSD density on the grids, CCSD density matrices need to be</span>
+<span class="c1"># first transformed to AO basis.</span>
+<span class="n">dm1_ao</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;pi,ij,qj-&gt;pq&#39;</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">,</span> <span class="n">dm1</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+
+<span class="kn">from</span> <span class="nn">pyscf.tools</span> <span class="k">import</span> <span class="n">cubegen</span>
+<span class="n">cubegen</span><span class="o">.</span><span class="n">density</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="s1">&#39;rho_ccsd.cube&#39;</span><span class="p">,</span> <span class="n">dm1_ao</span><span class="p">)</span>
+
 </pre></div>
 </div>
 </div>
@@ -641,6 +651,8 @@ This class supports the calculation of CCSD 1- and 2-particle density matrices.<
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>Allow for asynchronous function execution. Default is True.</dd>
 <dt>incore_complete</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>Avoid all I/O (also for DIIS). Default is False.</dd>
+<dt>level_shift</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>A shift on virtual orbital energies to stablize the CCSD iteration</dd>
 <dt>frozen</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">int or list</span><dd><p class="first">If integer is given, the inner-most orbitals are frozen from CC
 amplitudes.  Given the orbital indices (0-based) in a list, both
@@ -712,6 +724,8 @@ occupied and virtual orbitals can be frozen in CC calculation.</p>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>Allow for asynchronous function execution. Default is True.</dd>
 <dt>incore_complete</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><dd>Avoid all I/O (also for DIIS). Default is False.</dd>
+<dt>level_shift</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>A shift on virtual orbital energies to stablize the CCSD iteration</dd>
 <dt>frozen</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">int or list</span><dd><p class="first">If integer is given, the inner-most orbitals are frozen from CC
 amplitudes.  Given the orbital indices (0-based) in a list, both
@@ -933,7 +947,6 @@ not support complex integrals.</p>
 <code class="descclassname">pyscf.cc.addons.</code><code class="descname">spatial2spin</code><span class="sig-paren">(</span><em>tx</em>, <em>orbspin=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/addons.html#spatial2spin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.addons.spatial2spin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert T1/T2 of spatial orbital representation to T1/T2 of
 spin-orbital representation</p>
-<p>call orbspin_of_sorted_mo_energy to get orbspin</p>
 </dd></dl>
 
 <dl class="function">
@@ -941,13 +954,6 @@ spin-orbital representation</p>
 <code class="descclassname">pyscf.cc.addons.</code><code class="descname">spatial2spinorb</code><span class="sig-paren">(</span><em>tx</em>, <em>orbspin=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.cc.addons.spatial2spinorb" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert T1/T2 of spatial orbital representation to T1/T2 of
 spin-orbital representation</p>
-<p>call orbspin_of_sorted_mo_energy to get orbspin</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyscf.cc.addons.spin2spatial">
-<code class="descclassname">pyscf.cc.addons.</code><code class="descname">spin2spatial</code><span class="sig-paren">(</span><em>tx</em>, <em>orbspin</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/cc/addons.html#spin2spatial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.cc.addons.spin2spatial" title="Permalink to this definition">¶</a></dt>
-<dd><p>call orbspin_of_sorted_mo_energy to get orbspin</p>
 </dd></dl>
 
 </div>

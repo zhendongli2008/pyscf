@@ -108,13 +108,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../grad.html">19. grad &#8212; Analytical nuclear gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../hessian.html">20. hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../pbc.html">21. pbc &#8212; Periodic boundary conditions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../lo.html">22. lo &#8212; Orbital localization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">23. Miscellaneous</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../qmmm.html">24. qmmm &#8212; QM/MM interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mrpt.html">25. mrpt &#8212; Multi-reference perturbation theory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../benchmark.html">26. Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../code-rule.html">27. Code standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../version.html">28. Version history</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../nao.html">22. nao &#8212; Numerical Atomic Orbitals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../lo.html">23. lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">24. Miscellaneous</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../qmmm.html">25. qmmm &#8212; QM/MM interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mrpt.html">26. mrpt &#8212; Multi-reference perturbation theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmark.html">27. Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code-rule.html">28. Code standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../version.html">29. Version history</a></li>
 </ul>
 
             
@@ -574,6 +575,7 @@
 
 <div class="viewcode-block" id="symm_identical_atoms"><a class="viewcode-back" href="../../../symm.html#pyscf.symm.geom.symm_identical_atoms">[docs]</a><span class="k">def</span> <span class="nf">symm_identical_atoms</span><span class="p">(</span><span class="n">gpname</span><span class="p">,</span> <span class="n">atoms</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39; Requires &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">gto</span>
     <span class="c1"># Dooh Coov for linear molecule</span>
     <span class="k">if</span> <span class="n">gpname</span> <span class="o">==</span> <span class="s1">&#39;Dooh&#39;</span><span class="p">:</span>
         <span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -591,13 +593,15 @@
         <span class="n">eql_atom_ids</span> <span class="o">=</span> <span class="p">[[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">atoms</span><span class="p">)]</span>
         <span class="k">return</span> <span class="n">eql_atom_ids</span>
 
-    <span class="n">center</span> <span class="o">=</span> <span class="n">mole</span><span class="o">.</span><span class="n">charge_center</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+    <span class="n">charges</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">gto</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">])</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">])</span>
+    <span class="n">center</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;z,zr-&gt;r&#39;</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span><span class="o">/</span><span class="n">charges</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
 <span class="c1">#    if not numpy.allclose(center, 0, atol=TOLERANCE):</span>
 <span class="c1">#        sys.stderr.write(&#39;WARN: Molecular charge center %s is not on (0,0,0)\n&#39;</span>
 <span class="c1">#                        % center)</span>
     <span class="n">opdic</span> <span class="o">=</span> <span class="n">symm_ops</span><span class="p">(</span><span class="n">gpname</span><span class="p">)</span>
     <span class="n">ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">opdic</span><span class="p">[</span><span class="n">op</span><span class="p">]</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">OPERATOR_TABLE</span><span class="p">[</span><span class="n">gpname</span><span class="p">]]</span>
-    <span class="n">coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="n">idx</span> <span class="o">=</span> <span class="n">argsort_coords</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
     <span class="n">coords0</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
@@ -937,7 +941,7 @@
     <span class="n">degen</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">idx</span><span class="o">==</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">))]</span>
     <span class="k">return</span> <span class="n">degen</span>
 
-<span class="k">def</span> <span class="nf">_pesudo_vectors</span><span class="p">(</span><span class="n">vs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_pseudo_vectors</span><span class="p">(</span><span class="n">vs</span><span class="p">):</span>
     <span class="n">idy0</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">vs</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span><span class="o">&lt;</span><span class="n">TOLERANCE</span>
     <span class="n">idz0</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">vs</span><span class="p">[:,</span><span class="mi">2</span><span class="p">])</span><span class="o">&lt;</span><span class="n">TOLERANCE</span>
     <span class="n">vs</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -957,7 +961,7 @@
             <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">vs</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">vs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">rest</span> <span class="o">=</span> <span class="n">rm_iter</span><span class="p">(</span><span class="n">vs</span><span class="p">[</span><span class="mi">1</span><span class="p">:][</span><span class="n">x</span><span class="o">&gt;</span><span class="n">TOLERANCE</span><span class="p">])</span>
             <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">vs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rest</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">rm_iter</span><span class="p">(</span><span class="n">_pesudo_vectors</span><span class="p">(</span><span class="n">vs</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">rm_iter</span><span class="p">(</span><span class="n">_pseudo_vectors</span><span class="p">(</span><span class="n">vs</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">_make_axes</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>

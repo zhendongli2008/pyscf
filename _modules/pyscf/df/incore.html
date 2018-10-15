@@ -108,13 +108,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../grad.html">19. grad &#8212; Analytical nuclear gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../hessian.html">20. hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../pbc.html">21. pbc &#8212; Periodic boundary conditions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../lo.html">22. lo &#8212; Orbital localization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">23. Miscellaneous</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../qmmm.html">24. qmmm &#8212; QM/MM interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mrpt.html">25. mrpt &#8212; Multi-reference perturbation theory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../benchmark.html">26. Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../code-rule.html">27. Code standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../version.html">28. Version history</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../nao.html">22. nao &#8212; Numerical Atomic Orbitals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../lo.html">23. lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">24. Miscellaneous</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../qmmm.html">25. qmmm &#8212; QM/MM interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mrpt.html">26. mrpt &#8212; Multi-reference perturbation theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmark.html">27. Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code-rule.html">28. Code standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../version.html">29. Version history</a></li>
 </ul>
 
             
@@ -214,17 +215,42 @@
 <span class="n">format_aux_basis</span> <span class="o">=</span> <span class="n">addons</span><span class="o">.</span><span class="n">make_auxmol</span>
 
 
-<span class="c1"># (ij|L)</span>
-<div class="viewcode-block" id="aux_e2"><a class="viewcode-back" href="../../../df.html#pyscf.df.incore.aux_e2">[docs]</a><span class="k">def</span> <span class="nf">aux_e2</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxmol</span><span class="p">,</span> <span class="n">intor</span><span class="o">=</span><span class="s1">&#39;int3c2e_sph&#39;</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="s1">&#39;s1&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="aux_e2"><a class="viewcode-back" href="../../../df.html#pyscf.df.incore.aux_e2">[docs]</a><span class="k">def</span> <span class="nf">aux_e2</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxmol</span><span class="p">,</span> <span class="n">intor</span><span class="o">=</span><span class="s1">&#39;int3c2e&#39;</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="s1">&#39;s1&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">cintopt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;3-center AO integrals (ij|L), where L is the auxiliary basis.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">pmol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">mole</span><span class="o">.</span><span class="n">conc_mol</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxmol</span><span class="p">)</span>
-    <span class="n">shls_slice</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="o">+</span><span class="n">auxmol</span><span class="o">.</span><span class="n">nbas</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">pmol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="n">intor</span><span class="p">,</span> <span class="n">comp</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="n">aosym</span><span class="p">,</span> <span class="n">shls_slice</span><span class="o">=</span><span class="n">shls_slice</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span></div>
 
-<span class="c1"># (L|ij)</span>
-<div class="viewcode-block" id="aux_e1"><a class="viewcode-back" href="../../../df.html#pyscf.df.incore.aux_e1">[docs]</a><span class="k">def</span> <span class="nf">aux_e1</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxmol</span><span class="p">,</span> <span class="n">intor</span><span class="o">=</span><span class="s1">&#39;int3c2e_sph&#39;</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="s1">&#39;s1&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="sd">    Kwargs:</span>
+<span class="sd">        cintopt : Libcint-3.14 and newer version support to compute int3c2e</span>
+<span class="sd">            without the opt for the 3rd index.  It can be precomputed to</span>
+<span class="sd">            reduce the overhead of cintopt initialization repeatedly.</span>
+
+<span class="sd">            cintopt = gto.moleintor.make_cintopt(mol._atm, mol._bas, mol._env, intor)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">pyscf.gto.moleintor</span> <span class="k">import</span> <span class="n">getints</span><span class="p">,</span> <span class="n">make_cintopt</span>
+    <span class="n">shls_slice</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">nbas</span><span class="o">+</span><span class="n">auxmol</span><span class="o">.</span><span class="n">nbas</span><span class="p">)</span>
+
+    <span class="c1"># Extract the call of the two lines below</span>
+    <span class="c1">#  pmol = gto.mole.conc_mol(mol, auxmol)</span>
+    <span class="c1">#  return pmol.intor(intor, comp, aosym=aosym, shls_slice=shls_slice, out=out)</span>
+    <span class="n">intor</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">_add_suffix</span><span class="p">(</span><span class="n">intor</span><span class="p">)</span>
+    <span class="n">hermi</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ao_loc</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">atm</span><span class="p">,</span> <span class="n">bas</span><span class="p">,</span> <span class="n">env</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">mole</span><span class="o">.</span><span class="n">conc_env</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">_env</span><span class="p">,</span>
+                                      <span class="n">auxmol</span><span class="o">.</span><span class="n">_atm</span><span class="p">,</span> <span class="n">auxmol</span><span class="o">.</span><span class="n">_bas</span><span class="p">,</span> <span class="n">auxmol</span><span class="o">.</span><span class="n">_env</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">getints</span><span class="p">(</span><span class="n">intor</span><span class="p">,</span> <span class="n">atm</span><span class="p">,</span> <span class="n">bas</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">shls_slice</span><span class="p">,</span> <span class="n">comp</span><span class="p">,</span> <span class="n">hermi</span><span class="p">,</span> <span class="n">aosym</span><span class="p">,</span>
+                   <span class="n">ao_loc</span><span class="p">,</span> <span class="n">cintopt</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="aux_e1"><a class="viewcode-back" href="../../../df.html#pyscf.df.incore.aux_e1">[docs]</a><span class="k">def</span> <span class="nf">aux_e1</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxmol</span><span class="p">,</span> <span class="n">intor</span><span class="o">=</span><span class="s1">&#39;int3c2e&#39;</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="s1">&#39;s1&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;3-center 2-electron AO integrals (L|ij), where L is the auxiliary basis.</span>
+
+<span class="sd">    Note aux_e1 is basically analogous to aux_e2 function. It can be viewed as</span>
+<span class="sd">    the version of transposed aux_e2 tensor:</span>
+<span class="sd">    if comp == 1:</span>
+<span class="sd">        aux_e1 = aux_e2().T</span>
+<span class="sd">    else:</span>
+<span class="sd">        aux_e1 = aux_e2().transpose(0,2,1)</span>
+
+<span class="sd">    The same arguments as function aux_e2 can be input to aux_e1.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">aux_e2</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxmol</span><span class="p">,</span> <span class="n">intor</span><span class="p">,</span> <span class="n">aosym</span><span class="p">,</span> <span class="n">comp</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># comp == 1</span>
@@ -234,7 +260,7 @@
     <span class="k">return</span> <span class="n">out</span></div>
 
 
-<div class="viewcode-block" id="fill_2c2e"><a class="viewcode-back" href="../../../df.html#pyscf.df.incore.fill_2c2e">[docs]</a><span class="k">def</span> <span class="nf">fill_2c2e</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxmol</span><span class="p">,</span> <span class="n">intor</span><span class="o">=</span><span class="s1">&#39;int2c2e_sph&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="fill_2c2e"><a class="viewcode-back" href="../../../df.html#pyscf.df.incore.fill_2c2e">[docs]</a><span class="k">def</span> <span class="nf">fill_2c2e</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxmol</span><span class="p">,</span> <span class="n">intor</span><span class="o">=</span><span class="s1">&#39;int2c2e&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;2-center 2-electron AO integrals for auxiliary basis (auxmol)</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="n">auxmol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="n">intor</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="n">comp</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="n">hermi</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span></div>
@@ -243,7 +269,7 @@
 <span class="c1"># Note the temporary memory usage is about twice as large as the return cderi</span>
 <span class="c1"># array</span>
 <div class="viewcode-block" id="cholesky_eri"><a class="viewcode-back" href="../../../df.html#pyscf.df.incore.cholesky_eri">[docs]</a><span class="k">def</span> <span class="nf">cholesky_eri</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="s1">&#39;weigend+etb&#39;</span><span class="p">,</span> <span class="n">auxmol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">int3c</span><span class="o">=</span><span class="s1">&#39;int3c2e_sph&#39;</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="s1">&#39;s2ij&#39;</span><span class="p">,</span> <span class="n">int2c</span><span class="o">=</span><span class="s1">&#39;int2c2e_sph&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">int3c</span><span class="o">=</span><span class="s1">&#39;int3c2e&#39;</span><span class="p">,</span> <span class="n">aosym</span><span class="o">=</span><span class="s1">&#39;s2ij&#39;</span><span class="p">,</span> <span class="n">int2c</span><span class="o">=</span><span class="s1">&#39;int2c2e&#39;</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">fauxe2</span><span class="o">=</span><span class="n">aux_e2</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns:</span>

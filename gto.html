@@ -128,13 +128,14 @@
 <li class="toctree-l1"><a class="reference internal" href="grad.html">19. grad &#8212; Analytical nuclear gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hessian.html">20. hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pbc.html">21. pbc &#8212; Periodic boundary conditions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="lo.html">22. lo &#8212; Orbital localization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="advanced.html">23. Miscellaneous</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qmmm.html">24. qmmm &#8212; QM/MM interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mrpt.html">25. mrpt &#8212; Multi-reference perturbation theory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="benchmark.html">26. Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="code-rule.html">27. Code standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="version.html">28. Version history</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nao.html">22. nao &#8212; Numerical Atomic Orbitals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lo.html">23. lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">24. Miscellaneous</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qmmm.html">25. qmmm &#8212; QM/MM interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrpt.html">26. mrpt &#8212; Multi-reference perturbation theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">27. Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code-rule.html">28. Code standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="version.html">29. Version history</a></li>
 </ul>
 
             
@@ -232,10 +233,10 @@ format:</p>
 <p>Also, <code class="xref py py-attr docutils literal"><span class="pre">atom</span></code> can be a string of Cartesian format or Z-matrix format:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">O 0 0 0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">H 0 1 0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">H 0 0 1;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">O 0 0 0</span>
+<span class="gp">... </span><span class="s1">H 0 1 0</span>
+<span class="gp">... </span><span class="s1">H 0 0 1;</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span>
 </pre></div>
 </div>
 <p>There are a few requirements for the string format.  The string input
@@ -571,9 +572,15 @@ coordinates will not be changed in this case.</dd>
 <dt>basis</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span><dd>To define basis set.</dd>
 <dt>nucmod</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span><dd>Nuclear model.  Set it to 0, None or False for point nuclear model.
-Any other values will enable Gaussian nuclear model.  Default is
-point nuclear model.</dd>
+ <span class="classifier-delimiter">:</span> <span class="classifier">dict or str or [function(nuc_charge, nucprop) =&gt; zeta]</span><dd>Nuclear model.  0 or None means point nuclear model.  Other
+values will enable Gaussian nuclear model.  If a function is
+assigned to this attribute, the function will be called to
+generate the nuclear charge distribution value &#8220;zeta&#8221; and the
+relevant nuclear model will be set to Gaussian model.
+Default is point nuclear model.</dd>
+<dt>nucprop</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">dict</span><dd>Nuclear properties (like g-factor &#8216;g&#8217;, quadrupole moments &#8216;Q&#8217;).
+It is needed by pyscf.prop module and submodules.</dd>
 <dt>cart</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span><dd>Using Cartesian GTO basis and integrals (6d,10f,15g)</dd>
 </dl>
@@ -783,6 +790,20 @@ Number of electrons screened by ECP can be obtained by charge(atom_symbol)-atom_
 <dt id="pyscf.gto.mole.Mole.atom_coords">
 <code class="descname">atom_coords</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.atom_coords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.atom_coords" title="Permalink to this definition">¶</a></dt>
 <dd><p>np.asarray([mol.atom_coords(i) for i in range(mol.natm)])</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyscf.gto.mole.Mole.atom_mass_list">
+<code class="descname">atom_mass_list</code><span class="sig-paren">(</span><em>mol</em>, <em>isotope_avg=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.gto.mole.Mole.atom_mass_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of mass for all atoms in the molecule</p>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>isotope_avg</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span><dd>Whether to use the isotope average mass as the atomic mass</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -1455,7 +1476,7 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <dl class="method">
 <dt id="pyscf.gto.mole.Mole.has_ecp">
 <code class="descname">has_ecp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.has_ecp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.has_ecp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Whether pesudo potential is used in the system.</p>
+<dd><p>Whether pseudo potential is used in the system.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1657,7 +1678,7 @@ name, the given point group symmetry will be used.</dd>
 
 <dl class="method">
 <dt id="pyscf.gto.mole.Mole.make_atm_env">
-<code class="descname">make_atm_env</code><span class="sig-paren">(</span><em>atom</em>, <em>ptr=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.make_atm_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.make_atm_env" title="Permalink to this definition">¶</a></dt>
+<code class="descname">make_atm_env</code><span class="sig-paren">(</span><em>atom</em>, <em>ptr=0</em>, <em>nucmod=1</em>, <em>nucprop=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.make_atm_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.make_atm_env" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the internal format <code class="xref py py-attr docutils literal"><span class="pre">Mole._atom</span></code> to the format required
 by <code class="docutils literal"><span class="pre">libcint</span></code> integrals</p>
 </dd></dl>
@@ -1676,7 +1697,7 @@ by <code class="docutils literal"><span class="pre">libcint</span></code> integr
 
 <dl class="method">
 <dt id="pyscf.gto.mole.Mole.make_env">
-<code class="descname">make_env</code><span class="sig-paren">(</span><em>atoms</em>, <em>basis</em>, <em>pre_env=[]</em>, <em>nucmod={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.make_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.make_env" title="Permalink to this definition">¶</a></dt>
+<code class="descname">make_env</code><span class="sig-paren">(</span><em>atoms</em>, <em>basis</em>, <em>pre_env=[]</em>, <em>nucmod={}</em>, <em>nucprop=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.make_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.Mole.make_env" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate the input arguments for <code class="docutils literal"><span class="pre">libcint</span></code> library based on internal
 format <code class="xref py py-attr docutils literal"><span class="pre">Mole._atom</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">Mole._basis</span></code></p>
 </dd></dl>
@@ -2119,6 +2140,24 @@ otherwise <span class="math">\(T|i\rangle = |j\rangle\)</span></p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyscf.gto.mole.Mole.to_uncontracted_cartesian_basis">
+<code class="descname">to_uncontracted_cartesian_basis</code><span class="sig-paren">(</span><em>mol</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.gto.mole.Mole.to_uncontracted_cartesian_basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decontract the basis of a Mole or a Cell.  Returns a Mole (Cell) object
+with the uncontracted basis environment and a list of coefficients that
+transform the uncontracted cartesian basis to the original basis.  Each
+element in the list corresponds to one shell of the original Mole (Cell).</p>
+<p>Examples:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;Ne&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;ccpvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pmol</span><span class="p">,</span> <span class="n">ctr_coeff</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">to_uncontracted_cartesian_basis</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">ctr_coeff</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">pmol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">),</span> <span class="n">c</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="n">s</span><span class="o">-</span><span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyscf.gto.mole.Mole.tot_electrons">
 <code class="descname">tot_electrons</code><span class="sig-paren">(</span><em>mol</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.gto.mole.Mole.tot_electrons" title="Permalink to this definition">¶</a></dt>
 <dd><p>Total number of electrons for the given molecule</p>
@@ -2292,6 +2331,20 @@ or formatted strings based on the argument &#8220;fmt&#8221;</dd>
 </dd></dl>
 
 <dl class="function">
+<dt id="pyscf.gto.mole.atom_mass_list">
+<code class="descclassname">pyscf.gto.mole.</code><code class="descname">atom_mass_list</code><span class="sig-paren">(</span><em>mol</em>, <em>isotope_avg=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#atom_mass_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.atom_mass_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of mass for all atoms in the molecule</p>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>isotope_avg</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span><dd>Whether to use the isotope average mass as the atomic mass</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyscf.gto.mole.atom_types">
 <code class="descclassname">pyscf.gto.mole.</code><code class="descname">atom_types</code><span class="sig-paren">(</span><em>atoms</em>, <em>basis=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#atom_types"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.atom_types" title="Permalink to this definition">¶</a></dt>
 <dd><p>symmetry inequivalent atoms</p>
@@ -2445,7 +2498,7 @@ delimiter.  Then call compressor function to abstract each block.</p>
 
 <dl class="function">
 <dt id="pyscf.gto.mole.dyall_nuc_mod">
-<code class="descclassname">pyscf.gto.mole.</code><code class="descname">dyall_nuc_mod</code><span class="sig-paren">(</span><em>mass</em>, <em>c=137.03599967994</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#dyall_nuc_mod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.dyall_nuc_mod" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyscf.gto.mole.</code><code class="descname">dyall_nuc_mod</code><span class="sig-paren">(</span><em>nuc_charge</em>, <em>nucprop={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#dyall_nuc_mod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.dyall_nuc_mod" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate the nuclear charge distribution parameter zeta
 rho(r) = nuc_charge * Norm * exp(-zeta * r^2)</p>
 <p>Ref. L. Visscher and K. Dyall, At. Data Nucl. Data Tables, 67, 207 (1997)</p>
@@ -2532,7 +2585,7 @@ distribution with the Gaussian exponent (expnt).</p>
 
 <dl class="function">
 <dt id="pyscf.gto.mole.filatov_nuc_mod">
-<code class="descclassname">pyscf.gto.mole.</code><code class="descname">filatov_nuc_mod</code><span class="sig-paren">(</span><em>nuc_charge</em>, <em>c=137.03599967994</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#filatov_nuc_mod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.filatov_nuc_mod" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyscf.gto.mole.</code><code class="descname">filatov_nuc_mod</code><span class="sig-paren">(</span><em>nuc_charge</em>, <em>nucprop={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#filatov_nuc_mod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.filatov_nuc_mod" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate the nuclear charge distribution parameter zeta
 rho(r) = nuc_charge * Norm * exp(-zeta * r^2)</p>
 <dl class="docutils">
@@ -2784,7 +2837,7 @@ return 4l+2</p>
 
 <dl class="function">
 <dt id="pyscf.gto.mole.make_atm_env">
-<code class="descclassname">pyscf.gto.mole.</code><code class="descname">make_atm_env</code><span class="sig-paren">(</span><em>atom</em>, <em>ptr=0</em>, <em>nuclear_model=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#make_atm_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.make_atm_env" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyscf.gto.mole.</code><code class="descname">make_atm_env</code><span class="sig-paren">(</span><em>atom</em>, <em>ptr=0</em>, <em>nuclear_model=1</em>, <em>nucprop={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#make_atm_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.make_atm_env" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the internal format <code class="xref py py-attr docutils literal"><span class="pre">Mole._atom</span></code> to the format required
 by <code class="docutils literal"><span class="pre">libcint</span></code> integrals</p>
 </dd></dl>
@@ -2803,7 +2856,7 @@ by <code class="docutils literal"><span class="pre">libcint</span></code> integr
 
 <dl class="function">
 <dt id="pyscf.gto.mole.make_env">
-<code class="descclassname">pyscf.gto.mole.</code><code class="descname">make_env</code><span class="sig-paren">(</span><em>atoms</em>, <em>basis</em>, <em>pre_env=[]</em>, <em>nucmod={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#make_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.make_env" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pyscf.gto.mole.</code><code class="descname">make_env</code><span class="sig-paren">(</span><em>atoms</em>, <em>basis</em>, <em>pre_env=[]</em>, <em>nucmod={}</em>, <em>nucprop={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#make_env"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.make_env" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate the input arguments for <code class="docutils literal"><span class="pre">libcint</span></code> library based on internal
 format <code class="xref py py-attr docutils literal"><span class="pre">Mole._atom</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">Mole._basis</span></code></p>
 </dd></dl>
@@ -3115,6 +3168,24 @@ otherwise <span class="math">\(T|i\rangle = |j\rangle\)</span></p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pyscf.gto.mole.to_uncontracted_cartesian_basis">
+<code class="descclassname">pyscf.gto.mole.</code><code class="descname">to_uncontracted_cartesian_basis</code><span class="sig-paren">(</span><em>mol</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#to_uncontracted_cartesian_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.to_uncontracted_cartesian_basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decontract the basis of a Mole or a Cell.  Returns a Mole (Cell) object
+with the uncontracted basis environment and a list of coefficients that
+transform the uncontracted cartesian basis to the original basis.  Each
+element in the list corresponds to one shell of the original Mole (Cell).</p>
+<p>Examples:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;Ne&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;ccpvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pmol</span><span class="p">,</span> <span class="n">ctr_coeff</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">to_uncontracted_cartesian_basis</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">ctr_coeff</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">pmol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">),</span> <span class="n">c</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="n">s</span><span class="o">-</span><span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyscf.gto.mole.tot_electrons">
 <code class="descclassname">pyscf.gto.mole.</code><code class="descname">tot_electrons</code><span class="sig-paren">(</span><em>mol</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#tot_electrons"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.tot_electrons" title="Permalink to this definition">¶</a></dt>
 <dd><p>Total number of electrons for the given molecule</p>
@@ -3135,18 +3206,18 @@ otherwise <span class="math">\(T|i\rangle = |j\rangle\)</span></p>
 <code class="descclassname">pyscf.gto.mole.</code><code class="descname">uncontract</code><span class="sig-paren">(</span><em>_basis</em><span class="sig-paren">)</span><a class="headerlink" href="#pyscf.gto.mole.uncontract" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uncontract internal format _basis</p>
 <p>Examples:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">uncontract_basis</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;sto3g&#39;</span><span class="p">,</span> <span class="s1">&#39;He&#39;</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">uncontract</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;sto3g&#39;</span><span class="p">,</span> <span class="s1">&#39;He&#39;</span><span class="p">))</span>
 <span class="go">[[0, [6.3624213899999997, 1]], [0, [1.1589229999999999, 1]], [0, [0.31364978999999998, 1]]]</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyscf.gto.mole.uncontract_basis">
-<code class="descclassname">pyscf.gto.mole.</code><code class="descname">uncontract_basis</code><span class="sig-paren">(</span><em>_basis</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#uncontract_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.uncontract_basis" title="Permalink to this definition">¶</a></dt>
+<dt id="pyscf.gto.mole.uncontracted_basis">
+<code class="descclassname">pyscf.gto.mole.</code><code class="descname">uncontracted_basis</code><span class="sig-paren">(</span><em>_basis</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#uncontracted_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.mole.uncontracted_basis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uncontract internal format _basis</p>
 <p>Examples:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">uncontract_basis</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;sto3g&#39;</span><span class="p">,</span> <span class="s1">&#39;He&#39;</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gto</span><span class="o">.</span><span class="n">uncontract</span><span class="p">(</span><span class="n">gto</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;sto3g&#39;</span><span class="p">,</span> <span class="s1">&#39;He&#39;</span><span class="p">))</span>
 <span class="go">[[0, [6.3624213899999997, 1]], [0, [1.1589229999999999, 1]], [0, [0.31364978999999998, 1]]]</span>
 </pre></div>
 </div>
@@ -3233,9 +3304,15 @@ coordinates will not be changed in this case.</dd>
 <dt>basis</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span><dd>To define basis set.</dd>
 <dt>nucmod</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">dict or str</span><dd>Nuclear model.  Set it to 0, None or False for point nuclear model.
-Any other values will enable Gaussian nuclear model.  Default is
-point nuclear model.</dd>
+ <span class="classifier-delimiter">:</span> <span class="classifier">dict or str or [function(nuc_charge, nucprop) =&gt; zeta]</span><dd>Nuclear model.  0 or None means point nuclear model.  Other
+values will enable Gaussian nuclear model.  If a function is
+assigned to this attribute, the function will be called to
+generate the nuclear charge distribution value &#8220;zeta&#8221; and the
+relevant nuclear model will be set to Gaussian model.
+Default is point nuclear model.</dd>
+<dt>nucprop</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">dict</span><dd>Nuclear properties (like g-factor &#8216;g&#8217;, quadrupole moments &#8216;Q&#8217;).
+It is needed by pyscf.prop module and submodules.</dd>
 <dt>cart</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span><dd>Using Cartesian GTO basis and integrals (6d,10f,15g)</dd>
 </dl>
@@ -3445,6 +3522,20 @@ Number of electrons screened by ECP can be obtained by charge(atom_symbol)-atom_
 <dt>
 <code class="descname">atom_coords</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.atom_coords"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>np.asarray([mol.atom_coords(i) for i in range(mol.natm)])</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">atom_mass_list</code><span class="sig-paren">(</span><em>mol</em>, <em>isotope_avg=False</em><span class="sig-paren">)</span></dt>
+<dd><p>A list of mass for all atoms in the molecule</p>
+<dl class="docutils">
+<dt>Kwargs:</dt>
+<dd><dl class="first last docutils">
+<dt>isotope_avg</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span><dd>Whether to use the isotope average mass as the atomic mass</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -4117,7 +4208,7 @@ as the Bohr value (in angstrom), which should be around 0.53</dd>
 <dl class="method">
 <dt>
 <code class="descname">has_ecp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.has_ecp"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Whether pesudo potential is used in the system.</p>
+<dd><p>Whether pseudo potential is used in the system.</p>
 </dd></dl>
 
 <dl class="method">
@@ -4319,7 +4410,7 @@ name, the given point group symmetry will be used.</dd>
 
 <dl class="method">
 <dt>
-<code class="descname">make_atm_env</code><span class="sig-paren">(</span><em>atom</em>, <em>ptr=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.make_atm_env"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">make_atm_env</code><span class="sig-paren">(</span><em>atom</em>, <em>ptr=0</em>, <em>nucmod=1</em>, <em>nucprop=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.make_atm_env"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Convert the internal format <code class="xref py py-attr docutils literal"><span class="pre">Mole._atom</span></code> to the format required
 by <code class="docutils literal"><span class="pre">libcint</span></code> integrals</p>
 </dd></dl>
@@ -4338,7 +4429,7 @@ by <code class="docutils literal"><span class="pre">libcint</span></code> integr
 
 <dl class="method">
 <dt>
-<code class="descname">make_env</code><span class="sig-paren">(</span><em>atoms</em>, <em>basis</em>, <em>pre_env=[]</em>, <em>nucmod={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.make_env"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">make_env</code><span class="sig-paren">(</span><em>atoms</em>, <em>basis</em>, <em>pre_env=[]</em>, <em>nucmod={}</em>, <em>nucprop=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/mole.html#Mole.make_env"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Generate the input arguments for <code class="docutils literal"><span class="pre">libcint</span></code> library based on internal
 format <code class="xref py py-attr docutils literal"><span class="pre">Mole._atom</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">Mole._basis</span></code></p>
 </dd></dl>
@@ -4782,6 +4873,24 @@ otherwise <span class="math">\(T|i\rangle = |j\rangle\)</span></p>
 
 <dl class="method">
 <dt>
+<code class="descname">to_uncontracted_cartesian_basis</code><span class="sig-paren">(</span><em>mol</em><span class="sig-paren">)</span></dt>
+<dd><p>Decontract the basis of a Mole or a Cell.  Returns a Mole (Cell) object
+with the uncontracted basis environment and a list of coefficients that
+transform the uncontracted cartesian basis to the original basis.  Each
+element in the list corresponds to one shell of the original Mole (Cell).</p>
+<p>Examples:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;Ne&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;ccpvdz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pmol</span><span class="p">,</span> <span class="n">ctr_coeff</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">to_uncontracted_cartesian_basis</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">ctr_coeff</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">pmol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">),</span> <span class="n">c</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="n">s</span><span class="o">-</span><span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <code class="descname">tot_electrons</code><span class="sig-paren">(</span><em>mol</em><span class="sig-paren">)</span></dt>
 <dd><p>Total number of electrons for the given molecule</p>
 <dl class="docutils">
@@ -4898,6 +5007,8 @@ See also <code class="xref py py-func docutils literal"><span class="pre">mol.se
 </div>
 <div class="section" id="module-pyscf.gto.moleintor">
 <span id="moleintor"></span><span id="gto-moleintor"></span><h3>4.2.2. moleintor<a class="headerlink" href="#module-pyscf.gto.moleintor" title="Permalink to this headline">¶</a></h3>
+<p>A low level interface to libcint library. It&#8217;s recommended to use the
+Mole.intor method to drive the integral evaluation funcitons.</p>
 <dl class="function">
 <dt id="pyscf.gto.moleintor.ascint3">
 <code class="descclassname">pyscf.gto.moleintor.</code><code class="descname">ascint3</code><span class="sig-paren">(</span><em>intor_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyscf/gto/moleintor.html#ascint3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyscf.gto.moleintor.ascint3" title="Permalink to this definition">¶</a></dt>
@@ -4923,182 +5034,176 @@ See also <code class="xref py py-func docutils literal"><span class="pre">mol.se
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td>&#8220;int1e_ovlp_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_ovlp&#8221;</td>
 <td>( | )</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_nuc_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_nuc&#8221;</td>
 <td>( | nuc | )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int1e_kin_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_kin&#8221;</td>
 <td>(.5 | p dot p)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_ia01p_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_ia01p&#8221;</td>
 <td>(#C(0 1) | nabla-rinv | cross p)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int1e_giao_irjxp_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_giao_irjxp&#8221;</td>
 <td>(#C(0 1) | r cross p)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_cg_irxp_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_cg_irxp&#8221;</td>
 <td>(#C(0 1) | rc cross p)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int1e_giao_a11part_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_giao_a11part&#8221;</td>
 <td>(-.5 | nabla-rinv | r)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_cg_a11part_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_cg_a11part&#8221;</td>
 <td>(-.5 | nabla-rinv | rc)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int1e_a01gp_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_a01gp&#8221;</td>
 <td>(g | nabla-rinv cross p |)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_igkin_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_igkin&#8221;</td>
 <td>(#C(0 .5) g | p dot p)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int1e_igovlp_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_igovlp&#8221;</td>
 <td>(#C(0 1) g |)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_ignuc_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_ignuc&#8221;</td>
 <td>(#C(0 1) g | nuc |)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int1e_z_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_z&#8221;</td>
 <td>( | zc | )</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_zz_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_zz&#8221;</td>
 <td>( | zc zc | )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int1e_r_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_r&#8221;</td>
 <td>( | rc | )</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_r2_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_r2&#8221;</td>
 <td>( | rc dot rc | )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int1e_rr_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_rr&#8221;</td>
 <td>( | rc rc | )</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_pnucp_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_rrr&#8221;</td>
+<td>( | rc rc rc | )</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_rrrr&#8221;</td>
+<td>( | rc rc rc rc | )</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_pnucp&#8221;</td>
 <td>(p* | nuc dot p | )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int1e_prinvxp_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_prinvxp&#8221;</td>
 <td>(p* | rinv cross p | )</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_ovlp_spinor&#8221;</td>
-<td>( | )</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_nuc_spinor&#8221;</td>
-<td>( | nuc |)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_srsr_spinor&#8221;</td>
-<td>(sigma dot r | sigma dot r)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_sr_spinor&#8221;</td>
-<td>(sigma dot r |)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_srsp_spinor&#8221;</td>
-<td>(sigma dot r | sigma dot p)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_spsp_spinor&#8221;</td>
-<td>(sigma dot p | sigma dot p)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_sp_spinor&#8221;</td>
-<td>(sigma dot p |)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_spnucsp_spinor&#8221;</td>
-<td>(sigma dot p | nuc | sigma dot p)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_srnucsr_spinor&#8221;</td>
-<td>(sigma dot r | nuc | sigma dot r)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_govlp_spinor&#8221;</td>
-<td>(g |)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_gnuc_spinor&#8221;</td>
-<td>(g | nuc |)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_cg_sa10sa01_spinor&#8221;</td>
-<td>(.5 sigma cross rc | sigma cross nabla-rinv |)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_cg_sa10sp_spinor&#8221;</td>
-<td>(.5 rc cross sigma | sigma dot p)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_cg_sa10nucsp_spinor&#8221;</td>
-<td>(.5 rc cross sigma | nuc | sigma dot p)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_giao_sa10sa01_spinor&#8221;</td>
-<td>(.5 sigma cross r | sigma cross nabla-rinv |)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_giao_sa10sp_spinor&#8221;</td>
-<td>(.5 r cross sigma | sigma dot p)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_giao_sa10nucsp_spinor&#8221;</td>
-<td>(.5 r cross sigma | nuc | sigma dot p)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_sa01sp_spinor&#8221;</td>
-<td>(| nabla-rinv cross sigma | sigma dot p)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_spgsp_spinor&#8221;</td>
-<td>(g sigma dot p | sigma dot p)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_spgnucsp_spinor&#8221;</td>
-<td>(g sigma dot p | nuc | sigma dot p)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_spgsa01_spinor&#8221;</td>
-<td>(g sigma dot p | nabla-rinv cross sigma |)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_spspsp_spinor&#8221;</td>
-<td>(sigma dot p | sigma dot p sigma dot p)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_spnuc_spinor&#8221;</td>
-<td>(sigma dot p | nuc |)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_ovlp_cart&#8221;</td>
-<td>( | )</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_nuc_cart&#8221;</td>
-<td>( | nuc | )</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_kin_cart&#8221;</td>
-<td>(.5 | p dot p)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_ia01p_cart&#8221;</td>
-<td>(#C(0 1) | nabla-rinv | cross p)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_giao_irjxp_cart&#8221;</td>
-<td>(#C(0 1) | r cross p)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_cg_irxp_cart&#8221;</td>
-<td>(#C(0 1) | rc cross p)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_giao_a11part_cart&#8221;</td>
-<td>(-.5 | nabla-rinv | r)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_cg_a11part_cart&#8221;</td>
-<td>(-.5 | nabla-rinv | rc)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_a01gp_cart&#8221;</td>
-<td>(g | nabla-rinv cross p |)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_igkin_cart&#8221;</td>
-<td>(#C(0 .5) g | p dot p)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_igovlp_cart&#8221;</td>
-<td>(#C(0 1) g |)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_ignuc_cart&#8221;</td>
-<td>(#C(0 1) g | nuc |)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_ipovlp_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_ipovlp&#8221;</td>
 <td>(nabla |)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_ipkin_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_ipkin&#8221;</td>
 <td>(.5 nabla | p dot p)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int1e_ipnuc_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_ipnuc&#8221;</td>
 <td>(nabla | nuc |)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_iprinv_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int1e_iprinv&#8221;</td>
 <td>(nabla | rinv |)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int1e_rinv_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int1e_rinv&#8221;</td>
 <td>(| rinv |)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_pnucxp&#8221;</td>
+<td>(p* | nuc cross p | )</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_irp&#8221;</td>
+<td>( | rc nabla | )</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_irrp&#8221;</td>
+<td>( | rc rc nabla | )</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_irpr&#8221;</td>
+<td>( | rc nabla rc | )</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_ggovlp&#8221;</td>
+<td>( | g g | )</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_ggkin&#8221;</td>
+<td>(.5 | g g p dot p | )</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_ggnuc&#8221;</td>
+<td>( | g g nuc | )</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_grjxp&#8221;</td>
+<td>( | g r cross p | )</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_ovlp_spinor&#8221;</td>
+<td>( | )</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_nuc_spinor&#8221;</td>
+<td>( | nuc |)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_srsr_spinor&#8221;</td>
+<td>(sigma dot r | sigma dot r)</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_sr_spinor&#8221;</td>
+<td>(sigma dot r |)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_srsp_spinor&#8221;</td>
+<td>(sigma dot r | sigma dot p)</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_spsp_spinor&#8221;</td>
+<td>(sigma dot p | sigma dot p)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_sp_spinor&#8221;</td>
+<td>(sigma dot p |)</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_spnucsp_spinor&#8221;</td>
+<td>(sigma dot p | nuc | sigma dot p)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_srnucsr_spinor&#8221;</td>
+<td>(sigma dot r | nuc | sigma dot r)</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_govlp_spinor&#8221;</td>
+<td>(g |)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_gnuc_spinor&#8221;</td>
+<td>(g | nuc |)</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_cg_sa10sa01_spinor&#8221;</td>
+<td>(.5 sigma cross rc | sigma cross nabla-rinv |)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_cg_sa10sp_spinor&#8221;</td>
+<td>(.5 rc cross sigma | sigma dot p)</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_cg_sa10nucsp_spinor&#8221;</td>
+<td>(.5 rc cross sigma | nuc | sigma dot p)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_giao_sa10sa01_spinor&#8221;</td>
+<td>(.5 sigma cross r | sigma cross nabla-rinv |)</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_giao_sa10sp_spinor&#8221;</td>
+<td>(.5 r cross sigma | sigma dot p)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_giao_sa10nucsp_spinor&#8221;</td>
+<td>(.5 r cross sigma | nuc | sigma dot p)</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_sa01sp_spinor&#8221;</td>
+<td>(| nabla-rinv cross sigma | sigma dot p)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_spgsp_spinor&#8221;</td>
+<td>(g sigma dot p | sigma dot p)</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_spgnucsp_spinor&#8221;</td>
+<td>(g sigma dot p | nuc | sigma dot p)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_spgsa01_spinor&#8221;</td>
+<td>(g sigma dot p | nabla-rinv cross sigma |)</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int1e_spspsp_spinor&#8221;</td>
+<td>(sigma dot p | sigma dot p sigma dot p)</td>
+</tr>
+<tr class="row-even"><td>&#8220;int1e_spnuc_spinor&#8221;</td>
+<td>(sigma dot p | nuc |)</td>
 </tr>
 <tr class="row-odd"><td>&#8220;int1e_ipovlp_spinor&#8221;</td>
 <td>(nabla |)</td>
@@ -5118,172 +5223,163 @@ See also <code class="xref py py-func docutils literal"><span class="pre">mol.se
 <tr class="row-even"><td>&#8220;int1e_ipsprinvsp_spinor&#8221;</td>
 <td>(nabla sigma dot p | rinv | sigma dot p)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int1e_ipovlp_cart&#8221;</td>
-<td>(nabla |)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_ipkin_cart&#8221;</td>
-<td>(.5 nabla | p dot p)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_ipnuc_cart&#8221;</td>
-<td>(nabla | nuc |)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int1e_iprinv_cart&#8221;</td>
-<td>(nabla | rinv |)</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int1e_rinv_cart&#8221;</td>
-<td>(| rinv |)</td>
-</tr>
-<tr class="row-even"><td>&#8220;int2e_p1vxp1_sph&#8221;</td>
-<td>( p* , cross p | , ) ; SSO</td>
-</tr>
-<tr class="row-odd"><td>&#8220;int2e_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e&#8221;</td>
 <td>( , | , )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_ig1_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_ig1&#8221;</td>
 <td>(#C(0 1) g , | , )</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_gg1&#8221;</td>
+<td>(g g , | , )</td>
+</tr>
+<tr class="row-even"><td>&#8220;int2e_g1g2&#8221;</td>
+<td>(g , | g , )</td>
+</tr>
+<tr class="row-odd"><td>&#8220;int2e_p1vxp1&#8221;</td>
+<td>( p* , cross p | , ) ; SSO</td>
+</tr>
+<tr class="row-even"><td>&#8220;int2e_spinor&#8221;</td>
 <td>(, | , )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_spsp1_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_spsp1_spinor&#8221;</td>
 <td>(sigma dot p , sigma dot p | , )</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_spsp1spsp2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_spsp1spsp2_spinor&#8221;</td>
 <td>(sigma dot p , sigma dot p | sigma dot p , sigma dot p )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_srsr1_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_srsr1_spinor&#8221;</td>
 <td>(sigma dot r , sigma dot r | ,)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_srsr1srsr2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_srsr1srsr2_spinor&#8221;</td>
 <td>(sigma dot r , sigma dot r | sigma dot r , sigma dot r)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_cg_sa10sp1_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_cg_sa10sp1_spinor&#8221;</td>
 <td>(.5 rc cross sigma , sigma dot p | ,)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_cg_sa10sp1spsp2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_cg_sa10sp1spsp2_spinor&#8221;</td>
 <td>(.5 rc cross sigma , sigma dot p | sigma dot p , sigma dot p )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_giao_sa10sp1_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_giao_sa10sp1_spinor&#8221;</td>
 <td>(.5 r cross sigma , sigma dot p | ,)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_giao_sa10sp1spsp2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_giao_sa10sp1spsp2_spinor&#8221;</td>
 <td>(.5 r cross sigma , sigma dot p | sigma dot p , sigma dot p )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_g1_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_g1_spinor&#8221;</td>
 <td>(g , | ,)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_spgsp1_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_spgsp1_spinor&#8221;</td>
 <td>(g sigma dot p , sigma dot p | ,)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_g1spsp2_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_g1spsp2_spinor&#8221;</td>
 <td>(g , | sigma dot p , sigma dot p)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_spgsp1spsp2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_spgsp1spsp2_spinor&#8221;</td>
 <td>(g sigma dot p , sigma dot p | sigma dot p , sigma dot p)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_spv1_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_spv1_spinor&#8221;</td>
 <td>(sigma dot p , | ,)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_vsp1_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_vsp1_spinor&#8221;</td>
 <td>(, sigma dot p | ,)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_spsp2_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_spsp2_spinor&#8221;</td>
 <td>(, | sigma dot p , sigma dot p)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_spv1spv2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_spv1spv2_spinor&#8221;</td>
 <td>(sigma dot p , | sigma dot p ,)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_vsp1spv2_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_vsp1spv2_spinor&#8221;</td>
 <td>(, sigma dot p | sigma dot p ,)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_spv1vsp2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_spv1vsp2_spinor&#8221;</td>
 <td>(sigma dot p , | , sigma dot p)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_vsp1vsp2_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_vsp1vsp2_spinor&#8221;</td>
 <td>(, sigma dot p | , sigma dot p)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_spv1spsp2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_spv1spsp2_spinor&#8221;</td>
 <td>(sigma dot p , | sigma dot p , sigma dot p)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_vsp1spsp2_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_vsp1spsp2_spinor&#8221;</td>
 <td>(, sigma dot p | sigma dot p , sigma dot p)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_ig1_cart&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_ig1&#8221;</td>
 <td>(#C(0 1) g , | , )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_ip1_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_ip1&#8221;</td>
 <td>(nabla , | ,)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_ip1_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_ip1_spinor&#8221;</td>
 <td>(nabla , | ,)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_ipspsp1_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_ipspsp1_spinor&#8221;</td>
 <td>(nabla sigma dot p , sigma dot p | ,)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_ip1spsp2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_ip1spsp2_spinor&#8221;</td>
 <td>(nabla , | sigma dot p , sigma dot p)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_ipspsp1spsp2_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_ipspsp1spsp2_spinor&#8221;</td>
 <td>(nabla sigma dot p , sigma dot p | sigma dot p , sigma dot p)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_ipsrsr1_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_ipsrsr1_spinor&#8221;</td>
 <td>(nabla sigma dot r , sigma dot r | ,)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_ip1srsr2_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_ip1srsr2_spinor&#8221;</td>
 <td>(nabla , | sigma dot r , sigma dot r)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_ipsrsr1srsr2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_ipsrsr1srsr2_spinor&#8221;</td>
 <td>(nabla sigma dot r , sigma dot r | sigma dot r , sigma dot r)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_ip1_cart&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_ip1&#8221;</td>
 <td>(nabla , | ,)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_ssp1ssp2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_ssp1ssp2_spinor&#8221;</td>
 <td>( , sigma dot p | gaunt | , sigma dot p)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_cg_ssa10ssp2_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_cg_ssa10ssp2_spinor&#8221;</td>
 <td>(rc cross sigma , | gaunt | , sigma dot p)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_giao_ssa10ssp2_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_giao_ssa10ssp2_spinor&#8221;</td>
 <td>(r cross sigma  , | gaunt | , sigma dot p)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_gssp1ssp2_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_gssp1ssp2_spinor&#8221;</td>
 <td>(g , sigma dot p  | gaunt | , sigma dot p)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_ipip1_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_ipip1&#8221;</td>
 <td>( nabla nabla , | , )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2e_ipvip1_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2e_ipvip1&#8221;</td>
 <td>( nabla , nabla | , )</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int2e_ip1ip2_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int2e_ip1ip2&#8221;</td>
 <td>( nabla , | nabla , )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int3c2e_ip1_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int3c2e_ip1&#8221;</td>
 <td>(nabla , | )</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int3c2e_ip2_sph&#8221;</td>
+<tr class="row-even"><td>&#8220;int3c2e_ip2&#8221;</td>
 <td>( , | nabla)</td>
 </tr>
-<tr class="row-even"><td>&#8220;int2c2e_ip1_sph&#8221;</td>
+<tr class="row-odd"><td>&#8220;int2c2e_ip1&#8221;</td>
 <td>(nabla | r12 | )</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int3c2e_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int3c2e_spinor&#8221;</td>
 <td>(nabla , | )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int3c2e_spsp1_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int3c2e_spsp1_spinor&#8221;</td>
 <td>(nabla , | )</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int3c2e_ip1_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int3c2e_ip1_spinor&#8221;</td>
 <td>(nabla , | )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int3c2e_ip2_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int3c2e_ip2_spinor&#8221;</td>
 <td>( , | nabla)</td>
 </tr>
-<tr class="row-odd"><td>&#8220;int3c2e_ipspsp1_spinor&#8221;</td>
+<tr class="row-even"><td>&#8220;int3c2e_ipspsp1_spinor&#8221;</td>
 <td>(nabla sigma dot p , sigma dot p | )</td>
 </tr>
-<tr class="row-even"><td>&#8220;int3c2e_spsp1ip2_spinor&#8221;</td>
+<tr class="row-odd"><td>&#8220;int3c2e_spsp1ip2_spinor&#8221;</td>
 <td>(sigma dot p , sigma dot p | nabla )</td>
 </tr>
 </tbody>

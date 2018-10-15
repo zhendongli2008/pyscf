@@ -108,13 +108,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../grad.html">19. grad &#8212; Analytical nuclear gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../hessian.html">20. hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../pbc.html">21. pbc &#8212; Periodic boundary conditions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../lo.html">22. lo &#8212; Orbital localization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">23. Miscellaneous</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../qmmm.html">24. qmmm &#8212; QM/MM interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mrpt.html">25. mrpt &#8212; Multi-reference perturbation theory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../benchmark.html">26. Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../code-rule.html">27. Code standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../version.html">28. Version history</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../nao.html">22. nao &#8212; Numerical Atomic Orbitals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../lo.html">23. lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">24. Miscellaneous</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../qmmm.html">25. qmmm &#8212; QM/MM interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mrpt.html">26. mrpt &#8212; Multi-reference perturbation theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmark.html">27. Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code-rule.html">28. Code standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../version.html">29. Version history</a></li>
 </ul>
 
             
@@ -264,7 +265,7 @@
     <span class="k">if</span> <span class="n">project</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">project</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">gto</span><span class="o">.</span><span class="n">same_basis_set</span><span class="p">(</span><span class="n">chk_mol</span><span class="p">,</span> <span class="n">mol</span><span class="p">)</span>
 
-    <span class="c1"># Check whether the two molecules are similar enough</span>
+    <span class="c1"># Check whether the two molecules are similar</span>
     <span class="k">def</span> <span class="nf">inertia_momentum</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
         <span class="n">im</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">inertia_momentum</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">_atom</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">atom_charges</span><span class="p">(),</span>
                                   <span class="n">mol</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">())</span>
@@ -314,6 +315,10 @@
     <span class="n">mo_b</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">dm_a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_a</span><span class="o">*</span><span class="n">mo_occ</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mo_a</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
     <span class="n">dm_b</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mo_b</span><span class="o">*</span><span class="n">mo_occ</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mo_b</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+<span class="c1"># DO NOT make tag_array for DM here because the DM arrays may be modified and</span>
+<span class="c1"># passed to functions like get_jk, get_vxc.  These functions may take the tags</span>
+<span class="c1"># (mo_coeff, mo_occ) to compute the potential if tags were found in the DM</span>
+<span class="c1"># arrays and modifications to DM arrays may be ignored.</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">dm_a</span><span class="p">,</span><span class="n">dm_b</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="get_veff"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.uhf.get_veff">[docs]</a><span class="k">def</span> <span class="nf">get_veff</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">dm_last</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vhf_last</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">hermi</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vhfopt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -429,10 +434,7 @@
     <span class="n">e_sort_a</span> <span class="o">=</span> <span class="n">mo_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">e_idx_a</span><span class="p">]</span>
     <span class="n">e_sort_b</span> <span class="o">=</span> <span class="n">mo_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">e_idx_b</span><span class="p">]</span>
     <span class="n">nmo</span> <span class="o">=</span> <span class="n">mo_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
-    <span class="k">if</span> <span class="n">mf</span><span class="o">.</span><span class="n">nelec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">n_a</span><span class="p">,</span> <span class="n">n_b</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nelec</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">n_a</span><span class="p">,</span> <span class="n">n_b</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">nelec</span>
+    <span class="n">n_a</span><span class="p">,</span> <span class="n">n_b</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">nelec</span>
     <span class="n">mo_occ</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mo_energy</span><span class="p">)</span>
     <span class="n">mo_occ</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">e_idx_a</span><span class="p">[:</span><span class="n">n_a</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">mo_occ</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">e_idx_b</span><span class="p">[:</span><span class="n">n_b</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
@@ -492,10 +494,12 @@
         <span class="n">dm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">dm</span><span class="o">*.</span><span class="mi">5</span><span class="p">,</span> <span class="n">dm</span><span class="o">*.</span><span class="mi">5</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">vhf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">vhf</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">get_veff</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">dm</span><span class="p">)</span>
-    <span class="n">e1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ij&#39;</span><span class="p">,</span> <span class="n">h1e</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">e1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">h1e</span><span class="p">,</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">e1</span><span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">h1e</span><span class="p">,</span> <span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="n">e_coul</span> <span class="o">=</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">vhf</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dm</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span>
-             <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">vhf</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
-    <span class="k">return</span> <span class="n">e1</span><span class="o">+</span><span class="n">e_coul</span><span class="p">,</span> <span class="n">e_coul</span></div>
+             <span class="n">numpy</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ji&#39;</span><span class="p">,</span> <span class="n">vhf</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dm</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s1">&#39;E1 = </span><span class="si">%s</span><span class="s1">  Ecoul = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e_coul</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">e1</span><span class="o">+</span><span class="n">e_coul</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">e_coul</span></div>
 
 <span class="c1"># mo_a and mo_b are occupied orbitals</span>
 <div class="viewcode-block" id="spin_square"><a class="viewcode-back" href="../../../scf.html#pyscf.scf.uhf.spin_square">[docs]</a><span class="k">def</span> <span class="nf">spin_square</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
@@ -831,23 +835,31 @@
         <span class="c1"># self.mo_coeff =&gt; [mo_a, mo_b]</span>
         <span class="c1"># self.mo_occ =&gt; [mo_occ_a, mo_occ_b]</span>
         <span class="c1"># self.mo_energy =&gt; [mo_energy_a, mo_energy_b]</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">nelec</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span><span class="o">.</span><span class="n">union</span><span class="p">([</span><span class="s1">&#39;nelec&#39;</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nelec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nelec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nelec</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nelec</span>
+    <span class="nd">@nelec</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">nelec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nelec</span> <span class="o">=</span> <span class="n">x</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nelectron_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="nd">@nelectron_alpha</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">nelectron_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;WARN: Attribute .nelectron_alpha is deprecated. &#39;</span>
+                    <span class="s1">&#39;Set .nelec instead&#39;</span><span class="p">)</span>
+        <span class="c1">#raise RuntimeError(&#39;API updates&#39;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nelec</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="o">-</span><span class="n">x</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;nelectron_alpha&#39;</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Note the API updates: attribute nelectron_alpha was replaced by attribute nelec&#39;</span><span class="p">)</span>
-            <span class="c1">#raise RuntimeError(&#39;API updates&#39;)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nelec</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nelectron_alpha</span><span class="p">,</span>
-                          <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nelectron_alpha</span><span class="p">)</span>
-            <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;nelectron_alpha&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">nelec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">nelec</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">nelec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nelec</span>
         <span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="o">.</span><span class="n">dump_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;number electrons alpha = </span><span class="si">%d</span><span class="s1">  beta = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">nelec</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;number electrons alpha = </span><span class="si">%d</span><span class="s1">  beta = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nelec</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">eig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fock</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
         <span class="n">e_a</span><span class="p">,</span> <span class="n">c_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigh</span><span class="p">(</span><span class="n">fock</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="p">)</span>

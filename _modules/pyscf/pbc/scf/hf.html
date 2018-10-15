@@ -108,13 +108,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../grad.html">19. grad &#8212; Analytical nuclear gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../hessian.html">20. hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../pbc.html">21. pbc &#8212; Periodic boundary conditions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../lo.html">22. lo &#8212; Orbital localization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../advanced.html">23. Miscellaneous</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../qmmm.html">24. qmmm &#8212; QM/MM interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../mrpt.html">25. mrpt &#8212; Multi-reference perturbation theory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../benchmark.html">26. Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../code-rule.html">27. Code standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../version.html">28. Version history</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../nao.html">22. nao &#8212; Numerical Atomic Orbitals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../lo.html">23. lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../advanced.html">24. Miscellaneous</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../qmmm.html">25. qmmm &#8212; QM/MM interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../mrpt.html">26. mrpt &#8212; Multi-reference perturbation theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../benchmark.html">27. Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../code-rule.html">28. Code standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../version.html">29. Version history</a></li>
 </ul>
 
             
@@ -213,6 +214,7 @@
 <span class="kn">from</span> <span class="nn">pyscf.scf</span> <span class="k">import</span> <span class="n">hf</span> <span class="k">as</span> <span class="n">mol_hf</span>
 <span class="kn">from</span> <span class="nn">pyscf</span> <span class="k">import</span> <span class="n">lib</span>
 <span class="kn">from</span> <span class="nn">pyscf.lib</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">pyscf.data</span> <span class="k">import</span> <span class="n">nist</span>
 <span class="kn">from</span> <span class="nn">pyscf.scf.hf</span> <span class="k">import</span> <span class="n">make_rdm1</span>
 <span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="k">import</span> <span class="n">tools</span>
 <span class="kn">from</span> <span class="nn">pyscf.pbc.gto</span> <span class="k">import</span> <span class="n">ecp</span>
@@ -380,6 +382,264 @@
 <span class="n">energy_elec</span> <span class="o">=</span> <span class="n">mol_hf</span><span class="o">.</span><span class="n">energy_elec</span>
 
 
+<div class="viewcode-block" id="dip_moment"><a class="viewcode-back" href="../../../../pbc/scf.html#pyscf.pbc.scf.hf.dip_moment">[docs]</a><span class="k">def</span> <span class="nf">dip_moment</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Debye&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">logger</span><span class="o">.</span><span class="n">NOTE</span><span class="p">,</span>
+               <span class="n">grids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kpt</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; Dipole moment in the unit cell.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">         cell : an instance of :class:`Cell`</span>
+
+<span class="sd">         dm (ndarray) : density matrix</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        A list: the dipole moment on x, y and z components</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="k">import</span> <span class="n">gto</span>
+    <span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="k">import</span> <span class="n">tools</span>
+    <span class="kn">from</span> <span class="nn">pyscf.pbc.dft</span> <span class="k">import</span> <span class="n">gen_grid</span>
+    <span class="kn">from</span> <span class="nn">pyscf.pbc.dft</span> <span class="k">import</span> <span class="n">numint</span>
+    <span class="k">if</span> <span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># raise NotImplementedError</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">new_logger</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">lattice_vectors</span><span class="p">()</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">if</span> <span class="n">grids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">grids</span> <span class="o">=</span> <span class="n">gen_grid</span><span class="o">.</span><span class="n">UniformGrids</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+        <span class="c1">#? FIXME: Less requirements on the density accuracy.</span>
+        <span class="c1">#ke_cutoff = gto.estimate_ke_cutoff(cell, 1e-5)</span>
+        <span class="c1">#grids.mesh = tools.cutoff_to_mesh(a, ke_cutoff)</span>
+    <span class="k">if</span> <span class="n">rho</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="n">numint</span><span class="o">.</span><span class="n">NumInt</span><span class="p">()</span><span class="o">.</span><span class="n">get_rho</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">kpt</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">max_memory</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">_search_dipole_gauge_origin</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
+
+    <span class="c1"># Move the unit cell to the position around the origin.</span>
+    <span class="k">def</span> <span class="nf">shift_grids</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+        <span class="n">r_frac</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="n">origin</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="c1"># Grids on the boundary (r_frac == +/-0.5) of the new cell may lead to</span>
+        <span class="c1"># unbalanced contributions to the dipole moment. Exclude them from the</span>
+        <span class="c1"># dipole and quadrupole</span>
+        <span class="n">r_frac</span><span class="p">[</span><span class="n">r_frac</span><span class="o">==</span> <span class="mf">0.5</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">r_frac</span><span class="p">[</span><span class="n">r_frac</span><span class="o">==-</span><span class="mf">0.5</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">r_frac</span><span class="p">[</span><span class="n">r_frac</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">r_frac</span><span class="p">[</span><span class="n">r_frac</span> <span class="o">&lt;-</span><span class="mf">0.5</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r_frac</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">shift_grids</span><span class="p">(</span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+    <span class="n">e_dip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;g,g,gx-&gt;x&#39;</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+
+    <span class="n">charges</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">atom_charges</span><span class="p">()</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">shift_grids</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">())</span>
+    <span class="n">nuc_dip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;g,gx-&gt;x&#39;</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+    <span class="n">dip</span> <span class="o">=</span> <span class="n">nuc_dip</span> <span class="o">-</span> <span class="n">e_dip</span>
+
+    <span class="k">if</span> <span class="n">unit</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;DEBYE&#39;</span><span class="p">:</span>
+        <span class="n">dip</span> <span class="o">*=</span> <span class="n">nist</span><span class="o">.</span><span class="n">AU2DEBYE</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">note</span><span class="p">(</span><span class="s1">&#39;Dipole moment(X, Y, Z, Debye): </span><span class="si">%8.5f</span><span class="s1">, </span><span class="si">%8.5f</span><span class="s1">, </span><span class="si">%8.5f</span><span class="s1">&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">dip</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">note</span><span class="p">(</span><span class="s1">&#39;Dipole moment(X, Y, Z, A.U.): </span><span class="si">%8.5f</span><span class="s1">, </span><span class="si">%8.5f</span><span class="s1">, </span><span class="si">%8.5f</span><span class="s1">&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">dip</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dip</span></div>
+
+<span class="k">def</span> <span class="nf">_search_dipole_gauge_origin</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">log</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Optimize the position of the unit cell in crystal. With a proper unit</span>
+<span class="sd">    cell, the nuclear charge center and the electron density center are at the</span>
+<span class="sd">    same point. This function returns the origin of such unit cell.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">pyscf.pbc.dft</span> <span class="k">import</span> <span class="n">gen_grid</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">lattice_vectors</span><span class="p">()</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">charges</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">atom_charges</span><span class="p">()</span>
+    <span class="n">coords</span>  <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">()</span>
+
+    <span class="n">origin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;i,ix-&gt;x&#39;</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span> <span class="o">/</span> <span class="n">charges</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="s1">&#39;Initial guess of origin center </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="p">)</span>
+    <span class="n">nelec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span>
+
+    <span class="c1"># The dipole moment in the crystal is not uniquely defined. Depending on</span>
+    <span class="c1"># the position and the shape of the unit cell, the value of dipole moment</span>
+    <span class="c1"># can be very different. The optimization below searches the boundary of</span>
+    <span class="c1"># cell inside which the nuclear charge center and electron density charge</span>
+    <span class="c1"># center locate at the same point. The gauge origin will be chosen at the</span>
+    <span class="c1"># center of unit cell.</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span>
+        <span class="c1"># For orthogonal lattice only</span>
+        <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()))</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="ow">and</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">grids</span><span class="p">,</span> <span class="n">gen_grid</span><span class="o">.</span><span class="n">UniformGrids</span><span class="p">)):</span>
+        <span class="n">gridxyz</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="n">grids</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="n">gridbase</span> <span class="o">=</span> <span class="p">(</span><span class="n">gridxyz</span><span class="p">[</span><span class="mi">0</span><span class="p">,:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">gridxyz</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">gridxyz</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,:])</span>
+        <span class="n">wxyz</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">grids</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="n">rhoxyz</span> <span class="o">=</span> <span class="n">rho</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">grids</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">search_orig</span><span class="p">(</span><span class="n">ix</span><span class="p">,</span> <span class="n">origin</span><span class="p">):</span>
+            <span class="n">nx</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span>
+            <span class="n">Lx</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">ix</span><span class="p">,</span><span class="n">ix</span><span class="p">]</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">gridbase</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="o">-</span> <span class="n">origin</span>
+            <span class="n">g_frac</span> <span class="o">=</span> <span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="n">ix</span><span class="p">,</span><span class="n">ix</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+            <span class="n">g</span><span class="p">[</span><span class="n">g_frac</span> <span class="o">==</span> <span class="o">.</span><span class="mi">5</span><span class="p">]</span>  <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">g</span><span class="p">[</span><span class="n">g_frac</span> <span class="o">==-.</span><span class="mi">5</span><span class="p">]</span>  <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">g</span><span class="p">[</span><span class="n">g_frac</span> <span class="o">&gt;</span>  <span class="o">.</span><span class="mi">5</span><span class="p">]</span> <span class="o">-=</span> <span class="n">Lx</span>
+            <span class="n">g</span><span class="p">[</span><span class="n">g_frac</span> <span class="o">&lt;</span> <span class="o">-.</span><span class="mi">5</span><span class="p">]</span> <span class="o">+=</span> <span class="n">Lx</span>
+            <span class="n">meanx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;xyz,xyz-&gt;&#39;</span><span class="o">+</span><span class="p">(</span><span class="s1">&#39;xyz&#39;</span><span class="p">[</span><span class="n">ix</span><span class="p">]),</span> <span class="n">rhoxyz</span><span class="p">,</span> <span class="n">wxyz</span><span class="p">)</span> <span class="o">/</span> <span class="n">nelec</span>
+            <span class="n">ex</span> <span class="o">=</span> <span class="n">meanx</span> <span class="o">*</span> <span class="n">g</span>
+
+            <span class="n">r_nuc</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[:,</span><span class="n">ix</span><span class="p">]</span> <span class="o">-</span> <span class="n">origin</span>
+            <span class="n">r_frac</span> <span class="o">=</span> <span class="p">(</span><span class="n">r_nuc</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="n">ix</span><span class="p">,</span><span class="n">ix</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+            <span class="n">r_nuc</span><span class="p">[</span><span class="n">r_frac</span> <span class="o">==</span> <span class="o">.</span><span class="mi">5</span><span class="p">]</span>  <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">r_nuc</span><span class="p">[</span><span class="n">r_frac</span> <span class="o">==-.</span><span class="mi">5</span><span class="p">]</span>  <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">r_nuc</span><span class="p">[</span><span class="n">r_frac</span> <span class="o">&gt;</span>  <span class="o">.</span><span class="mi">5</span><span class="p">]</span> <span class="o">-=</span> <span class="n">Lx</span>
+            <span class="n">r_nuc</span><span class="p">[</span><span class="n">r_frac</span> <span class="o">&lt;</span> <span class="o">-.</span><span class="mi">5</span><span class="p">]</span> <span class="o">+=</span> <span class="n">Lx</span>
+            <span class="n">nuc_dip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">charges</span><span class="p">,</span> <span class="n">r_nuc</span><span class="p">)</span> <span class="o">/</span> <span class="n">charges</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+            <span class="c1"># ex.sum() ~ electron dipole wrt the given origin</span>
+            <span class="n">dipx</span> <span class="o">=</span> <span class="n">nuc_dip</span> <span class="o">-</span> <span class="n">ex</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+            <span class="n">g</span> <span class="o">=</span> <span class="n">gridbase</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="o">-</span> <span class="n">origin</span>
+            <span class="n">sorted_meanx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">meanx</span><span class="p">[</span><span class="n">g</span> <span class="o">&gt;=</span> <span class="n">Lx</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span>
+                                      <span class="n">meanx</span><span class="p">[(</span><span class="n">g</span> <span class="o">&lt;</span> <span class="n">Lx</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">g</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="n">Lx</span><span class="o">/</span><span class="mi">2</span><span class="p">)],</span>
+                                      <span class="n">meanx</span><span class="p">[</span><span class="n">g</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">Lx</span><span class="o">/</span><span class="mi">2</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dipx</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">3</span><span class="p">:</span>
+                <span class="n">offx</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">elif</span> <span class="n">dipx</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># To cancel the positive dipole, move electrons to the right side</span>
+                <span class="n">rcum_dip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sorted_meanx</span> <span class="o">*</span> <span class="n">Lx</span><span class="p">))</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rcum_dip</span> <span class="o">&gt;</span> <span class="n">dipx</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">rcum_dip</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">dipx</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">rcum_dip</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">rcum_dip</span><span class="p">[</span><span class="n">idx</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">offx</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">-</span> <span class="n">dx</span><span class="p">)</span> <span class="o">*</span> <span class="n">Lx</span><span class="o">/</span><span class="n">nx</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># To cancel the negative dipole, move electrons to the left side</span>
+                <span class="n">lcum_dip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sorted_meanx</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">Lx</span><span class="p">))</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">lcum_dip</span> <span class="o">&gt;</span> <span class="o">-</span><span class="n">dipx</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">lcum_dip</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="o">-</span><span class="n">dipx</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">lcum_dip</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">lcum_dip</span><span class="p">[</span><span class="n">idx</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">offx</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">idx</span> <span class="o">-</span> <span class="n">dx</span><span class="p">)</span> <span class="o">*</span> <span class="n">Lx</span><span class="o">/</span><span class="n">nx</span>
+            <span class="k">return</span> <span class="n">origin</span> <span class="o">+</span> <span class="n">offx</span>
+
+        <span class="n">wbar</span> <span class="o">=</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+            <span class="n">orig_last</span> <span class="o">=</span> <span class="n">origin</span>
+            <span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">search_orig</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">search_orig</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">origin</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">origin</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">search_orig</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">origin</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">origin</span> <span class="o">-</span> <span class="n">orig_last</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">wbar</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="s1">&#39;iter </span><span class="si">%d</span><span class="s1">: origin </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">origin</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+    <span class="c1"># If the grids are non-cubic grids, regenerating the grids is expensive if</span>
+    <span class="c1"># the position or the shape of the unit cell is changed. The position of</span>
+    <span class="c1"># the unit cell is not optimized. The gauge origin is set to the nuclear</span>
+    <span class="c1"># charge center of the original unit cell.</span>
+        <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="n">origin</span>
+
+<div class="viewcode-block" id="get_rho"><a class="viewcode-back" href="../../../../pbc/scf.html#pyscf.pbc.scf.hf.get_rho">[docs]</a><span class="k">def</span> <span class="nf">get_rho</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kpt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Compute density in real space</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">pyscf.pbc.dft</span> <span class="k">import</span> <span class="n">gen_grid</span>
+    <span class="kn">from</span> <span class="nn">pyscf.pbc.dft</span> <span class="k">import</span> <span class="n">numint</span>
+    <span class="k">if</span> <span class="n">dm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dm</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">grids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">grids</span> <span class="o">=</span> <span class="n">gen_grid</span><span class="o">.</span><span class="n">UniformGrids</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">cell</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">kpt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">kpt</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">kpt</span>
+    <span class="n">ni</span> <span class="o">=</span> <span class="n">numint</span><span class="o">.</span><span class="n">NumInt</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ni</span><span class="o">.</span><span class="n">get_rho</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">kpt</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">max_memory</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">_dip_correction</span><span class="p">(</span><span class="n">mf</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Makov-Payne corrections for charged systems.&#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="k">import</span> <span class="n">gto</span>
+    <span class="kn">from</span> <span class="nn">pyscf.pbc</span> <span class="k">import</span> <span class="n">tools</span>
+    <span class="kn">from</span> <span class="nn">pyscf.pbc.dft</span> <span class="k">import</span> <span class="n">gen_grid</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">new_logger</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">cell</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">lattice_vectors</span><span class="p">()</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">grids</span> <span class="o">=</span> <span class="n">gen_grid</span><span class="o">.</span><span class="n">UniformGrids</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+    <span class="n">ke_cutoff</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">estimate_ke_cutoff</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">grids</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">cutoff_to_mesh</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">ke_cutoff</span><span class="p">)</span>
+
+    <span class="n">dm</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">get_rho</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">mf</span><span class="o">.</span><span class="n">kpt</span><span class="p">)</span>
+    <span class="n">origin</span> <span class="o">=</span> <span class="n">_search_dipole_gauge_origin</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">grids</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">shift_grids</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+        <span class="n">r_frac</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="n">origin</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="c1"># Grids on the boundary (r_frac == +/-0.5) of the new cell may lead to</span>
+        <span class="c1"># unbalanced contributions to the dipole moment. Exclude them from the</span>
+        <span class="c1"># dipole and quadrupole</span>
+        <span class="n">r_frac</span><span class="p">[</span><span class="n">r_frac</span><span class="o">==</span> <span class="mf">0.5</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">r_frac</span><span class="p">[</span><span class="n">r_frac</span><span class="o">==-</span><span class="mf">0.5</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">r_frac</span><span class="p">[</span><span class="n">r_frac</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">r_frac</span><span class="p">[</span><span class="n">r_frac</span> <span class="o">&lt;-</span><span class="mf">0.5</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r_frac</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span>
+
+    <span class="c1">#           SC              BCC             FCC</span>
+    <span class="n">madelung</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">2.83729747948</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.63923344951</span><span class="p">,</span> <span class="o">-</span><span class="mf">4.58486207411</span><span class="p">)</span>
+    <span class="n">vol</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">vol</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">vol</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">chg</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">charge</span>
+
+    <span class="c1"># epsilon is the dielectric constant of the system. For systems</span>
+    <span class="c1"># surrounded by vacuum, epsilon = 1.</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Energy correction of point charges of a simple cubic lattice.</span>
+    <span class="n">de_mono</span> <span class="o">=</span> <span class="o">-</span> <span class="n">chg</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">madelung</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">L</span> <span class="o">*</span> <span class="n">epsilon</span><span class="p">)</span>
+
+    <span class="c1"># dipole energy correction</span>
+    <span class="n">r_e</span> <span class="o">=</span> <span class="n">shift_grids</span><span class="p">(</span><span class="n">grids</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+    <span class="n">r_nuc</span> <span class="o">=</span> <span class="n">shift_grids</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">())</span>
+    <span class="n">charges</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">atom_charges</span><span class="p">()</span>
+    <span class="n">e_dip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;g,g,gx-&gt;x&#39;</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">r_e</span><span class="p">)</span>
+    <span class="n">nuc_dip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;g,gx-&gt;x&#39;</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">r_nuc</span><span class="p">)</span>
+    <span class="n">dip</span> <span class="o">=</span> <span class="n">nuc_dip</span> <span class="o">-</span> <span class="n">e_dip</span>
+    <span class="n">de_dip</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">cell</span><span class="o">.</span><span class="n">vol</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">dip</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="c1"># quadrupole energy correction</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">L</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">5</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s1">&#39;System is not cubic cell. Quadrupole energy &#39;</span>
+                    <span class="s1">&#39;correction is inaccurate since it is developed based on &#39;</span>
+                    <span class="s1">&#39;cubic cell.&#39;</span><span class="p">)</span>
+    <span class="n">e_quad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;g,g,gx,gx-&gt;&#39;</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">grids</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">r_e</span><span class="p">,</span> <span class="n">r_e</span><span class="p">)</span>
+    <span class="n">nuc_quad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;g,gx,gx-&gt;&#39;</span><span class="p">,</span> <span class="n">charges</span><span class="p">,</span> <span class="n">r_nuc</span><span class="p">,</span> <span class="n">r_nuc</span><span class="p">)</span>
+    <span class="n">quad</span> <span class="o">=</span> <span class="n">nuc_quad</span> <span class="o">-</span> <span class="n">e_quad</span>
+    <span class="n">de_quad</span> <span class="o">=</span> <span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">cell</span><span class="o">.</span><span class="n">vol</span><span class="p">)</span> <span class="o">*</span> <span class="n">quad</span>
+
+    <span class="n">de</span> <span class="o">=</span> <span class="n">de_mono</span> <span class="o">+</span> <span class="n">de_dip</span> <span class="o">+</span> <span class="n">de_quad</span>
+    <span class="k">return</span> <span class="n">de_mono</span><span class="p">,</span> <span class="n">de_dip</span><span class="p">,</span> <span class="n">de_quad</span><span class="p">,</span> <span class="n">de</span>
+
+<div class="viewcode-block" id="makov_payne_correction"><a class="viewcode-back" href="../../../../pbc/scf.html#pyscf.pbc.scf.hf.makov_payne_correction">[docs]</a><span class="k">def</span> <span class="nf">makov_payne_correction</span><span class="p">(</span><span class="n">mf</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Makov-Payne correction (Phys. Rev. B, 51, 4014)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">cell</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">note</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s1">&#39;Makov-Payne correction for charged 3D PBC systems&#39;</span><span class="p">)</span>
+    <span class="c1"># PRB 51 (1995), 4014</span>
+    <span class="c1"># PRB 77 (2008), 115139</span>
+    <span class="k">if</span> <span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="s1">&#39;Correction for low-dimension PBC systems&#39;</span>
+                    <span class="s1">&#39;is not available.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mf</span>
+
+    <span class="k">if</span> <span class="n">mf</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">NOTE</span><span class="p">:</span>
+        <span class="n">de_mono</span><span class="p">,</span> <span class="n">de_dip</span><span class="p">,</span> <span class="n">de_quad</span><span class="p">,</span> <span class="n">de</span> <span class="o">=</span> <span class="n">_dip_correction</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+        <span class="n">write</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span>
+        <span class="n">write</span><span class="p">(</span><span class="s1">&#39;Corrections (AU)</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">write</span><span class="p">(</span><span class="s1">&#39;       Monopole      Dipole          Quadrupole    total</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">write</span><span class="p">(</span><span class="s1">&#39;SC   </span><span class="si">%12.8f</span><span class="s1">   </span><span class="si">%12.8f</span><span class="s1">   </span><span class="si">%12.8f</span><span class="s1">   </span><span class="si">%12.8f</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span>
+              <span class="p">(</span><span class="n">de_mono</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">de_dip</span>   <span class="p">,</span> <span class="n">de_quad</span>   <span class="p">,</span> <span class="n">de</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">write</span><span class="p">(</span><span class="s1">&#39;BCC  </span><span class="si">%12.8f</span><span class="s1">   </span><span class="si">%12.8f</span><span class="s1">   </span><span class="si">%12.8f</span><span class="s1">   </span><span class="si">%12.8f</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span>
+              <span class="p">(</span><span class="n">de_mono</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">de_dip</span>   <span class="p">,</span> <span class="n">de_quad</span>   <span class="p">,</span> <span class="n">de</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">write</span><span class="p">(</span><span class="s1">&#39;FCC  </span><span class="si">%12.8f</span><span class="s1">   </span><span class="si">%12.8f</span><span class="s1">   </span><span class="si">%12.8f</span><span class="s1">   </span><span class="si">%12.8f</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span>
+              <span class="p">(</span><span class="n">de_mono</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">de_dip</span>   <span class="p">,</span> <span class="n">de_quad</span>   <span class="p">,</span> <span class="n">de</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">mf</span></div>
+
+
 <div class="viewcode-block" id="SCF"><a class="viewcode-back" href="../../../../pbc/scf.html#pyscf.pbc.scf.hf.SCF">[docs]</a><span class="k">class</span> <span class="nc">SCF</span><span class="p">(</span><span class="n">mol_hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;SCF base class adapted for PBCs.</span>
 
@@ -390,8 +650,8 @@
 <span class="sd">        exxdiv : str</span>
 <span class="sd">            Exchange divergence treatment, can be one of</span>
 
-<span class="sd">            | None : ignore G=0 contribution in exchange integral</span>
-<span class="sd">            | &#39;ewald&#39; : Ewald summation for G=0 in exchange integral</span>
+<span class="sd">            | None : ignore G=0 contribution in exchange</span>
+<span class="sd">            | &#39;ewald&#39; : Ewald probe charge correction (JCP, 122, 234102)</span>
 
 <span class="sd">        with_df : density fitting object</span>
 <span class="sd">            Default is the FFT based DF model. For all-electron calculation,</span>
@@ -417,6 +677,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">with_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">FFTDF</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">exxdiv</span> <span class="o">=</span> <span class="n">exxdiv</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kpt</span> <span class="o">=</span> <span class="n">kpt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">precision</span> <span class="o">*</span> <span class="mi">10</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span><span class="o">.</span><span class="n">union</span><span class="p">([</span><span class="s1">&#39;cell&#39;</span><span class="p">,</span> <span class="s1">&#39;exxdiv&#39;</span><span class="p">,</span> <span class="s1">&#39;with_df&#39;</span><span class="p">])</span>
 
@@ -443,13 +704,14 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;******** PBC SCF flags ********&#39;</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;kpt = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kpt</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Exchange divergence treatment (exxdiv) = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exxdiv</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span>
+        <span class="n">cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">cell</span><span class="o">.</span><span class="n">dimension</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">cell</span><span class="o">.</span><span class="n">low_dim_ft_type</span> <span class="o">!=</span> <span class="s1">&#39;inf_vacuum&#39;</span><span class="p">)</span> <span class="ow">and</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exxdiv</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">exxdiv</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;ewald&#39;</span><span class="p">):</span>
-            <span class="n">madelung</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">pbc</span><span class="o">.</span><span class="n">madelung</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">kpt</span><span class="p">])</span>
+            <span class="n">madelung</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">pbc</span><span class="o">.</span><span class="n">madelung</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">kpt</span><span class="p">])</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;    madelung (= occupied orbital energy shift) = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">madelung</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;    Total energy shift due to Ewald probe charge&#39;</span>
-                        <span class="s1">&#39; = -1/2 * Nelec*madelung/cell.vol = </span><span class="si">%.12g</span><span class="s1">&#39;</span><span class="p">,</span>
-                        <span class="n">madelung</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">nelectron</span> <span class="o">*</span> <span class="o">-.</span><span class="mi">5</span><span class="p">)</span>
+                        <span class="s1">&#39; = -1/2 * Nelec*madelung = </span><span class="si">%.12g</span><span class="s1">&#39;</span><span class="p">,</span>
+                        <span class="n">madelung</span><span class="o">*</span><span class="n">cell</span><span class="o">.</span><span class="n">nelectron</span> <span class="o">*</span> <span class="o">-.</span><span class="mi">5</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;DF object = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_df</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">with_df</span><span class="p">,</span> <span class="s1">&#39;build&#39;</span><span class="p">):</span>
             <span class="c1"># .dump_flags() is called in pbc.df.build function</span>
@@ -589,6 +851,26 @@
 
     <span class="n">get_bands</span> <span class="o">=</span> <span class="n">get_bands</span>
 
+    <span class="n">get_rho</span> <span class="o">=</span> <span class="n">get_rho</span>
+
+    <span class="nd">@lib</span><span class="o">.</span><span class="n">with_doc</span><span class="p">(</span><span class="n">dip_moment</span><span class="o">.</span><span class="n">__doc__</span><span class="p">)</span>
+<div class="viewcode-block" id="SCF.dip_moment"><a class="viewcode-back" href="../../../../pbc/scf.html#pyscf.pbc.scf.hf.SCF.dip_moment">[docs]</a>    <span class="k">def</span> <span class="nf">dip_moment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;Debye&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">logger</span><span class="o">.</span><span class="n">NOTE</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;rho&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span>
+        <span class="k">if</span> <span class="n">rho</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rho</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dip_moment</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">verbose</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">,</span> <span class="n">kpt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kpt</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Hook for dumping results and clearing up the object.&#39;&#39;&#39;</span>
+        <span class="n">mol_hf</span><span class="o">.</span><span class="n">SCF</span><span class="o">.</span><span class="n">_finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">charge</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">makov_payne_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
     <span class="k">def</span> <span class="nf">get_init_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;minao&#39;</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span>
         <span class="n">dm</span> <span class="o">=</span> <span class="n">mol_hf</span><span class="o">.</span><span class="n">SCF</span><span class="o">.</span><span class="n">get_init_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
@@ -635,11 +917,11 @@
 
     <span class="k">def</span> <span class="nf">density_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_df</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">pyscf.pbc.df</span> <span class="k">import</span> <span class="n">df_jk</span>
-        <span class="k">return</span> <span class="n">df_jk</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">auxbasis</span><span class="p">,</span> <span class="n">with_df</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df_jk</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">auxbasis</span><span class="p">,</span> <span class="n">with_df</span><span class="o">=</span><span class="n">with_df</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">mix_density_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">auxbasis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_df</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">pyscf.pbc.df</span> <span class="k">import</span> <span class="n">mdf_jk</span>
-        <span class="k">return</span> <span class="n">mdf_jk</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">auxbasis</span><span class="p">,</span> <span class="n">with_df</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mdf_jk</span><span class="o">.</span><span class="n">density_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">auxbasis</span><span class="p">,</span> <span class="n">with_df</span><span class="o">=</span><span class="n">with_df</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">sfx2c1e</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">pyscf.pbc.x2c</span> <span class="k">import</span> <span class="n">sfx2c1e</span>

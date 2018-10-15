@@ -108,13 +108,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../grad.html">19. grad &#8212; Analytical nuclear gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../hessian.html">20. hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../pbc.html">21. pbc &#8212; Periodic boundary conditions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../lo.html">22. lo &#8212; Orbital localization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">23. Miscellaneous</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../qmmm.html">24. qmmm &#8212; QM/MM interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mrpt.html">25. mrpt &#8212; Multi-reference perturbation theory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../benchmark.html">26. Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../code-rule.html">27. Code standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../version.html">28. Version history</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../nao.html">22. nao &#8212; Numerical Atomic Orbitals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../lo.html">23. lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced.html">24. Miscellaneous</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../qmmm.html">25. qmmm &#8212; QM/MM interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mrpt.html">26. mrpt &#8212; Multi-reference perturbation theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmark.html">27. Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code-rule.html">28. Code standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../version.html">29. Version history</a></li>
 </ul>
 
             
@@ -928,10 +929,10 @@
         <span class="c1">#    for j in range(na):</span>
         <span class="c1">#        uij = u[occ_masks[i]][:,occ_masks[j]]</span>
         <span class="c1">#        trans_ci_a[i,j] = numpy.linalg.det(uij)</span>
-        <span class="n">occ_idx_all_strs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">occ_masks</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">occ_idx_all_strs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">occ_masks</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">na</span><span class="p">,</span><span class="n">neleca</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">na</span><span class="p">):</span>
             <span class="n">ui</span> <span class="o">=</span> <span class="n">ua</span><span class="p">[</span><span class="n">occ_masks</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">minors</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">ui</span><span class="p">,</span> <span class="n">occ_idx_all_strs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">na</span><span class="p">,</span><span class="n">neleca</span><span class="p">,</span><span class="n">neleca</span><span class="p">)</span>
+            <span class="n">minors</span> <span class="o">=</span> <span class="n">ui</span><span class="p">[</span><span class="n">occ_idx_all_strs</span><span class="p">]</span>
             <span class="n">trans_ci_a</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">minors</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">neleca</span> <span class="o">==</span> <span class="n">nelecb</span> <span class="ow">and</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">ua</span><span class="p">,</span> <span class="n">ub</span><span class="p">):</span>
@@ -946,10 +947,10 @@
             <span class="c1">#    for j in range(nb):</span>
             <span class="c1">#        uij = u[occ_masks[i]][:,occ_masks[j]]</span>
             <span class="c1">#        trans_ci_b[i,j] = numpy.linalg.det(uij)</span>
-            <span class="n">occ_idx_all_strs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">occ_masks</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">occ_idx_all_strs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">occ_masks</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nb</span><span class="p">,</span><span class="n">nelecb</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb</span><span class="p">):</span>
                 <span class="n">ui</span> <span class="o">=</span> <span class="n">ub</span><span class="p">[</span><span class="n">occ_masks</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-                <span class="n">minors</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">ui</span><span class="p">,</span> <span class="n">occ_idx_all_strs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nb</span><span class="p">,</span><span class="n">nelecb</span><span class="p">,</span><span class="n">nelecb</span><span class="p">)</span>
+                <span class="n">minors</span> <span class="o">=</span> <span class="n">ui</span><span class="p">[</span><span class="n">occ_idx_all_strs</span><span class="p">]</span>
                 <span class="n">trans_ci_b</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">minors</span><span class="p">)</span>
 
     <span class="c1"># Transform old basis to new basis for all alpha-electron excitations</span>

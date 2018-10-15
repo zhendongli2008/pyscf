@@ -108,13 +108,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../grad.html">19. grad &#8212; Analytical nuclear gradients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hessian.html">20. hessian &#8212; Analytical nuclear Hessian</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../pbc.html">21. pbc &#8212; Periodic boundary conditions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../lo.html">22. lo &#8212; Orbital localization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../advanced.html">23. Miscellaneous</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../qmmm.html">24. qmmm &#8212; QM/MM interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../mrpt.html">25. mrpt &#8212; Multi-reference perturbation theory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../benchmark.html">26. Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../code-rule.html">27. Code standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../version.html">28. Version history</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../nao.html">22. nao &#8212; Numerical Atomic Orbitals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lo.html">23. lo &#8212; Orbital localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advanced.html">24. Miscellaneous</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../qmmm.html">25. qmmm &#8212; QM/MM interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mrpt.html">26. mrpt &#8212; Multi-reference perturbation theory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../benchmark.html">27. Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code-rule.html">28. Code standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../version.html">29. Version history</a></li>
 </ul>
 
             
@@ -367,7 +368,7 @@
 <span class="sd">            the eigenvectors during the iterations.  The first iteration has</span>
 <span class="sd">            one eigenvector, the next iteration has two, the third iterastion</span>
 <span class="sd">            has 4, ..., until the subspace size &gt; nroots.</span>
-<span class="sd">        precond : function(dx, e, x0) =&gt; array_like_dx</span>
+<span class="sd">        precond : diagonal elements of the matrix or  function(dx, e, x0) =&gt; array_like_dx</span>
 <span class="sd">            Preconditioner to generate new trial vector.</span>
 <span class="sd">            The argument dx is a residual vector ``a*x0-e*x0``; e is the current</span>
 <span class="sd">            eigenvalue; x0 is the current eigenvector.</span>
@@ -454,7 +455,7 @@
 <span class="sd">            the eigenvectors during the iterations.  The first iteration has</span>
 <span class="sd">            one eigenvector, the next iteration has two, the third iterastion</span>
 <span class="sd">            has 4, ..., until the subspace size &gt; nroots.</span>
-<span class="sd">        precond : function(dx, e, x0) =&gt; array_like_dx</span>
+<span class="sd">        precond : diagonal elements of the matrix or  function(dx, e, x0) =&gt; array_like_dx</span>
 <span class="sd">            Preconditioner to generate new trial vector.</span>
 <span class="sd">            The argument dx is a residual vector ``a*x0-e*x0``; e is the current</span>
 <span class="sd">            eigenvalue; x0 is the current eigenvector.</span>
@@ -526,12 +527,15 @@
         <span class="n">toloose</span> <span class="o">=</span> <span class="n">tol_residual</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="s1">&#39;tol </span><span class="si">%g</span><span class="s1">  toloose </span><span class="si">%g</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">toloose</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">precond</span><span class="p">):</span>
+        <span class="n">precond</span> <span class="o">=</span> <span class="n">make_diag_precond</span><span class="p">(</span><span class="n">precond</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">x0</span><span class="p">):</span>  <span class="c1"># lazy initialization to reduce memory footprint</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="p">()</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="p">[</span><span class="n">x0</span><span class="p">]</span>
     <span class="c1">#max_cycle = min(max_cycle, x0[0].size)</span>
-    <span class="n">max_space</span> <span class="o">=</span> <span class="n">max_space</span> <span class="o">+</span> <span class="n">nroots</span> <span class="o">*</span> <span class="mi">3</span>
+    <span class="n">max_space</span> <span class="o">=</span> <span class="n">max_space</span> <span class="o">+</span> <span class="p">(</span><span class="n">nroots</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span>
     <span class="c1"># max_space*2 for holding ax and xs, nroots*2 for holding axt and xt</span>
     <span class="n">_incore</span> <span class="o">=</span> <span class="n">max_memory</span><span class="o">*</span><span class="mi">1</span><span class="n">e6</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">&gt;</span> <span class="n">max_space</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="n">nroots</span><span class="o">*</span><span class="mi">3</span>
     <span class="n">lessio</span> <span class="o">=</span> <span class="n">lessio</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_incore</span>
@@ -559,7 +563,7 @@
             <span class="n">xt</span><span class="p">,</span> <span class="n">x0</span> <span class="o">=</span> <span class="n">_qr</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">dot</span><span class="p">),</span> <span class="kc">None</span>
             <span class="n">max_dx_last</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e9</span>
             <span class="k">if</span> <span class="n">SORT_EIG_BY_SIMILARITY</span><span class="p">:</span>
-                <span class="n">conv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="n">nroots</span><span class="p">)</span>
+                <span class="n">conv</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="n">nroots</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">xt</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">xt</span> <span class="o">=</span> <span class="n">_qr</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="n">dot</span><span class="p">)</span>
             <span class="n">xt</span> <span class="o">=</span> <span class="n">xt</span><span class="p">[:</span><span class="mi">40</span><span class="p">]</span>  <span class="c1"># 40 trial vectors at most</span>
@@ -700,7 +704,16 @@
         <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">callback</span><span class="p">):</span>
             <span class="n">callback</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
 
-    <span class="k">return</span> <span class="n">conv</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">x0</span></div>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">conv</span><span class="p">),</span> <span class="n">e</span><span class="p">,</span> <span class="n">x0</span></div>
+
+
+<div class="viewcode-block" id="make_diag_precond"><a class="viewcode-back" href="../../lib.html#lib.linalg_helper.make_diag_precond">[docs]</a><span class="k">def</span> <span class="nf">make_diag_precond</span><span class="p">(</span><span class="n">diag</span><span class="p">,</span> <span class="n">level_shift</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Generate the preconditioner function with the diagonal function.&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">precond</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">diagd</span> <span class="o">=</span> <span class="n">diag</span> <span class="o">-</span> <span class="p">(</span><span class="n">e</span> <span class="o">-</span> <span class="n">level_shift</span><span class="p">)</span>
+        <span class="n">diagd</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">diagd</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">8</span>
+        <span class="k">return</span> <span class="n">dx</span><span class="o">/</span><span class="n">diagd</span>
+    <span class="k">return</span> <span class="n">precond</span></div>
 
 
 <span class="k">def</span> <span class="nf">eigh</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -716,19 +729,34 @@
 <span class="n">dsyev</span> <span class="o">=</span> <span class="n">eigh</span>
 
 
-<span class="k">def</span> <span class="nf">pick_real_eigs</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">nroots</span><span class="p">,</span> <span class="n">x0</span><span class="p">):</span>
-    <span class="c1"># Here we pick the eigenvalues with smallest imaginary component,</span>
-    <span class="c1"># where we are forced to choose at least one eigenvalue.</span>
+<div class="viewcode-block" id="pick_real_eigs"><a class="viewcode-back" href="../../lib.html#lib.linalg_helper.pick_real_eigs">[docs]</a><span class="k">def</span> <span class="nf">pick_real_eigs</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">nroots</span><span class="p">,</span> <span class="n">x0</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;This function searchs the real eigenvalues or eigenvalues with small</span>
+<span class="sd">    imaginary component, then constructs approximate real eigenvectors if</span>
+<span class="sd">    quasi-real eigenvalues were found.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">abs_imag</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
-    <span class="n">max_imag_tol</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="nb">min</span><span class="p">(</span><span class="n">abs_imag</span><span class="p">)</span><span class="o">*</span><span class="mf">1.1</span><span class="p">)</span>
+    <span class="n">max_imag_tol</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">abs_imag</span><span class="p">)</span><span class="o">*</span><span class="mf">1.1</span><span class="p">)</span>
     <span class="n">realidx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">abs_imag</span> <span class="o">&lt;</span> <span class="n">max_imag_tol</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">realidx</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">nroots</span> <span class="ow">and</span> <span class="n">w</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="n">nroots</span><span class="p">:</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1"> eigenvalues with imaginary part &gt; 0.01</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span>
                       <span class="n">numpy</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">abs_imag</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">2</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="n">realidx</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="n">realidx</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span>
-    <span class="k">return</span> <span class="n">w</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">v</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">idx</span>
+
+    <span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">_eigs_cmplx2real</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">realidx</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">idx</span></div>
+
+<span class="c1"># If the complex eigenvalue has small imaginary part, both the real part</span>
+<span class="c1"># and the imaginary part of the eigenvector can approximately be used as</span>
+<span class="c1"># the &quot;real&quot; eigen solutions.</span>
+<span class="k">def</span> <span class="nf">_eigs_cmplx2real</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">real_idx</span><span class="p">):</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">real_idx</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="n">real_idx</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">argsort</span><span class="p">()]</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">degen_idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">imag</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">degen_idx</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Take the imaginary part of the &quot;degenerated&quot; eigenvectors as an</span>
+        <span class="c1"># independent eigenvector</span>
+        <span class="n">v</span><span class="p">[:,</span><span class="n">degen_idx</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="n">degen_idx</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]]</span><span class="o">.</span><span class="n">imag</span>
+    <span class="k">return</span> <span class="n">w</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">idx</span>
 
 <div class="viewcode-block" id="eig"><a class="viewcode-back" href="../../lib.html#lib.linalg_helper.eig">[docs]</a><span class="k">def</span> <span class="nf">eig</span><span class="p">(</span><span class="n">aop</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">precond</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">12</span><span class="p">,</span> <span class="n">max_cycle</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">max_space</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
         <span class="n">lindep</span><span class="o">=</span><span class="n">DAVIDSON_LINDEP</span><span class="p">,</span> <span class="n">max_memory</span><span class="o">=</span><span class="n">MAX_MEMORY</span><span class="p">,</span>
@@ -747,7 +775,7 @@
 <span class="sd">            the eigenvectors during the iterations.  The first iteration has</span>
 <span class="sd">            one eigenvector, the next iteration has two, the third iterastion</span>
 <span class="sd">            has 4, ..., until the subspace size &gt; nroots.</span>
-<span class="sd">        precond : function(dx, e, x0) =&gt; array_like_dx</span>
+<span class="sd">        precond : diagonal elements of the matrix or  function(dx, e, x0) =&gt; array_like_dx</span>
 <span class="sd">            Preconditioner to generate new trial vector.</span>
 <span class="sd">            The argument dx is a residual vector ``a*x0-e*x0``; e is the current</span>
 <span class="sd">            eigenvalue; x0 is the current eigenvector.</span>
@@ -848,14 +876,17 @@
         <span class="n">toloose</span> <span class="o">=</span> <span class="n">tol_residual</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="s1">&#39;tol </span><span class="si">%g</span><span class="s1">  toloose </span><span class="si">%g</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">toloose</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">precond</span><span class="p">):</span>
+        <span class="n">precond</span> <span class="o">=</span> <span class="n">make_diag_precond</span><span class="p">(</span><span class="n">precond</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">x0</span><span class="p">):</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="p">()</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="p">[</span><span class="n">x0</span><span class="p">]</span>
     <span class="c1">#max_cycle = min(max_cycle, x0[0].size)</span>
-    <span class="n">max_space</span> <span class="o">=</span> <span class="n">max_space</span> <span class="o">+</span> <span class="n">nroots</span> <span class="o">*</span> <span class="mi">4</span>
+    <span class="n">max_space</span> <span class="o">=</span> <span class="n">max_space</span> <span class="o">+</span> <span class="p">(</span><span class="n">nroots</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span>
     <span class="c1"># max_space*2 for holding ax and xs, nroots*2 for holding axt and xt</span>
-    <span class="n">_incore</span> <span class="o">=</span> <span class="n">max_memory</span><span class="o">*</span><span class="mi">1</span><span class="n">e6</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">&gt;</span> <span class="n">max_space</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="n">nroots</span> <span class="o">*</span> <span class="mi">3</span>
+    <span class="n">_incore</span> <span class="o">=</span> <span class="n">max_memory</span><span class="o">*</span><span class="mi">1</span><span class="n">e6</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">&gt;</span> <span class="n">max_space</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="n">nroots</span><span class="o">*</span><span class="mi">3</span>
     <span class="n">lessio</span> <span class="o">=</span> <span class="n">lessio</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_incore</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug1</span><span class="p">(</span><span class="s1">&#39;max_cycle </span><span class="si">%d</span><span class="s1">  max_space </span><span class="si">%d</span><span class="s1">  max_memory </span><span class="si">%d</span><span class="s1">  incore </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
                <span class="n">max_cycle</span><span class="p">,</span> <span class="n">max_space</span><span class="p">,</span> <span class="n">max_memory</span><span class="p">,</span> <span class="n">_incore</span><span class="p">)</span>
@@ -881,7 +912,7 @@
             <span class="n">xt</span><span class="p">,</span> <span class="n">x0</span> <span class="o">=</span> <span class="n">_qr</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">dot</span><span class="p">),</span> <span class="kc">None</span>
             <span class="n">max_dx_last</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e9</span>
             <span class="k">if</span> <span class="n">SORT_EIG_BY_SIMILARITY</span><span class="p">:</span>
-                <span class="n">conv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="n">nroots</span><span class="p">)</span>
+                <span class="n">conv</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="n">nroots</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">xt</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">xt</span> <span class="o">=</span> <span class="n">_qr</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="n">dot</span><span class="p">)</span>
             <span class="n">xt</span> <span class="o">=</span> <span class="n">xt</span><span class="p">[:</span><span class="mi">40</span><span class="p">]</span>  <span class="c1"># 40 trial vectors at most</span>
@@ -1026,9 +1057,9 @@
         <span class="n">e</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">pick</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">nroots</span><span class="p">,</span> <span class="n">x0</span><span class="p">)</span>
         <span class="n">xl</span> <span class="o">=</span> <span class="n">_gen_x0</span><span class="p">(</span><span class="n">vl</span><span class="p">[:,</span><span class="n">idx</span><span class="p">[:</span><span class="n">nroots</span><span class="p">]]</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">xs</span><span class="p">)</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">_gen_x0</span><span class="p">(</span><span class="n">v</span><span class="p">[:,:</span><span class="n">nroots</span><span class="p">],</span> <span class="n">xs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">conv</span><span class="p">,</span> <span class="n">e</span><span class="p">[:</span><span class="n">nroots</span><span class="p">],</span> <span class="n">xl</span><span class="p">,</span> <span class="n">x0</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">conv</span><span class="p">),</span> <span class="n">e</span><span class="p">[:</span><span class="n">nroots</span><span class="p">],</span> <span class="n">xl</span><span class="p">,</span> <span class="n">x0</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">conv</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">x0</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">conv</span><span class="p">),</span> <span class="n">e</span><span class="p">,</span> <span class="n">x0</span>
 
 <div class="viewcode-block" id="dgeev"><a class="viewcode-back" href="../../lib.html#lib.linalg_helper.dgeev">[docs]</a><span class="k">def</span> <span class="nf">dgeev</span><span class="p">(</span><span class="n">abop</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">precond</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">12</span><span class="p">,</span> <span class="n">max_cycle</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">max_space</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
           <span class="n">lindep</span><span class="o">=</span><span class="n">DAVIDSON_LINDEP</span><span class="p">,</span> <span class="n">max_memory</span><span class="o">=</span><span class="n">MAX_MEMORY</span><span class="p">,</span>
@@ -1041,7 +1072,7 @@
 <span class="sd">            abop applies two matrix vector multiplications and returns tuple (Ax, Bx)</span>
 <span class="sd">        x0 : 1D array</span>
 <span class="sd">            Initial guess</span>
-<span class="sd">        precond : function(dx, e, x0) =&gt; array_like_dx</span>
+<span class="sd">        precond : diagonal elements of the matrix or  function(dx, e, x0) =&gt; array_like_dx</span>
 <span class="sd">            Preconditioner to generate new trial vector.</span>
 <span class="sd">            The argument dx is a residual vector ``a*x0-e*x0``; e is the current</span>
 <span class="sd">            eigenvalue; x0 is the current eigenvector.</span>
@@ -1105,7 +1136,7 @@
 <span class="sd">            abop applies two matrix vector multiplications and returns tuple (Ax, Bx)</span>
 <span class="sd">        x0 : 1D array</span>
 <span class="sd">            Initial guess</span>
-<span class="sd">        precond : function(dx, e, x0) =&gt; array_like_dx</span>
+<span class="sd">        precond : diagonal elements of the matrix or  function(dx, e, x0) =&gt; array_like_dx</span>
 <span class="sd">            Preconditioner to generate new trial vector.</span>
 <span class="sd">            The argument dx is a residual vector ``a*x0-e*x0``; e is the current</span>
 <span class="sd">            eigenvalue; x0 is the current eigenvector.</span>
@@ -1158,10 +1189,13 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">toloose</span> <span class="o">=</span> <span class="n">tol_residual</span>
 
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">precond</span><span class="p">):</span>
+        <span class="n">precond</span> <span class="o">=</span> <span class="n">make_diag_precond</span><span class="p">(</span><span class="n">precond</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x0</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="p">[</span><span class="n">x0</span><span class="p">]</span>
     <span class="c1">#max_cycle = min(max_cycle, x0[0].size)</span>
-    <span class="n">max_space</span> <span class="o">=</span> <span class="n">max_space</span> <span class="o">+</span> <span class="n">nroots</span> <span class="o">*</span> <span class="mi">3</span>
+    <span class="n">max_space</span> <span class="o">=</span> <span class="n">max_space</span> <span class="o">+</span> <span class="p">(</span><span class="n">nroots</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span>
     <span class="c1"># max_space*3 for holding ax, bx and xs, nroots*3 for holding axt, bxt and xt</span>
     <span class="n">_incore</span> <span class="o">=</span> <span class="n">max_memory</span><span class="o">*</span><span class="mi">1</span><span class="n">e6</span><span class="o">/</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">&gt;</span> <span class="n">max_space</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="n">nroots</span><span class="o">*</span><span class="mi">3</span>
     <span class="n">lessio</span> <span class="o">=</span> <span class="n">lessio</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_incore</span>
@@ -1427,6 +1461,9 @@
         <span class="n">toloose</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tol</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">toloose</span> <span class="o">=</span> <span class="n">tol_residual</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">precond</span><span class="p">):</span>
+        <span class="n">precond</span> <span class="o">=</span> <span class="n">make_diag_precond</span><span class="p">(</span><span class="n">precond</span><span class="p">)</span>
 
     <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">precond</span><span class="p">(</span><span class="n">b</span><span class="p">)]</span>
     <span class="n">ax</span> <span class="o">=</span> <span class="p">[</span><span class="n">aop</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])]</span>
