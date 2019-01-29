@@ -437,8 +437,14 @@ def order_ao_index(mol, cart=False):
                 elif l == 4:
                     idx.extend([off+4,off+5,off+3,off+6,off+2,
                                 off+7,off+1,off+8,off+0])
-                elif l > 4:
-                    raise RuntimeError('l=5 is not supported')
+                elif l == 5:
+                    idx.extend(off+odx for odx in [5, 6, 4, 7, 3, 8, 2, 9, 1, 10, 0])
+                elif l == 6:
+                    idx.extend(off+odx for odx in [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12, 0])
+                elif l == 7:
+                    idx.extend(off+odx for odx in [7, 8, 6, 9, 5, 10, 4, 11, 3, 12, 2, 13, 1, 14, 0])
+                elif l >= 8:
+                    raise RuntimeError('l>=8 is not supported')
                 else:
                     idx.extend(range(off,off+l*2+1))
                 off += l * 2 + 1
